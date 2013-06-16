@@ -11,7 +11,8 @@
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
     SupportedOrientations="Portrait" Orientation="Portrait"
-    shell:SystemTray.IsVisible="True">
+    shell:SystemTray.IsVisible="True"
+    DataContext="{Binding RelativeSource={RelativeSource Self}}">
 
     <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot" Background="Transparent">
@@ -47,7 +48,27 @@
 
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
-
+           <StackPanel>
+            <Button Click="Connect_OnClick" Content="Connect"/>
+            <Button Click="TakeOff_Click" Content="Take Off"/>
+            <Button Click="Land_Click" Content="Land"/>
+            <TextBlock Text="Battery"/>
+            <TextBlock Text="{Binding DroneController.NavData.Demo.BatteryPercentage}"/>
+            <TextBlock Text="Altitude"/>
+            <TextBlock Text="{Binding DroneController.NavData.Demo.Altitude}"/>
+            <TextBlock Text="Phi"/>
+            <TextBlock Text="{Binding DroneController.NavData.Demo.Phi}"/>
+            <TextBlock Text="Psi"/>
+            <TextBlock Text="{Binding DroneController.NavData.Demo.Psi}"/>
+            <TextBlock Text="Theta"/>
+            <TextBlock Text="{Binding DroneController.NavData.Demo.Theta}"/>
+            <TextBlock Text="Vx"/>
+            <TextBlock Text="{Binding DroneController.NavData.Demo.Vx}"/>
+            <TextBlock Text="Vy"/>
+            <TextBlock Text="{Binding DroneController.NavData.Demo.Vy}"/>
+            <TextBlock Text="Vz"/>
+            <TextBlock Text="{Binding DroneController.NavData.Demo.Vz}"/>
+            </StackPanel>
         </Grid>
 
         <!--Uncomment to see an alignment grid to help ensure your controls are

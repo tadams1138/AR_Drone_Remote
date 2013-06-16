@@ -7,7 +7,7 @@
 
     <!--Application Resources-->
     <Application.Resources>
-        <local:LocalizedStrings xmlns:local="clr-namespace:AR_Drone_Remote_for_Windows_Phone" x:Key="LocalizedStrings"/>
+        <!--<local:LocalizedStrings xmlns:local="clr-namespace:AR_Drone_Remote_for_Windows_Phone" x:Key="LocalizedStrings"/>-->
     </Application.Resources>
 
     <Application.ApplicationLifetimeObjects>

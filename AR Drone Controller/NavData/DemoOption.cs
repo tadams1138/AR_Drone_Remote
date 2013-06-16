@@ -1,0 +1,110 @@
+﻿using System.Runtime.CompilerServices;
+
+namespace AR_Drone_Controller.NavData
+{
+    using Common;
+    using System.IO;
+    using System.ComponentModel;
+
+    public class DemoOption 
+    {
+        public enum States : uint
+        {
+            Default,
+            Init,
+            Landed,
+            Flying,
+            Hovering,
+            Test,
+            TransTakeoff,
+            TransGotofix,
+            TransLanding,
+            TransLooping,
+            NumStates
+        }
+
+        private uint _batteryPercentage;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private Matrix33 _detectionCameraRotation;
+
+        private Vector _detectionCameraTrans;
+
+        private Matrix33 _droneCameraRotation;
+
+        private Vector _droneCameraTrans;
+
+        public States State { get; internal set; }
+
+        public uint BatteryPercentage
+        {
+            get { return _batteryPercentage; }
+            set
+            {
+                _batteryPercentage = value; NotifyPropertyChanged();
+            }
+        }
+
+        public float Theta { get; internal set; }
+
+        public float Phi { get; internal set; }
+
+        public float Psi { get; internal set; }
+
+        public int Altitude { get; set; }
+
+        public float Vx { get; internal set; }
+
+        public float Vy { get; internal set; }
+
+        public float Vz { get; internal set; }
+
+        public uint FrameNumber { get; internal set; }
+
+        public uint DetectionTagIndex { get; internal set; }
+
+        public uint DetectionCameraType { get; internal set; }
+
+        internal static DemoOption FromReader(ushort size, BinaryReader reader)
+        {
+            Validate(size);
+            var result = new DemoOption
+            {
+                State = (States)reader.ReadUInt32(),
+                BatteryPercentage = reader.ReadUInt32(),
+                Theta = reader.ReadSingle(),
+                Phi = reader.ReadSingle(),
+                Psi = reader.ReadSingle(),
+                Altitude = reader.ReadInt32(),
+                Vx = reader.ReadSingle(),
+                Vy = reader.ReadSingle(),
+                Vz = reader.ReadSingle(),
+                FrameNumber = reader.ReadUInt32(),
+                _detectionCameraRotation = Matrix33.FromReader(reader),
+                _detectionCameraTrans = Vector.FromReader(reader),
+                DetectionTagIndex = reader.ReadUInt32(),
+                DetectionCameraType = reader.ReadUInt32(),
+                _droneCameraRotation = Matrix33.FromReader(reader),
+                _droneCameraTrans = Vector.FromReader(reader)
+            };
+            return result;
+        }
+
+        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+
+        private static void Validate(ushort size)
+        {
+            // TODO: validate the size
+        }
+
+        
+    }
+}
