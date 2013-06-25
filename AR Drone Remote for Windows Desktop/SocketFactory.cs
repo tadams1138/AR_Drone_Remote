@@ -9,9 +9,9 @@
             return new TcpSocket(ipAddress, port);
         }
 
-        public IUdpSocket GetUdpSocket(string localIp, int localPort, string remoteIp, int remotePort, int timeout)
+        public IUdpSocket GetUdpSocket(int localPort, string remoteIp, int remotePort, int timeout)
         {
-            return new UdpSocket(localIp, localPort, remoteIp, remotePort, timeout);
+            return new UdpSocket(localPort, remoteIp, remotePort, timeout);
         }
     }
 }

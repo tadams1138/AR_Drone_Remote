@@ -1,32 +1,36 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Navigation;
 using AR_Drone_Controller;
 using Microsoft.Phone.Controls;
-using Microsoft.Phone.Shell;
-using AR_Drone_Remote_for_Windows_Phone.Resources;
+using System.Windows;
 
 namespace AR_Drone_Remote_for_Windows_Phone
 {
     public partial class MainPage : PhoneApplicationPage
     {
+        private BindableCompass compass;
+
         // Constructor
         public MainPage()
         {
             DroneController = new DroneController
             {
                 IpAddress = "192.168.1.1",
-                SocketFactory = new SocketFactory()
+                SocketFactory = new SocketFactory(),
+                Dispatcher = new DispatcherWrapper(Dispatcher)
             };
 
+            compass = new BindableCompass {Dispatcher = Dispatcher};
+            compass.Start();
+            
             InitializeComponent();
 
             // Sample code to localize the ApplicationBar
             //BuildLocalizedApplicationBar();
+        }
+
+        public BindableCompass ControllerDirection
+        {
+            get { return compass; }
         }
 
         // Sample code for building a localized ApplicationBar
@@ -59,6 +63,28 @@ namespace AR_Drone_Remote_for_Windows_Phone
         private void TakeOff_Click(object sender, RoutedEventArgs e)
         {
             DroneController.TakeOff();
+        }
+
+        private void Emergency_Click(object sender, RoutedEventArgs e)
+        {
+            DroneController.Emergency();
+        }
+
+        private void Blink_Click(object sender, RoutedEventArgs e)
+        {
+            DroneController.Blink();
+        }
+
+        private void MainPage_OnOrientationChanged(object sender, OrientationChangedEventArgs e)
+        {
+            try
+            {
+                VisualStateManager.GoToState(this, e.Orientation.ToString(), true);
+            }
+            catch
+            {
+                // TODO: log this crap
+            }
         }
     }
 }

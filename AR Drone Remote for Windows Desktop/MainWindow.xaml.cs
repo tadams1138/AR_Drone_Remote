@@ -1,20 +1,19 @@
-﻿using System.Windows.Input;
-using AR_Drone_Controller.NavData;
-
-namespace AR_Drone_Remote_for_Windows_Desktop
+﻿namespace AR_Drone_Remote_for_Windows_Desktop
 {
     using AR_Drone_Controller;
     using System;
     using System.Windows;
+    using System.Windows.Input;
 
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         public MainWindow()
         {
             DroneController = new DroneController
                 {
                     IpAddress = "192.168.1.1",
-                    SocketFactory = new SocketFactory()
+                    SocketFactory = new SocketFactory(),
+                    Dispatcher = new DispatcherWrapper(Dispatcher)
                 };
 
             InitializeComponent();
@@ -57,6 +56,9 @@ namespace AR_Drone_Remote_for_Windows_Desktop
             {
                 case Key.Escape:
                     DroneController.Emergency();
+                    break;
+                case Key.G:
+                    DroneController.Blink();
                     break;
                 case Key.W:
                     DroneController.Pitch = -.5f;

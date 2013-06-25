@@ -6,7 +6,7 @@ namespace AR_Drone_Controller.NavData
     using System.IO;
     using System.ComponentModel;
 
-    public class DemoOption 
+    public class DemoOption
     {
         public enum States : uint
         {
@@ -52,6 +52,16 @@ namespace AR_Drone_Controller.NavData
 
         public float Psi { get; internal set; }
 
+        public float Heading
+        {
+            get
+            {
+                float heading = Psi - 90f;
+                heading = NormalizeDegrees(heading);
+                return heading;
+            }
+        }
+
         public int Altitude { get; set; }
 
         public float Vx { get; internal set; }
@@ -73,9 +83,9 @@ namespace AR_Drone_Controller.NavData
             {
                 State = (States)reader.ReadUInt32(),
                 BatteryPercentage = reader.ReadUInt32(),
-                Theta = reader.ReadSingle(),
-                Phi = reader.ReadSingle(),
-                Psi = reader.ReadSingle(),
+                Theta = reader.ReadSingle() / 1000f,
+                Phi = reader.ReadSingle() / 1000f,
+                Psi = reader.ReadSingle() / 1000f,
                 Altitude = reader.ReadInt32(),
                 Vx = reader.ReadSingle(),
                 Vy = reader.ReadSingle(),
@@ -91,6 +101,17 @@ namespace AR_Drone_Controller.NavData
             return result;
         }
 
+        private static float NormalizeDegrees(float degrees)
+        {
+            degrees %= 360;
+            if (degrees < 0)
+            {
+                degrees += 360;
+            }
+
+            return degrees;
+        }
+
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
             if (PropertyChanged != null)
@@ -99,12 +120,11 @@ namespace AR_Drone_Controller.NavData
             }
         }
 
-
         private static void Validate(ushort size)
         {
             // TODO: validate the size
         }
 
-        
+
     }
 }

@@ -18,9 +18,7 @@ namespace AR_Drone_Controller
         private readonly Queue<string> _commands = new Queue<string>();
         private readonly object _syncLock = new object();
         private DateTime _timeSinceLastSend;
-
-        public string LocalIpAddress { get; set; }
-
+        
         public string RemoteIpAddress { get; set; }
 
         public ISocketFactory SocketFactory { get; set; }
@@ -89,8 +87,8 @@ namespace AR_Drone_Controller
 
         private void CreateSocket()
         {
-            _cmdSocket = SocketFactory.GetUdpSocket(LocalIpAddress, CommandPort, RemoteIpAddress, CommandPort,
-                                                        TimeoutValue);
+            _cmdSocket = SocketFactory.GetUdpSocket(CommandPort, RemoteIpAddress, CommandPort,
+                                                    TimeoutValue);
         }
 
         public void SendFtrimCommand()
@@ -126,6 +124,39 @@ namespace AR_Drone_Controller
         public void SendRefCommand(RefCommands command)
         {
             EnqueCommand("REF", ((int)command).ToString());
+        }
+
+        public enum LedAnimation
+        {
+            BlinkGreenRed = 0,
+            BlinkGreen = 1,
+            BlinkRed = 2,
+            BlinkOrange = 3,
+            SnakeGreenRed = 4,
+            Fire = 5,
+            Standard = 6,
+            Red = 7,
+            Green = 8,
+            RedSnake = 9,
+            Blank = 10,
+            RightMissile = 11,
+            LeftMissile = 12,
+            DoubleMissile = 13,
+            FrontLeftGreenOthersRed = 14,
+            FrontRightGreenOthersRed = 15,
+            RearRightGreenOthersRed = 16,
+            RearLeftGreenOthersRed = 17,
+            LeftGreenRightRed = 18,
+            LeftRedRightGreen = 19,
+            BlinkStandard = 20
+        }
+
+        public void SendLedCommand(LedAnimation command, float frequencyInHz, int durationInSeconds)
+        {
+            int frequency = ConvertFloatToInt32(frequencyInHz);
+            string message = string.Format("{0},{1},{2}", (int) command, frequency,
+                                           durationInSeconds);
+            EnqueCommand("LED", message);
         }
 
         public void SendAck()

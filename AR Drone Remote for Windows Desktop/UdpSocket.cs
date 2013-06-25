@@ -12,9 +12,9 @@ namespace AR_Drone_Remote_for_Windows_Desktop
         private readonly UdpClient _socket;
         private IPEndPoint _remoteEndpoint;
 
-        public UdpSocket(string localIp, int localPort, string remoteIp, int remotePort, int timeout)
+        public UdpSocket(int localPort, string remoteIp, int remotePort, int timeout)
         {
-            var endpoint = new IPEndPoint(IPAddress.Parse(localIp), localPort);
+            var endpoint = new IPEndPoint(IPAddress.Any, localPort);
             _socket = new UdpClient(endpoint) { Client = { ReceiveTimeout = timeout, SendTimeout = timeout } };
             _remoteEndpoint = new IPEndPoint(IPAddress.Parse(remoteIp), remotePort);
         }

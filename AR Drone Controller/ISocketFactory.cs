@@ -4,6 +4,6 @@
     {
         ITcpSocket GetTcpSocket(string ipAddress, int port);
 
-        IUdpSocket GetUdpSocket(string localIp, int localPort, string remoteIp, int remotePort, int timeout);
+        IUdpSocket GetUdpSocket(int localPort, string remoteIp, int remotePort, int timeout);
     }
 }

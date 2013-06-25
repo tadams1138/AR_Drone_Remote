@@ -39,43 +39,37 @@
         }
 
         [Flags]
-        internal enum ARDRONE_STATE_MASK
+        internal enum ArdroneStateMask
         {
-            ARDRONE_FLY_MASK = 1 << 0, // FLY MASK                  : (0) Ardrone is landed, (1) Ardrone is flying
-            ARDRONE_VIDEO_MASK = 1 << 1, // VIDEO MASK                : (0) Video disable, (1) Video enable
-            ARDRONE_VISION_MASK = 1 << 2, // VISION MASK               : (0) Vision disable, (1) Vision enable
-            ARDRONE_CONTROL_MASK = 1 << 3,
-            // CONTROL ALGO              : (0) Euler angles control, (1) Angular speed control
-            ARDRONE_ALTITUDE_MASK = 1 << 4,
-            // ALTITUDE CONTROL ALGO     : (0) Altitude control inactive (1) Altitude control active
-            ARDRONE_USER_FEEDBACK_START = 1 << 5, // USER feedback             :     Start button state 
-            ARDRONE_COMMAND_MASK = 1 << 6, // Control command ACK       : (0) None, (1) One received
-//  ARDRONE_FW_FILE_MASK        = 1 <<  7, //                           : (1) Firmware file is good
-//  ARDRONE_FW_VER_MASK         = 1 <<  8, //                           : (1) Firmware update is newer
-//  ARDRONE_FW_UPD_MASK         = 1 <<  9, //                           : (1) Firmware update is ongoing
-            ARDRONE_NAVDATA_DEMO_MASK = 1 << 10, // Navdata demo              : (0) All navdata, (1) Only navdata demo
-            ARDRONE_NAVDATA_BOOTSTRAP = 1 << 11,
-            // Navdata bootstrap         : (0) Options sent in all or demo mode, (1) No navdata options sent
-            ARDRONE_MOTORS_MASK = 1 << 12, // Motors status             : (0) Ok, (1) Motors problem
-            ARDRONE_COM_LOST_MASK = 1 << 13, // Communication Lost        : (1) Com problem, (0) Com is ok
-            ARDRONE_VBAT_LOW = 1 << 15, // VBat low                  : (1) Too low, (0) Ok
-            ARDRONE_USER_EL = 1 << 16, // User Emergency Landing    : (1) User EL is ON, (0) User EL is OFF
-            ARDRONE_TIMER_ELAPSED = 1 << 17, // Timer elapsed             : (1) Elapsed, (0) Not elapsed
-            ARDRONE_ANGLES_OUT_OF_RANGE = 1 << 19, // Angles                    : (0) Ok, (1) Out of range
-            ARDRONE_ULTRASOUND_MASK = 1 << 21, // Ultrasonic sensor         : (0) Ok, (1) Deaf
-            ARDRONE_CUTOUT_MASK = 1 << 22, // Cutout system detection   : (0) Not detected, (1) Detected
-            ARDRONE_PIC_VERSION_MASK = 1 << 23,
-            // PIC Version number OK     : (0) A bad version number, (1) Version number is OK */
-            ARDRONE_ATCODEC_THREAD_ON = 1 << 24, // ATCodec thread ON         : (0) Thread OFF (1) thread ON
-            ARDRONE_NAVDATA_THREAD_ON = 1 << 25, // Navdata thread ON         : (0) Thread OFF (1) thread ON
-            ARDRONE_VIDEO_THREAD_ON = 1 << 26, // Video thread ON           : (0) Thread OFF (1) thread ON
-            ARDRONE_ACQ_THREAD_ON = 1 << 27, // Acquisition thread ON     : (0) Thread OFF (1) thread ON
-            ARDRONE_CTRL_WATCHDOG_MASK = 1 << 28,
-            // CTRL watchdog             : (1) Delay in control execution (> 5ms), (0) Control is well scheduled
-            ARDRONE_ADC_WATCHDOG_MASK = 1 << 29,
-            // ADC Watchdog              : (1) Delay in uart2 dsr (> 5ms), (0) Uart2 is good
-            ARDRONE_COM_WATCHDOG_MASK = 1 << 30, // Communication Watchdog    : (1) Com problem, (0) Com is ok
-            ARDRONE_EMERGENCY_MASK = 1 << 31 // Emergency landing         : (0) No emergency, (1) Emergency
+            Flying = 1 << 0,
+            VideoEnabled = 1 << 1, 
+            VisionEnabled = 1 << 2, 
+            ControlMask = 1 << 3, // CONTROL ALGO              : (0) Euler angles control, (1) Angular speed control
+            AltitudeControl = 1 << 4, // ALTITUDE CONTROL ALGO     : (0) Altitude control inactive (1) Altitude control active
+            UserFeedbackStart = 1 << 5, // USER feedback             :     Start button state 
+            CommandMask = 1 << 6, // Control command ACK       : (0) None, (1) One received
+            //  ARDRONE_FW_FILE_MASK        = 1 <<  7, //                           : (1) Firmware file is good
+            //  ARDRONE_FW_VER_MASK         = 1 <<  8, //                           : (1) Firmware update is newer
+            //  ARDRONE_FW_UPD_MASK         = 1 <<  9, //                           : (1) Firmware update is ongoing
+            DemoDataOnly = 1 << 10, // Navdata demo              : (0) All navdata, (1) Only navdata demo
+            NavdataBootstrap = 1 << 11, // Navdata bootstrap         : (0) Options sent in all or demo mode, (1) No navdata options sent
+            MotorProblem = 1 << 12, 
+            CommLost = 1 << 13, 
+            BatteryTooLow = 1 << 15, 
+            EmergencyLanding = 1 << 16, // User Emergency Landing    : (1) User EL is ON, (0) User EL is OFF
+            TimerElapsed = 1 << 17, 
+            AnglesOutOfRange = 1 << 19, 
+            UltrasoundDeaf = 1 << 21,
+            CutoutDetected = 1 << 22,
+            PicVersionNumberOk = 1 << 23, 
+            AtCodecThreadOn = 1 << 24, 
+            NavDataThreadOn = 1 << 25, 
+            VideoThreadOn = 1 << 26, 
+            AcquisitionThreadOn = 1 << 27, 
+            ControlWatchdog = 1 << 28, // CTRL watchdog             : (1) Delay in control execution (> 5ms), (0) Control is well scheduled
+            AdcWatchdog = 1 << 29, // ADC Watchdog              : (1) Delay in uart2 dsr (> 5ms), (0) Uart2 is good
+            CommWatchdog = 1 << 30, // Communication Watchdog    : (1) Com problem, (0) Com is ok
+            Emergency = 1 << 31 // Emergency landing         : (0) No emergency, (1) Emergency
         }
 
         private const uint Header = 1432778632;
@@ -87,14 +81,67 @@
         private uint _sequence;
         private uint _vision;
 
-        public bool CommunicationWatchDogState
+        private bool IsStateBitOne(ArdroneStateMask bitmask)
         {
-            get { return (_state & (int)ARDRONE_STATE_MASK.ARDRONE_COM_WATCHDOG_MASK) > 0; }
+            return (_state & (int)bitmask) > 0;
         }
 
-        public bool FlyingState { get { return (_state & (int)ARDRONE_STATE_MASK.ARDRONE_FLY_MASK) > 0; } }
+        public bool ArdroneAcqThreadState
+        {
+            get { return IsStateBitOne(ArdroneStateMask.AcquisitionThreadOn); }
+        }
+        
+        public bool AdcWatchdog { get { return IsStateBitOne(ArdroneStateMask.AdcWatchdog); } }
 
-        public DemoOption Demo { get; internal set; }
+        public bool AltitudeControl { get { return IsStateBitOne(ArdroneStateMask.AltitudeControl); } }
+
+        public bool AnglesOutOfRange { get { return IsStateBitOne(ArdroneStateMask.AnglesOutOfRange); } }
+
+        public bool AtCodecThreadOn { get { return IsStateBitOne(ArdroneStateMask.AtCodecThreadOn); } }
+
+        public bool CommLost { get { return IsStateBitOne(ArdroneStateMask.CommLost); } }
+
+        public bool CommWatchDog { get { return IsStateBitOne(ArdroneStateMask.CommWatchdog); } }
+
+        public bool CommandState { get { return IsStateBitOne(ArdroneStateMask.CommandMask); } }
+
+        public bool ControlState { get { return IsStateBitOne(ArdroneStateMask.ControlMask); } }
+
+        public bool ControlWatchdog { get { return IsStateBitOne(ArdroneStateMask.ControlWatchdog); } }
+
+        public bool CutoutDetected { get { return IsStateBitOne(ArdroneStateMask.CutoutDetected); } }
+
+        public bool Emergency { get { return IsStateBitOne(ArdroneStateMask.Emergency); } }
+
+        public bool Flying { get { return IsStateBitOne(ArdroneStateMask.Flying); } }
+
+        public bool MotorsProblem { get { return IsStateBitOne(ArdroneStateMask.MotorProblem); } }
+
+        public bool NavdataBootstrap { get { return IsStateBitOne(ArdroneStateMask.NavdataBootstrap); } }
+
+        public bool DemoDataOnly { get { return IsStateBitOne(ArdroneStateMask.DemoDataOnly); } }
+
+        public bool NavDataThreadOn { get { return IsStateBitOne(ArdroneStateMask.NavDataThreadOn); } }
+
+        public bool PicVersionNumberOk { get { return IsStateBitOne(ArdroneStateMask.PicVersionNumberOk); } }
+
+        public bool TimerElapsed { get { return IsStateBitOne(ArdroneStateMask.TimerElapsed); } }
+
+        public bool UltrasoundDeaf { get { return IsStateBitOne(ArdroneStateMask.UltrasoundDeaf); } }
+
+        public bool UserEmergencyLanding { get { return IsStateBitOne(ArdroneStateMask.EmergencyLanding); } }
+
+        public bool UserFeedbackStart { get { return IsStateBitOne(ArdroneStateMask.UserFeedbackStart); } }
+
+        public bool VisionEnabled { get { return IsStateBitOne(ArdroneStateMask.VisionEnabled); } }
+        
+        public bool BatteryTooLow { get { return IsStateBitOne(ArdroneStateMask.BatteryTooLow); } }
+
+        public bool VideoEnabled { get { return IsStateBitOne(ArdroneStateMask.VideoEnabled); } }
+
+        public bool VideoThreadOn { get { return IsStateBitOne(ArdroneStateMask.VideoThreadOn); } }
+
+        public DemoOption Demo { get; set; }
 
         internal uint CheckSum { get; set; }
 

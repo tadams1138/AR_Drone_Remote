@@ -40,6 +40,7 @@
     <Compile Include="Common\Matrix33.cs" />
     <Compile Include="Common\Vector.cs" />
     <Compile Include="DroneController.cs" />
+    <Compile Include="IDispatcher.cs" />
     <Compile Include="ITcpSocket.cs" />
     <Compile Include="ISocketFactory.cs" />
     <Compile Include="IUdpSocket.cs" />

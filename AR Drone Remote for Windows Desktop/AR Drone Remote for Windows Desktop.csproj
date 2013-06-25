@@ -60,6 +60,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DispatcherWrapper.cs" />
     <Compile Include="TcpSocket.cs" />
     <Compile Include="SocketFactory.cs" />
     <Compile Include="UdpSocket.cs" />

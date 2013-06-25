@@ -31,7 +31,7 @@ namespace AR_Drone_Controller
         public NavData.NavData NavData
         {
             get { return _navData; }
-            private set
+             set
             {
                 _navData = value;
                 NotifyPropertyChanged();
@@ -45,7 +45,7 @@ namespace AR_Drone_Controller
         {
             if (PropertyChanged != null)
             {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                Dispatcher.BeginInvoke(() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));
             }
         }
 
@@ -54,15 +54,12 @@ namespace AR_Drone_Controller
             const string ardroneSessionId = "d2e081a3";     // SessionID
             const string ardroneProfileId = "be27e2e4";    // Profile ID
             const string ardroneApplicationId = "d87f7e0c";      // Application ID
-
-            const string localIp = "192.168.1.2";
-
+            
             _controlSocket = SocketFactory.GetTcpSocket(IpAddress, ControlPort);
             if (_controlSocket.Connected)
             {
                 _commandWorker = new CommandWorker
                 {
-                    LocalIpAddress = localIp,
                     RemoteIpAddress = IpAddress,
                     SocketFactory = SocketFactory,
                     ApplocationId = ardroneApplicationId,
@@ -91,7 +88,6 @@ namespace AR_Drone_Controller
 
                 _navDataWorker = new NavDataWorker
                     {
-                        LocalIpAddress = localIp,
                         RemoteIpAddress = IpAddress,
                         SocketFactory = SocketFactory
                     };
@@ -109,11 +105,11 @@ namespace AR_Drone_Controller
             {
                 do
                 {
-                    if (_navData.CommunicationWatchDogState)
+                    if (_navData.CommWatchDog)
                     {
                         _commandWorker.SendResetWatchDogCommand();
                     }
-                    else if (_navData.FlyingState)
+                    else if (_navData.Flying)
                     {
                         _commandWorker.SendProgressiveCommand(Pitch, Roll, Gaz, Yaw);
                     }
@@ -159,5 +155,12 @@ namespace AR_Drone_Controller
         {
             _commandWorker.SendRefCommand(CommandWorker.RefCommands.Emergency);
         }
+
+        public void Blink()
+        {
+            _commandWorker.SendLedCommand(CommandWorker.LedAnimation.BlinkRed, 0.5f, 5);
+        }
+
+        public IDispatcher Dispatcher { get; set; }
     }
 }

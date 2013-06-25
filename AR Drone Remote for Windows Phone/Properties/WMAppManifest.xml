@@ -1,38 +1,45 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-
 <Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
-  <DefaultLanguage xmlns="" code="en-US"/>
-  <App xmlns="" ProductID="{a654e9a7-7bbb-4b09-964d-3b8c8a0c5602}" Title="AR_Drone_Remote_for_Windows_Phone" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal"  Author="AR_Drone_Remote_for_Windows_Phone author" Description="Sample description" Publisher="AR_Drone_Remote_for_Windows_Phone" PublisherID="{dadd2b7a-f660-4438-8390-27093cde0cdc}">
-    <IconPath IsRelative="true" IsResource="false">Assets\ApplicationIcon.png</IconPath>
+  <DefaultLanguage xmlns="" code="en-US" />
+  <Languages xmlns="">
+    <Language code="en-US" />
+  </Languages>
+  <App xmlns="" ProductID="{a654e9a7-7bbb-4b09-964d-3b8c8a0c5602}" Title="AR Drone Remote" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="Thomas Adams" Description="Remote Control for Parrot Brand AR Drone" Publisher="Thomas Adams" PublisherID="{dadd2b7a-f660-4438-8390-27093cde0cdc}">
+    <IconPath IsRelative="true" IsResource="false">Assets\AppIcon.png</IconPath>
     <Capabilities>
-      <Capability Name="ID_CAP_NETWORKING"/>
-      <Capability Name="ID_CAP_MEDIALIB_AUDIO"/>
-      <Capability Name="ID_CAP_MEDIALIB_PLAYBACK"/>
-      <Capability Name="ID_CAP_SENSORS"/>
-      <Capability Name="ID_CAP_WEBBROWSERCOMPONENT"/>
+      <Capability Name="ID_CAP_NETWORKING" />
+      <Capability Name="ID_CAP_SENSORS" />
     </Capabilities>
     <Tasks>
-      <DefaultTask  Name ="_default" NavigationPage="MainPage.xaml"/>
+      <DefaultTask Name="_default" NavigationPage="MainPage.xaml" />
     </Tasks>
     <Tokens>
       <PrimaryToken TokenID="AR_Drone_Remote_for_Windows_PhoneToken" TaskName="_default">
-        <TemplateFlip>
-          <SmallImageURI IsRelative="true" IsResource="false">Assets\Tiles\FlipCycleTileSmall.png</SmallImageURI>
+        <TemplateIconic>
+          <SmallImageURI IsRelative="true" IsResource="false">Assets\AppTileSmall.png</SmallImageURI>
           <Count>0</Count>
-          <BackgroundImageURI IsRelative="true" IsResource="false">Assets\Tiles\FlipCycleTileMedium.png</BackgroundImageURI>
-          <Title>AR_Drone_Remote_for_Windows_Phone</Title>
-          <BackContent></BackContent>
-          <BackBackgroundImageURI></BackBackgroundImageURI>
-          <BackTitle></BackTitle>
-          <DeviceLockImageURI></DeviceLockImageURI>
-          <HasLarge></HasLarge>
-        </TemplateFlip>
+          <IconImageURI IsRelative="true" IsResource="false">Assets\AppTileMedium.png</IconImageURI>
+          <Title>AR Drone Remote</Title>
+          <Message>
+          </Message>
+          <BackgroundColor>
+          </BackgroundColor>
+          <HasLarge>false</HasLarge>
+          <LargeContent1>
+          </LargeContent1>
+          <LargeContent2>
+          </LargeContent2>
+          <LargeContent3>
+          </LargeContent3>
+          <DeviceLockImageURI IsRelative="true" IsResource="false">
+          </DeviceLockImageURI>
+        </TemplateIconic>
       </PrimaryToken>
     </Tokens>
     <ScreenResolutions>
-      <ScreenResolution Name="ID_RESOLUTION_WVGA"/>
-      <ScreenResolution Name="ID_RESOLUTION_WXGA"/>
-      <ScreenResolution Name="ID_RESOLUTION_HD720P"/>
+      <ScreenResolution Name="ID_RESOLUTION_WXGA" />
+      <ScreenResolution Name="ID_RESOLUTION_HD720P" />
+      <ScreenResolution Name="ID_RESOLUTION_WVGA" />
     </ScreenResolutions>
   </App>
 </Deployment>

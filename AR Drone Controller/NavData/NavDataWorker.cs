@@ -11,7 +11,6 @@
         private IUdpSocket _navDataSocket;
         private bool _run;
 
-        public string LocalIpAddress { get; set; }
         public string RemoteIpAddress { get; set; }
         public ISocketFactory SocketFactory { get; set; }
 
@@ -76,7 +75,7 @@
 
         private void CreateSocket()
         {
-            _navDataSocket = SocketFactory.GetUdpSocket(LocalIpAddress, NavDataPort, RemoteIpAddress, NavDataPort,
+            _navDataSocket = SocketFactory.GetUdpSocket(NavDataPort, RemoteIpAddress, NavDataPort,
                                                         TimeoutValue);
         }
 

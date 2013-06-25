@@ -1,4 +1,5 @@
-﻿<phone:PhoneApplicationPage
+﻿<phone:PhoneApplicationPage 
+    xmlns:Controls="clr-namespace:Telerik.Windows.Controls;assembly=Telerik.Windows.Controls.DataVisualization" 
     x:Class="AR_Drone_Remote_for_Windows_Phone.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -6,19 +7,25 @@
     xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
+                            xmlns:local="clr-namespace:AR_Drone_Remote_for_Windows_Phone"
+                            mc:Ignorable="d"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
-    SupportedOrientations="Portrait" Orientation="Portrait"
+    SupportedOrientations="Landscape"  Orientation="Landscape"
     shell:SystemTray.IsVisible="True"
-    DataContext="{Binding RelativeSource={RelativeSource Self}}">
+    DataContext="{Binding RelativeSource={RelativeSource Self}}"
+    OrientationChanged="MainPage_OnOrientationChanged">
 
+    <Control.Resources>
+        <RotateTransform x:Key="RotateTransform180" Angle="45"/>
+    </Control.Resources>
     <!--LayoutRoot is the root grid where all page content is placed-->
-    <Grid x:Name="LayoutRoot" Background="Transparent">
+    <Grid x:Name="LayoutRoot" Background="Transparent" RenderTransformOrigin="0.5,0.5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="200"/>
         </Grid.RowDefinitions>
 
         <!-- LOCALIZATION NOTE:
@@ -42,35 +49,131 @@
 
         <!--TitlePanel contains the name of the application and page title-->
         <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="12,17,0,28">
-            <TextBlock Text="MY APPLICATION" Style="{StaticResource PhoneTextNormalStyle}" Margin="12,0"/>
-            <TextBlock Text="page name" Margin="9,-7,0,0" Style="{StaticResource PhoneTextTitle1Style}"/>
+            <TextBlock Text="{StaticResource AppName}" Style="{StaticResource PhoneTextNormalStyle}" Margin="12,0"/>
         </StackPanel>
 
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
-           <StackPanel>
-            <Button Click="Connect_OnClick" Content="Connect"/>
-            <Button Click="TakeOff_Click" Content="Take Off"/>
-            <Button Click="Land_Click" Content="Land"/>
-            <TextBlock Text="Battery"/>
-            <TextBlock Text="{Binding DroneController.NavData.Demo.BatteryPercentage}"/>
-            <TextBlock Text="Altitude"/>
-            <TextBlock Text="{Binding DroneController.NavData.Demo.Altitude}"/>
-            <TextBlock Text="Phi"/>
-            <TextBlock Text="{Binding DroneController.NavData.Demo.Phi}"/>
-            <TextBlock Text="Psi"/>
-            <TextBlock Text="{Binding DroneController.NavData.Demo.Psi}"/>
-            <TextBlock Text="Theta"/>
-            <TextBlock Text="{Binding DroneController.NavData.Demo.Theta}"/>
-            <TextBlock Text="Vx"/>
-            <TextBlock Text="{Binding DroneController.NavData.Demo.Vx}"/>
-            <TextBlock Text="Vy"/>
-            <TextBlock Text="{Binding DroneController.NavData.Demo.Vy}"/>
-            <TextBlock Text="Vz"/>
-            <TextBlock Text="{Binding DroneController.NavData.Demo.Vz}"/>
-            </StackPanel>
+            <ScrollViewer>
+                <StackPanel>
+                    <Button Click="Connect_OnClick" Content="Connect"/>
+                    <Button Click="TakeOff_Click" Content="Take Off"/>
+                    <Button Click="Land_Click" Content="Land"/>
+                    <Button Click="Emergency_Click" Content="Emergency"/>
+                    <Button Click="Blink_Click" Content="Blink"/>
+                    <TextBlock Text="Battery"/>
+                    <TextBlock Text="{Binding DroneController.NavData.Demo.BatteryPercentage}"/>
+                    <TextBlock Text="Altitude"/>
+                    <TextBlock Text="{Binding DroneController.NavData.Demo.Altitude}"/>
+                    <TextBlock Text="Phi"/>
+                    <TextBlock Text="{Binding DroneController.NavData.Demo.Phi}"/>
+                    <TextBlock Text="Psi"/>
+                    <TextBlock Text="{Binding DroneController.NavData.Demo.Psi}"/>
+                    <TextBlock Text="Theta"/>
+                    <TextBlock Text="{Binding DroneController.NavData.Demo.Theta}"/>
+                    <TextBlock Text="Vx"/>
+                    <TextBlock Text="{Binding DroneController.NavData.Demo.Vx}"/>
+                    <TextBlock Text="Vy"/>
+                    <TextBlock Text="{Binding DroneController.NavData.Demo.Vy}"/>
+                    <TextBlock Text="Vz"/>
+                    <TextBlock Text="{Binding DroneController.NavData.Demo.Vz}"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+        <Grid  Grid.Row="2">
+            <StackPanel Orientation="Horizontal">
+                <local:AttitudeIndicator Height="200" Width="200" Phi="{Binding DroneController.NavData.Demo.Phi}"
+                                         Theta="{Binding DroneController.NavData.Demo.Theta}"/>
+                <Controls:RadGauge Height="200" Width="200">
+                    <Grid RenderTransformOrigin="0.5,0.5">
+                        <Grid.Resources>
+                            <local:AngleRotator x:Key="CounterClockwiseAngleConverter" Offset="-90"  />
+                            <local:AngleRotator x:Key="CompassAngleConverter" InvertDegrees="True" />
+                            <local:AngleRotator x:Key="ControllerAngleConverter" Offset="90"  />
+                            <local:DegreeToCompassHeadingConverter x:Key="DegreeToCompassHeadingConverter"/>
+                            <SolidColorBrush Color="Red" x:Key="DroneColor"/>
+                            <SolidColorBrush Color="Green" x:Key="ControllerColor"/>
+                        </Grid.Resources>
+                        <Grid>
+                            <Controls:RadialGaugeRange LabelRadiusScale=".88" LabelStep="20" MaxValue="359" MaxAngle="359" MinAngle="0" MajorTickStep="2" TickRadiusScale="0.7" TickStep="5" IndicatorRadiusScale="1">
+                                <Controls:RadialGaugeRange.LabelTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Foreground="#FF555555" FontWeight="Bold" FontSize="15" RenderTransformOrigin="0.5,0.5" Text="{Binding}">
+                                            <TextBlock.RenderTransform>
+                                                <TransformGroup>
+                                                    <RotateTransform Angle="{Binding Converter={StaticResource CounterClockwiseAngleConverter}}" />
+                                                </TransformGroup>
+                                            </TextBlock.RenderTransform>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </Controls:RadialGaugeRange.LabelTemplate>
+                                <Controls:RadialGaugeRange.MajorTickTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Rectangle Fill="Gray" Height="2" Width="12">
+                                                <Rectangle.RenderTransform>
+                                                    <TranslateTransform X="-2" Y="0"/>
+                                                </Rectangle.RenderTransform>
+                                            </Rectangle>
+                                        </Grid>
+                                    </DataTemplate>
+                                </Controls:RadialGaugeRange.MajorTickTemplate>
+                                <Controls:RadialGaugeRange.TickTemplate>
+                                    <DataTemplate>
+                                        <Rectangle Fill="Gray" Height="2" Width="8"/>
+                                    </DataTemplate>
+                                </Controls:RadialGaugeRange.TickTemplate>
+                                <Controls:MarkerGaugeIndicator x:Name="ControllerIndicator" Value="{Binding ControllerDirection.CurrentValue.TrueHeading, Converter={StaticResource ControllerAngleConverter}}" Controls:RadialGaugeRange.MinAngle="0" Controls:RadialGaugeRange.MaxAngle="359">
+                                    <Controls:MarkerGaugeIndicator.MarkerTemplate>
+                                        <DataTemplate>
+                                            <Path Data="M0,-7 L10,0 L0,7 L0,-7" Fill="{StaticResource ControllerColor}" Stroke="{StaticResource PhoneForegroundBrush}"/>
+                                        </DataTemplate>
+                                    </Controls:MarkerGaugeIndicator.MarkerTemplate>
+                                </Controls:MarkerGaugeIndicator>
+                                <Controls:MarkerGaugeIndicator x:Name="DroneIndicator" Value="{Binding DroneController.NavData.Demo.Heading}" Controls:RadialGaugeRange.MinAngle="0" Controls:RadialGaugeRange.MaxAngle="359">
+                                    <Controls:MarkerGaugeIndicator.MarkerTemplate>
+                                        <DataTemplate>
+                                            <Path Data="M0,7 L-10,0 L0,-7 L0,7" Fill="{StaticResource DroneColor}" Stroke="{StaticResource PhoneForegroundBrush}"/>
+                                        </DataTemplate>
+                                    </Controls:MarkerGaugeIndicator.MarkerTemplate>
+                                </Controls:MarkerGaugeIndicator>
+                            </Controls:RadialGaugeRange>
+                            <Controls:RadialGaugeRange LabelRadiusScale="0.41" LabelStep="0" MaxValue="359" MaxAngle="359" MinAngle="0" MajorTickStep="2" TickRadiusScale="0.1" TickStep="45">
+                                <Controls:RadialGaugeRange.TickTemplate>
+                                    <DataTemplate>
+                                        <StackPanel RenderTransformOrigin="0.5, 0.5" Height="70">
+                                            <TextBlock Foreground="#FF555555" FontWeight="Bold" FontSize="15" Text="{Binding Converter={StaticResource DegreeToCompassHeadingConverter}}" />
+                                            <Rectangle Fill="Gray" Height="20" Width="2" />
+                                            <StackPanel.RenderTransform>
+                                                <RotateTransform Angle="-90"/>
+                                            </StackPanel.RenderTransform>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </Controls:RadialGaugeRange.TickTemplate>
+                                <Controls:RadialGaugeRange.MajorTickTemplate>
+                                    <DataTemplate>
+                                        <StackPanel RenderTransformOrigin="0.5, 0.5" Height="110">
+                                            <TextBlock Text="{Binding Converter={StaticResource DegreeToCompassHeadingConverter}}" />
+                                            <Rectangle Fill="Gray" Height="40" Width="2" />
+                                            <StackPanel.RenderTransform>
+                                                <RotateTransform Angle="-90"/>
+                                            </StackPanel.RenderTransform>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </Controls:RadialGaugeRange.MajorTickTemplate>
+                            </Controls:RadialGaugeRange>
+                        </Grid>
+                        <Grid.RenderTransform>
+                            <RotateTransform Angle="{Binding ControllerDirection.CurrentValue.TrueHeading, Converter={StaticResource CompassAngleConverter}}"/>
+                        </Grid.RenderTransform>
+                    </Grid>
+                </Controls:RadGauge>
+            </StackPanel>          
         </Grid>
 
+        <Grid.RenderTransform>
+            <RotateTransform/>
+        </Grid.RenderTransform>
         <!--Uncomment to see an alignment grid to help ensure your controls are
             aligned on common boundaries.  The image has a top margin of -32px to
             account for the System Tray. Set this to 0 (or remove the margin altogether)
@@ -78,6 +181,29 @@
 
             Before shipping remove this XAML and the image itself.-->
         <!--<Image Source="/Assets/AlignmentGrid.png" VerticalAlignment="Top" Height="800" Width="480" Margin="0,-32,0,0" Grid.Row="0" Grid.RowSpan="2" IsHitTestVisible="False" />-->
-    </Grid>
 
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="OrientationStates">
+                <VisualState x:Name="Landscape"/>
+                <VisualState x:Name="LandscapeLeft">
+                    <Storyboard>
+                        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                            <DiscreteDoubleKeyFrame KeyTime="0" Value="0"/>
+                        </DoubleAnimationUsingKeyFrames>
+                    </Storyboard>
+                </VisualState>
+                <VisualState x:Name="LandscapeRight">
+                    <Storyboard>
+                        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                            <DiscreteDoubleKeyFrame KeyTime="0" Value="180"/>
+                        </DoubleAnimationUsingKeyFrames>
+                    </Storyboard>
+                </VisualState>
+                <VisualState x:Name="Portrait"/>
+                <VisualState x:Name="PortraitUp"/>
+                <VisualState x:Name="PortraitDown"/>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+    </Grid>
 </phone:PhoneApplicationPage>
