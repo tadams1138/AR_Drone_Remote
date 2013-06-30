@@ -12,6 +12,8 @@ namespace AR_Drone_Remote_for_Windows_Phone
         private Compass _compass;
         private CompassReading _currentValue;
 
+        public event EventHandler<CompassReading> CurrentValueChanged;
+
         public BindableCompass()
         {
             _compass = new Compass();
@@ -33,16 +35,40 @@ namespace AR_Drone_Remote_for_Windows_Phone
         private void compass_CurrentValueChanged(object sender, SensorReadingEventArgs<CompassReading> e)
         {
             CurrentValue = e.SensorReading;
+            OnCurrentValueChanged(e);
+        }
+
+        private void OnCurrentValueChanged(SensorReadingEventArgs<CompassReading> e)
+        {
+            EventHandler<CompassReading> handler = CurrentValueChanged;
+            if (handler != null)
+            {
+                Dispatcher.BeginInvoke(() => handler(this, e.SensorReading));
+            }
         }
 
         public void Start()
         {
-            _compass.Start();
+            try
+            {
+                _compass.Start();
+            }
+            catch
+            {
+
+            }
         }
 
         public void Stop()
         {
-            _compass.Stop();
+            try
+            {
+                _compass.Stop();
+            }
+            catch
+            {
+
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -53,11 +79,7 @@ namespace AR_Drone_Remote_for_Windows_Phone
             PropertyChangedEventHandler handler = PropertyChanged;
             if (handler != null)
             {
-                Dispatcher.BeginInvoke(new Action(() =>
-                    {
-
-                        handler(this, new PropertyChangedEventArgs(propertyName));
-                    }));
+                Dispatcher.BeginInvoke(() => handler(this, new PropertyChangedEventArgs(propertyName)));
             }
         }
 

@@ -11,7 +11,6 @@
         {
             DroneController = new DroneController
                 {
-                    IpAddress = "192.168.1.1",
                     SocketFactory = new SocketFactory(),
                     Dispatcher = new DispatcherWrapper(Dispatcher)
                 };

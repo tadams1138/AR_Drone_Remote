@@ -5,6 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:AR_Drone_Remote_for_Windows_Phone"
              mc:Ignorable="d"
+             d:DesignHeight="200" d:DesignWidth="200"
     x:Name="This">
     <UserControl.Resources>
         <local:PitchTranslator x:Key="PitchTranslator" 
@@ -13,27 +14,28 @@
                                ActualWidth ="{Binding ElementName=This, Path=ActualWidth}" />
         <local:AngleRotator x:Key="PhiConverter" InvertDegrees="True"></local:AngleRotator>
     </UserControl.Resources>
-
-    <Grid x:Name="LayoutRoot">
-        <Grid.Resources>
-            <ImageBrush ImageSource="Horizon_GroundSky.bmp" x:Key="Horizon" Stretch="UniformToFill" >
-                <ImageBrush.Transform>
-                    <CompositeTransform TranslateY="{Binding Path=Theta, ElementName=This, Converter={StaticResource PitchTranslator}}" />
-                </ImageBrush.Transform>
-            </ImageBrush>
-        </Grid.Resources>
-        <Ellipse Fill="{StaticResource Horizon}" RenderTransformOrigin="0.5,0.5" >
-            <Ellipse.RenderTransform>
-                <RotateTransform Angle="{Binding Path=Phi, ElementName=This, Converter={StaticResource PhiConverter}}"/>
-            </Ellipse.RenderTransform>
-        </Ellipse>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="0.25*"/>
-                <ColumnDefinition Width="0.5*"/>
-                <ColumnDefinition Width="0.25*"/>
-            </Grid.ColumnDefinitions>
-            <Rectangle Height="4" Fill="Red" Grid.Column="1" VerticalAlignment="Center"/>
+    <Viewbox Stretch="Uniform">
+        <Grid x:Name="LayoutRoot" Width="200" Height="200">
+            <Grid.Resources>
+                <ImageBrush ImageSource="Assets\HorizonGroundSky.png" x:Key="Horizon" Stretch="UniformToFill" >
+                    <ImageBrush.Transform>
+                        <CompositeTransform TranslateY="{Binding Path=Theta, ElementName=This, Converter={StaticResource PitchTranslator}}" />
+                    </ImageBrush.Transform>
+                </ImageBrush>
+            </Grid.Resources>
+            <Ellipse Fill="{StaticResource Horizon}" RenderTransformOrigin="0.5,0.5" >
+                <Ellipse.RenderTransform>
+                    <RotateTransform Angle="{Binding Path=Phi, ElementName=This, Converter={StaticResource PhiConverter}}"/>
+                </Ellipse.RenderTransform>
+            </Ellipse>
+            <Grid Width="200" Height="200">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.25*"/>
+                    <ColumnDefinition Width="0.5*"/>
+                    <ColumnDefinition Width="0.25*"/>
+                </Grid.ColumnDefinitions>
+                <Rectangle Height="4" Fill="Red" Grid.Column="1" VerticalAlignment="Center"/>
+            </Grid>
         </Grid>
-    </Grid>
+    </Viewbox>
 </UserControl>

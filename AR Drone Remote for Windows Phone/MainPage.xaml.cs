@@ -1,36 +1,56 @@
-﻿using System;
-using AR_Drone_Controller;
+﻿using AR_Drone_Controller;
+using Microsoft.Devices.Sensors;
 using Microsoft.Phone.Controls;
+using Microsoft.Phone.Tasks;
+using System;
 using System.Windows;
+using Telerik.Windows.Controls;
 
 namespace AR_Drone_Remote_for_Windows_Phone
 {
-    public partial class MainPage : PhoneApplicationPage
+    public partial class MainPage
     {
-        private BindableCompass compass;
+        private readonly BindableCompass _compass;
+        private float gain = 1f;
 
         // Constructor
         public MainPage()
         {
             DroneController = new DroneController
             {
-                IpAddress = "192.168.1.1",
                 SocketFactory = new SocketFactory(),
                 Dispatcher = new DispatcherWrapper(Dispatcher)
             };
 
-            compass = new BindableCompass {Dispatcher = Dispatcher};
-            compass.Start();
-            
-            InitializeComponent();
+            _compass = new BindableCompass { Dispatcher = Dispatcher };
+            _compass.CurrentValueChanged += CompassOnCurrentValueChanged;
+            _compass.Start();
 
+            InitializeComponent();
+            
             // Sample code to localize the ApplicationBar
             //BuildLocalizedApplicationBar();
         }
 
+        private void CompassOnCurrentValueChanged(object sender, CompassReading compassReading)
+        {
+            DroneController.ControllerHeading = (float)compassReading.MagneticHeading;
+            DroneController.ControllerHeadingAccuracy = (float)compassReading.HeadingAccuracy;
+        }
+
+        private void RightJoystickOnYValueChanged(object sender, double d)
+        {
+            DroneController.Gaz = -(float)d * gain;
+        }
+
+        private void RightJoystickOnXValueChanged(object sender, double d)
+        {
+            DroneController.Yaw = (float)d * gain;
+        }
+
         public BindableCompass ControllerDirection
         {
-            get { return compass; }
+            get { return _compass; }
         }
 
         // Sample code for building a localized ApplicationBar
@@ -48,21 +68,24 @@ namespace AR_Drone_Remote_for_Windows_Phone
         //    ApplicationBarMenuItem appBarMenuItem = new ApplicationBarMenuItem(AppResources.AppBarMenuItemText);
         //    ApplicationBar.MenuItems.Add(appBarMenuItem);
         //}
-        public DroneController DroneController { get; set; }
-
-        private void Connect_OnClick(object sender, RoutedEventArgs e)
+        public DroneController DroneController
         {
-            DroneController.Connect();
+            get { return StaticDroneController; } 
+            set { StaticDroneController = value; }
         }
 
-        private void Land_Click(object sender, RoutedEventArgs e)
-        {
-            DroneController.Land();
-        }
+        public static DroneController StaticDroneController;
 
-        private void TakeOff_Click(object sender, RoutedEventArgs e)
+        private void LaunchLand_Click(object sender, RoutedEventArgs e)
         {
-            DroneController.TakeOff();
+            if (!DroneController.NavData.Flying)
+            {
+                DroneController.TakeOff();
+            }
+            else
+            {
+                DroneController.Land();
+            }
         }
 
         private void Emergency_Click(object sender, RoutedEventArgs e)
@@ -85,6 +108,81 @@ namespace AR_Drone_Remote_for_Windows_Phone
             {
                 // TODO: log this crap
             }
+        }
+
+        private void PrivacyClick(object sender, EventArgs e)
+        {
+            var webBrowserTask = new WebBrowserTask { Uri = new Uri("http://tadams1138.blogspot.com/p/ar-drone-remote-privacy-policy.html") };
+            webBrowserTask.Show();
+        }
+
+        private void RateAndReviewClick(object sender, EventArgs e)
+        {
+            var marketplaceReviewTask = new MarketplaceReviewTask();
+            marketplaceReviewTask.Show();
+        }
+
+        private void Connect_OnClick(object sender, EventArgs e)
+        {
+            if (DroneController.Connected)
+            {
+                DroneController.Disconnect();
+            }
+            else
+            {
+                try
+                {
+                    DroneController.Connect();
+                }
+                catch
+                {
+                    MessageBox.Show("Could not connect to AR Drone. Please verify you are connected to drone's WIFI.",
+                                    "Unable to connect.", MessageBoxButton.OK);
+                }
+            }
+        }
+
+        private void ShowOptions_OnClick(object sender, EventArgs e)
+        {
+            FlightControls.Visibility = Visibility.Collapsed;
+            Tools.Visibility = Visibility.Visible;
+        }
+
+        private void ShowControls_OnClick(object sender, EventArgs e)
+        {
+            FlightControls.Visibility = Visibility.Visible;
+            Tools.Visibility = Visibility.Collapsed;
+        }
+
+        private void Record_OnClick(object sender, EventArgs e)
+        {
+            // TODO
+        }
+
+        private void LockToCompass_OnCheckedChanged(object sender, CheckedChangedEventArgs e)
+        {
+            DroneController.AbsoluteControlMode = e.NewState;
+        }
+
+        private void LeftJoystickOnXValueChanged(object sender, double e)
+        {
+            DroneController.Roll = (float)e * gain;
+        }
+
+        private void LeftJoystickOnYValueChanged(object sender, double e)
+        {
+            DroneController.Pitch = (float)e * gain;
+        }
+
+        private void UsePhoneTilt_OnCheckedChanged(object sender, CheckedChangedEventArgs e)
+        {
+            LeftJoystick.Visibility = e.NewState ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void HelpClick(object sender, EventArgs e)
+        {
+            var webBrowserTask = new WebBrowserTask { Uri = new Uri("http://tadams1138.blogspot.com/p/ar-drone-remote_4115.html") };
+            webBrowserTask.Show();
         }
     }
 }

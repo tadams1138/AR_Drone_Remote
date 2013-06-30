@@ -37,7 +37,8 @@
 
         private void DoWork()
         {
-            CreateSocket();
+            NavData.ResetSequence();
+            CreateSocket(); 
             InitiateCommunication();
 
             do
@@ -47,7 +48,7 @@
                 {
                     bytesReceived = _navDataSocket.Receive();
                 }
-                catch (Exception)
+                catch
                 {
                     InitiateCommunication();
                 }

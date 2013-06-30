@@ -88,7 +88,7 @@ namespace AR_Drone_Remote_for_Windows_Phone
             private const string MessageFormat = "Time exceeded {0} milliseconds waiting to receive on port {1}.";
 
             public UdpSocketReceiveTimeoutException(int portNumber, int timeoutMilliseconds)
-                : base(string.Format(MessageFormat, portNumber, timeoutMilliseconds))
+                : base(string.Format(MessageFormat, timeoutMilliseconds, portNumber))
             {
             }
         }

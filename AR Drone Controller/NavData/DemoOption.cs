@@ -86,7 +86,7 @@ namespace AR_Drone_Controller.NavData
                 Theta = reader.ReadSingle() / 1000f,
                 Phi = reader.ReadSingle() / 1000f,
                 Psi = reader.ReadSingle() / 1000f,
-                Altitude = reader.ReadInt32(),
+                Altitude = reader.ReadInt32() / 1000,
                 Vx = reader.ReadSingle(),
                 Vy = reader.ReadSingle(),
                 Vz = reader.ReadSingle(),

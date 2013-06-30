@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,7 +19,7 @@ namespace AR_Drone_Controller
         private readonly Queue<string> _commands = new Queue<string>();
         private readonly object _syncLock = new object();
         private DateTime _timeSinceLastSend;
-        
+
         public string RemoteIpAddress { get; set; }
 
         public ISocketFactory SocketFactory { get; set; }
@@ -42,8 +43,11 @@ namespace AR_Drone_Controller
             _run = false;
         }
 
+        const int MaxCommandLength = 1024;
+
         private void DoWork()
         {
+            var message = new StringBuilder();
             CreateSocket();
 
             using (var manualResetEvent = new ManualResetEvent(false))
@@ -59,29 +63,30 @@ namespace AR_Drone_Controller
 
                     if (anyCommands)
                     {
-                        lock (_syncLock)
-                        {
-                            while (_commands.Any())
-                            {
-                                _cmdSocket.Write(_commands.Dequeue());
-                            }
-                        }
-
+                        AppendCommands(message);
+                        _cmdSocket.Write(message.ToString());
                         _timeSinceLastSend = DateTime.UtcNow;
                     }
-                    else
+                    else if ((DateTime.UtcNow - _timeSinceLastSend).Milliseconds > 200)
                     {
-                        if ((DateTime.UtcNow - _timeSinceLastSend).Seconds > 1)
-                        {
-                            SendAck();
-                        }
-                        else
-                        {
-                            // Sleep
-                            manualResetEvent.WaitOne(100);
-                        }
+                        SendAck();
                     }
+
+                    // Sleep
+                    manualResetEvent.WaitOne(30);
                 } while (_run);
+            }
+        }
+
+        private void AppendCommands(StringBuilder message)
+        {
+            message.Clear();
+            lock (_syncLock)
+            {
+                while (_commands.Any() && message.Length + _commands.Peek().Length <= MaxCommandLength)
+                {
+                    message.Append(_commands.Dequeue());
+                }
             }
         }
 
@@ -154,7 +159,7 @@ namespace AR_Drone_Controller
         public void SendLedCommand(LedAnimation command, float frequencyInHz, int durationInSeconds)
         {
             int frequency = ConvertFloatToInt32(frequencyInHz);
-            string message = string.Format("{0},{1},{2}", (int) command, frequency,
+            string message = string.Format("{0},{1},{2}", (int)command, frequency,
                                            durationInSeconds);
             EnqueCommand("LED", message);
         }
@@ -173,28 +178,86 @@ namespace AR_Drone_Controller
             }
         }
 
-        internal void SendProgressiveCommand(float pitch, float roll, float gaz, float yaw)
+        internal void SendProgressiveCommand(ProgressiveCommandArguments args)
         {
-            const float gain = 1f;
-            pitch *= gain;
-            roll *= gain;
-            gaz *= gain;
-            yaw *= gain;
+            EnqueCommand(args.GetCommand(), args.GetMessage());
+        }
 
-            int mode = (Math.Abs(pitch) < 0.1 && Math.Abs(roll) < 0.1) ? 0 : 1;
-            if (mode == 0)
+        public class ProgressiveCommandArguments
+        {
+            const float Threshold = 0.001f;
+
+            public float Pitch { get; set; }
+            public float Roll { get; set; }
+            public float Gaz { get; set; }
+            public float Yaw { get; set; }
+            public float MagnetoPsi { get; set; }
+            public float MagnetoPsiAccuracy { get; set; }
+            public bool AbsoluteControl { get; set; }
+            public bool CombineYaw { get; set; }
+
+            public string GetCommand()
             {
-                pitch = 0;
-                roll = 0;
+                return AbsoluteControl ? "PCMD_MAG" : "PCMD";
             }
 
-            int pitchAsInt = ConvertFloatToInt32(gain * pitch);
-            int rollAsInt = ConvertFloatToInt32(gain * roll);
-            int gazAsInt = ConvertFloatToInt32(gain * gaz);
-            int yawAsInt = ConvertFloatToInt32(gain * yaw);
-            
-            string message = string.Format("{0},{1},{2},{3},{4}", mode, rollAsInt, pitchAsInt, gazAsInt, yawAsInt);
-            EnqueCommand("PCMD", message);
+            public string GetMessage()
+            {
+                int pitchAsInt;
+                int rollAsInt;
+                int gazAsInt = ConvertFloatToInt32(Gaz);
+                int yawAsInt = ConvertFloatToInt32(Yaw);
+                int mode = 0;
+
+                if (Math.Abs(Pitch) < Threshold && Math.Abs(Roll) < Threshold)
+                {
+                    pitchAsInt = 0;
+                    rollAsInt = 0;
+                }
+                else
+                {
+                    pitchAsInt = ConvertFloatToInt32(Pitch);
+                    rollAsInt = ConvertFloatToInt32(Roll);
+                    mode = (int)Modes.EnableProgressiveCommands;
+                }
+
+                if (CombineYaw)
+                {
+                    mode &= (int)Modes.CombineYaw;
+                }
+
+                string message;
+                if (AbsoluteControl)
+                {
+                    int magnetoPsiAsInt = ConvertFloatToInt32(MagnetoPsi);
+                    int magnetoPsiAccuracyAsInt = ConvertFloatToInt32(MagnetoPsiAccuracy);
+                    mode &= (int)Modes.AbsoluteControl;
+                    message = string.Format("{0},{1},{2},{3},{4},{5},{6}", mode, rollAsInt, pitchAsInt, gazAsInt,
+                                            yawAsInt, magnetoPsiAsInt, magnetoPsiAccuracyAsInt);
+                }
+                else
+                {
+                    message = string.Format("{0},{1},{2},{3},{4}", mode, rollAsInt, pitchAsInt, gazAsInt,
+                                            yawAsInt);
+                }
+
+                return message;
+            }
+
+            [Flags]
+            private enum Modes
+            {
+                EnableProgressiveCommands = 1,
+                CombineYaw = 2,
+                AbsoluteControl = 4
+            }
+
+            private int ConvertFloatToInt32(float value)
+            {
+                var bytes = BitConverter.GetBytes(value);
+                int result = BitConverter.ToInt32(bytes, 0);
+                return result;
+            }
         }
 
         private int ConvertFloatToInt32(float value)
@@ -202,6 +265,11 @@ namespace AR_Drone_Controller
             var bytes = BitConverter.GetBytes(value);
             int result = BitConverter.ToInt32(bytes, 0);
             return result;
+        }
+
+        internal void SendCalibrationCommand()
+        {
+            EnqueCommand("CALIB", "0");
         }
 
         internal void SendResetWatchDogCommand()

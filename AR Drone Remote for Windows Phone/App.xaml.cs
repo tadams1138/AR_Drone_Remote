@@ -73,6 +73,7 @@ namespace AR_Drone_Remote_for_Windows_Phone
         // This code will not execute when the application is closing
         private void Application_Deactivated(object sender, DeactivatedEventArgs e)
         {
+            MainPage.StaticDroneController.Disconnect();
         }
 
         // Code to execute when the application is closing (eg, user hit Back)

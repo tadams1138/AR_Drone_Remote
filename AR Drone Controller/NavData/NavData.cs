@@ -81,6 +81,11 @@
         private uint _sequence;
         private uint _vision;
 
+        public static void ResetSequence()
+        {
+            _previousSequence = 0;
+        }
+
         private bool IsStateBitOne(ArdroneStateMask bitmask)
         {
             return (_state & (int)bitmask) > 0;
@@ -230,7 +235,14 @@
                     break;
 
                 default:
-                    throw new OptionNotImplementedException(optionId);
+                    for (int i = 0; i < size - 4; i ++)
+                    {
+                        reader.ReadByte();
+                    }
+
+                    break;
+                    // ignore
+                    //throw new OptionNotImplementedException(optionId);
             }
         }
 

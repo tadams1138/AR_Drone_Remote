@@ -96,10 +96,21 @@
     <Compile Include="AttitudeIndicator.xaml.cs">
       <DependentUpon>AttitudeIndicator.xaml</DependentUpon>
     </Compile>
+    <Compile Include="BatteryPercentageToColorConverter.cs" />
+    <Compile Include="BatteryIndicator.xaml.cs">
+      <DependentUpon>BatteryIndicator.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="BatteryPercentageToVisibilityConvert.cs" />
     <Compile Include="BindableCompass.cs" />
+    <Compile Include="CompassControl.xaml.cs">
+      <DependentUpon>CompassControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DegreeToCompassHeadingConverter.cs" />
     <Compile Include="DispatcherWrapper.cs" />
     <Compile Include="AngleRotator.cs" />
+    <Compile Include="Joystick.xaml.cs">
+      <DependentUpon>Joystick.xaml</DependentUpon>
+    </Compile>
     <Compile Include="LocalizedStrings.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -115,6 +126,10 @@
     <Compile Include="SocketFactory.cs" />
     <Compile Include="TcpSocket.cs" />
     <Compile Include="UdpSocket.cs" />
+    <Compile Include="WifiColorConverter.cs" />
+    <Compile Include="WifiSignal.xaml.cs">
+      <DependentUpon>WifiSignal.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -122,6 +137,18 @@
       <Generator>MSBuild:Compile</Generator>
     </ApplicationDefinition>
     <Page Include="AttitudeIndicator.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="BatteryIndicator.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CompassControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Joystick.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -129,18 +156,33 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="WifiSignal.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
+    <None Include="AR_Drone_Remote_for_Windows_Phone_2013_06_29_17_17_07.sap" />
+    <None Include="AR_Drone_Remote_for_Windows_Phone_2013_06_29_17_18_59.sap" />
     <None Include="Properties\AppManifest.xml" />
     <None Include="Properties\WMAppManifest.xml">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\appbar.connect.png" />
+    <Content Include="Assets\appbar.controller.xbox.png" />
+    <Content Include="Assets\appbar.dimension.line.height.png" />
+    <Content Include="Assets\appbar.measure.meter.png" />
+    <Content Include="Assets\appbar.tools.png" />
+    <Content Include="Assets\appbar.video.png" />
     <Content Include="Assets\AppIcon.png" />
     <Content Include="Assets\AppTileMedium.png" />
     <Content Include="Assets\AppTileSmall.png" />
-    <Content Include="Horizon_GroundSky.bmp" />
+    <Content Include="Assets\compass.png" />
+    <Content Include="Assets\heading.png" />
+    <Content Include="Assets\heading2.png" />
+    <Content Include="Assets\HorizonGroundSky.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\AppResources.resx">
@@ -155,8 +197,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="telerik.windows.controls.datavisualization, Version=2013.1.418.3040, Culture=neutral, PublicKeyToken=5803cfa389c90ce7, processorArchitecture=MSIL" />
-    <Reference Include="Telerik.Windows.Controls.Primitives, Version=2013.1.418.3040, Culture=neutral, PublicKeyToken=5803cfa389c90ce7, processorArchitecture=MSIL" />
+    <Reference Include="telerik.windows.controls.primitives, Version=2013.1.418.3040, Culture=neutral, PublicKeyToken=5803cfa389c90ce7, processorArchitecture=MSIL" />
     <Reference Include="Telerik.Windows.Core, Version=2013.1.418.3040, Culture=neutral, PublicKeyToken=5803cfa389c90ce7, processorArchitecture=MSIL" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).$(TargetFrameworkVersion).Overrides.targets" />

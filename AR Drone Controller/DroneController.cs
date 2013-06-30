@@ -9,18 +9,15 @@ namespace AR_Drone_Controller
 {
     public class DroneController : INotifyPropertyChanged, IDisposable
     {
+        private const string DefaultDroneIp = "192.168.1.1";
         private const int VideoPort = 5555;
         private const int ControlPort = 5559;
 
-        private static int seq = 1;
-
-        public string IpAddress { get; set; }
+        private const string _ipAddress = DefaultDroneIp;
         public ISocketFactory SocketFactory { get; set; }
-        
+
         // videoSocket udp for AR Drone 1 and tcp for AR Drone 2
         private ITcpSocket _controlSocket;
-
-        private const int timeoutValue = 500;
 
         private const int defaultDronePort = 23;
         private const String droneConfigurationCommand = "cat /data/config.ini";
@@ -28,12 +25,26 @@ namespace AR_Drone_Controller
         private NavDataWorker _navDataWorker;
         private NavData.NavData _navData = new NavData.NavData();
 
+        private Task _worker;     
+
         public NavData.NavData NavData
         {
             get { return _navData; }
-             set
+            set
             {
                 _navData = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private bool _connected;
+
+        public bool Connected
+        {
+            get { return _connected; } 
+            private set
+            {
+                _connected = value;
                 NotifyPropertyChanged();
             }
         }
@@ -51,51 +62,68 @@ namespace AR_Drone_Controller
 
         public void Connect()
         {
-            const string ardroneSessionId = "d2e081a3";     // SessionID
-            const string ardroneProfileId = "be27e2e4";    // Profile ID
-            const string ardroneApplicationId = "d87f7e0c";      // Application ID
-            
-            _controlSocket = SocketFactory.GetTcpSocket(IpAddress, ControlPort);
-            if (_controlSocket.Connected)
+            string ardroneSessionId = ("T&I AR Drone Remote SessionId").GetHashCode().ToString("X").ToLowerInvariant();     // SessionID
+            string ardroneProfileId = ("T&I AR Drone Remote ProfileId").GetHashCode().ToString("X").ToLowerInvariant();    // Profile ID
+            string ardroneApplicationId = ("T&I AR Drone Remote ApplicationId").GetHashCode().ToString("X").ToLowerInvariant();      // Application ID
+
+            try
             {
-                _commandWorker = new CommandWorker
+                _controlSocket = SocketFactory.GetTcpSocket(_ipAddress, ControlPort);
+                if (_controlSocket.Connected)
                 {
-                    RemoteIpAddress = IpAddress,
-                    SocketFactory = SocketFactory,
-                    ApplocationId = ardroneApplicationId,
-                    ProfileId = ardroneProfileId,
-                    SessionId = ardroneSessionId
-                };
-                _commandWorker.Run();
+                    var clientDone = new ManualResetEvent(false);
 
-                _commandWorker.SendPModeCommand(2);
-                _commandWorker.SendMiscellaneousCommand(string.Format("{0},{1},{2},{3}", 2, 20, 2000, 3000));
-                _commandWorker.SendConfigCommand("custom:session_id", ardroneSessionId);
-                _commandWorker.SendConfigCommand("custom:profile_id", ardroneProfileId);
-                _commandWorker.SendConfigCommand("custom:application_id", ardroneApplicationId);
-
-                _commandWorker.SendConfigCommand("general:video_enable", "TRUE");
-                _commandWorker.SendConfigCommand("video:bitrate_ctrl_mode", "0");
-                _commandWorker.SendConfigCommand("video:video_codec", string.Format("{0}", 0x81)); // H264_360P_CODEC
-
-                _commandWorker.SendConfigCommand("video:video_channel", "0");
-
-                _commandWorker.SendFtrimCommand();
-
-                _commandWorker.SendConfigCommand("general:navdata_demo", "TRUE");
-
-                _commandWorker.SendAck();
-
-                _navDataWorker = new NavDataWorker
+                    _navDataWorker = new NavDataWorker
                     {
-                        RemoteIpAddress = IpAddress,
+                        RemoteIpAddress = _ipAddress,
                         SocketFactory = SocketFactory
                     };
-                _navDataWorker.NavDataReceived += NavDataWorkerOnNavDataReceived;
-                _navDataWorker.NavDataUnhandledException += NavDataWorkerOnNavDataUnhandledException;
-                _navDataWorker.Run();
+                    _navDataWorker.NavDataReceived += NavDataWorkerOnNavDataReceived;
+                    _navDataWorker.NavDataUnhandledException += NavDataWorkerOnNavDataUnhandledException;
+                    _navDataWorker.Run();
 
-                Task.Factory.StartNew(DoWork);
+                    clientDone.WaitOne(100);
+
+                    _commandWorker = new CommandWorker
+                        {
+                            RemoteIpAddress = _ipAddress,
+                            SocketFactory = SocketFactory,
+                            ApplocationId = ardroneApplicationId,
+                            ProfileId = ardroneProfileId,
+                            SessionId = ardroneSessionId
+                        };
+                    _commandWorker.Run();
+
+                    clientDone.WaitOne(100);
+
+                    _commandWorker.SendPModeCommand(2);
+                    _commandWorker.SendMiscellaneousCommand(string.Format("{0},{1},{2},{3}", 2, 20, 2000, 3000));
+                    _commandWorker.SendConfigCommand("custom:session_id", ardroneSessionId);
+                    _commandWorker.SendConfigCommand("custom:profile_id", ardroneProfileId);
+                    _commandWorker.SendConfigCommand("custom:application_id", ardroneApplicationId);
+
+                    _commandWorker.SendConfigCommand("general:video_enable", "FALSE");
+                    //_commandWorker.SendConfigCommand("video:bitrate_ctrl_mode", "0");
+                    //_commandWorker.SendConfigCommand("video:video_codec", string.Format("{0}", 0x81)); // H264_360P_CODEC
+
+                    //_commandWorker.SendConfigCommand("video:video_channel", "0");
+
+                    _commandWorker.SendFtrimCommand();
+
+                    // _commandWorker.SendConfigCommand("general:navdata_options", "105971713");
+                    _commandWorker.SendConfigCommand("general:navdata_demo", "TRUE");
+
+                    //_commandWorker.SendAck();
+
+                    _worker = Task.Factory.StartNew(DoWork);
+
+                    Connected = true;
+                }
+            }
+            catch
+            {
+                Disconnect();
+                throw;
             }
         }
 
@@ -111,14 +139,54 @@ namespace AR_Drone_Controller
                     }
                     else if (_navData.Flying)
                     {
-                        _commandWorker.SendProgressiveCommand(Pitch, Roll, Gaz, Yaw);
+                        var args = new CommandWorker.ProgressiveCommandArguments
+                            {
+                                AbsoluteControl = AbsoluteControlMode,
+                                CombineYaw = CombineYaw,
+                                Pitch = Pitch,
+                                Roll = Roll,
+                                Gaz = Gaz,
+                                Yaw = Yaw,
+                                MagnetoPsi = ControllerHeading,
+                                MagnetoPsiAccuracy = ControllerHeadingAccuracy
+                            };
+                        _commandWorker.SendProgressiveCommand(args);
                     }
 
                     manualResetEvent.WaitOne(30);
-                } while (true);
+                } while (_controlSocket != null);
             }
         }
-        
+
+        public void Disconnect()
+        {
+            if (_controlSocket != null)
+            {
+                _controlSocket.Dispose();
+                _controlSocket = null;
+            }
+
+            if (_worker != null)
+            {
+                _worker.Wait(1000);
+                _worker = null;
+            }
+
+            if (_commandWorker != null)
+            {
+                _commandWorker.Stop();
+                _commandWorker = null;
+            }
+
+            if (_navDataWorker != null)
+            {
+                _navDataWorker.Stop();
+                _navDataWorker = null;
+            }
+
+            Connected = false;
+        }
+
         private void NavDataWorkerOnNavDataUnhandledException(object sender, NavDataUnhandledExceptionEventArgs e)
         {
             throw new NotImplementedException();
@@ -127,6 +195,11 @@ namespace AR_Drone_Controller
         private void NavDataWorkerOnNavDataReceived(object sender, NavDataReceivedEventArgs e)
         {
             NavData = e.NavData;
+            if (e.NavData.Demo == null && _commandWorker != null)
+            {
+                _commandWorker.SendConfigCommand("general:navdata_demo", "FALSE");
+                _commandWorker.SendConfigCommand("general:navdata_demo", "TRUE");
+            }
         }
 
         public void Dispose()
@@ -136,6 +209,7 @@ namespace AR_Drone_Controller
         public void TakeOff()
         {
             _commandWorker.SendRefCommand(CommandWorker.RefCommands.TakeOff);
+           // _commandWorker.SendCalibrationCommand();
         }
 
         public void Land()
@@ -151,6 +225,14 @@ namespace AR_Drone_Controller
 
         public float Gaz { get; set; }
 
+        public float ControllerHeading { get; set; }
+
+        public float ControllerHeadingAccuracy { get; set; }
+
+        public bool AbsoluteControlMode { get; set; }
+
+        public IDispatcher Dispatcher { get; set; }
+
         public void Emergency()
         {
             _commandWorker.SendRefCommand(CommandWorker.RefCommands.Emergency);
@@ -161,6 +243,6 @@ namespace AR_Drone_Controller
             _commandWorker.SendLedCommand(CommandWorker.LedAnimation.BlinkRed, 0.5f, 5);
         }
 
-        public IDispatcher Dispatcher { get; set; }
+        public bool CombineYaw { get; set; }
     }
 }

@@ -15,7 +15,7 @@ namespace AR_Drone_Remote_for_Windows_Phone
         public float Phi
         {
             get { return (float)GetValue(PhiProperty); }
-            set { SetValue(ThetaProperty, value); }
+            set { SetValue(PhiProperty, value); }
         }
 
         public static readonly DependencyProperty ThetaProperty = DependencyProperty.Register(
@@ -24,7 +24,7 @@ namespace AR_Drone_Remote_for_Windows_Phone
         public float Theta
         {
             get { return (float)GetValue(ThetaProperty); }
-            set { SetValue(PhiProperty, value); }
+            set { SetValue(ThetaProperty, value); }
         }
     }
 }
