@@ -90,6 +90,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AngleRotator.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
@@ -101,13 +102,11 @@
       <DependentUpon>BatteryIndicator.xaml</DependentUpon>
     </Compile>
     <Compile Include="BatteryPercentageToVisibilityConvert.cs" />
-    <Compile Include="BindableCompass.cs" />
     <Compile Include="CompassControl.xaml.cs">
       <DependentUpon>CompassControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="DegreeToCompassHeadingConverter.cs" />
     <Compile Include="DispatcherWrapper.cs" />
-    <Compile Include="AngleRotator.cs" />
     <Compile Include="Joystick.xaml.cs">
       <DependentUpon>Joystick.xaml</DependentUpon>
     </Compile>

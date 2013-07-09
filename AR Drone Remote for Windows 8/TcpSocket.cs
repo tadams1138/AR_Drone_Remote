@@ -1,44 +1,41 @@
 ﻿using System;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using AR_Drone_Controller;
+using Windows.Networking;
+using Windows.Networking.Sockets;
+using Windows.Storage.Streams;
 
-namespace AR_Drone_Remote_for_Windows_Phone
+namespace AR_Drone_Remote_for_Windows_8
 {
     internal class TcpSocket : ITcpSocket
     {
-        private readonly Socket _socket;
+        private readonly StreamSocket _socket;
+        private readonly DataWriter _writer;
         private readonly ManualResetEvent _clientDone = new ManualResetEvent(false);
         private readonly int _timeoutMilliseconds = 500;
 
         // TODO: TCP sockets for Windows phone
         public TcpSocket(string ipAddress, int port)
         {
-            bool connected = false;
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            var socketEventArg = new SocketAsyncEventArgs { RemoteEndPoint = new DnsEndPoint(ipAddress, port) };
-            socketEventArg.Completed += (s, e) =>
-                {
-                    connected = true;
-                    _clientDone.Set();
-                };
-            _clientDone.Reset();
-            _socket.ConnectAsync(socketEventArg);
-            _clientDone.WaitOne(_timeoutMilliseconds);
-
-            if (!connected)
+            _socket = new StreamSocket();
+            var result = _socket.ConnectAsync(new HostName(ipAddress), port.ToString());
+            result.AsTask().Wait(_timeoutMilliseconds);
+            if (result.ErrorCode != null)
             {
-                throw new TcpSocketConnectTimeoutException(ipAddress, port, _timeoutMilliseconds);
+                throw result.ErrorCode;
             }
+
+            Connected = true;
+            _writer = new DataWriter(_socket.OutputStream);
         }
 
         public void Dispose()
         {
+            Connected = false;
             _socket.Dispose();
         }
 
-        public bool Connected { get { return true; } private set { } }
+        public bool Connected { get; private set; }
 
         public void Write(string s)
         {

@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Linq;
-using System.Windows;
-using System.Windows.Input;
-using System.Windows.Media;
+using Windows.Foundation;
+using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 
-namespace AR_Drone_Remote_for_Windows_Phone
+namespace AR_Drone_Remote_for_Windows_8
 {
     public partial class Joystick
     {
@@ -16,9 +15,10 @@ namespace AR_Drone_Remote_for_Windows_Phone
         private readonly TranslateTransform _move = new TranslateTransform();
         private readonly TransformGroup _rectangleTransforms = new TransformGroup();
 
+        private bool _pointerPressed;
         private double _x;
         private double _y;
-
+        
         public event EventHandler<double> XValueChanged;
         public event EventHandler<double> YValueChanged;
 
@@ -29,8 +29,6 @@ namespace AR_Drone_Remote_for_Windows_Phone
             _rectangleTransforms.Children.Add(_move);
             Knob.RenderTransform = _rectangleTransforms;
             _move.X = _move.Y = ControlRadius - KnobRadius;
-
-            Touch.FrameReported += Touch_FrameReported;
         }
 
         public double X
@@ -60,27 +58,24 @@ namespace AR_Drone_Remote_for_Windows_Phone
                 }
             }
         }
-
-        private void Touch_FrameReported(object sender, TouchFrameEventArgs e)
+        
+        private void UIElement_OnPointerPressed(object sender, PointerRoutedEventArgs e)
         {
-            var touchPoints = e.GetTouchPoints(LayoutRoot);
-            var pointsInBounds = touchPoints.Where(p => IsInBounds(p.Position) && p.Action != TouchAction.Up).Select(p => p.Position);
-            var pointArray = pointsInBounds as Point[] ?? pointsInBounds.ToArray();
-
-            if (pointArray.Any())
-            {
-                SetJoystickToNewPoint(pointArray.First());
-            }
-            else
-            {
-                ResetHandleToOrigin();
-            }
+            SetJoyStickToPoint(e.GetCurrentPoint(LayoutRoot).Position);
+        }
+        
+        private void UIElement_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            _pointerPressed = false;
+            ResetHandleToOrigin();
         }
 
-        private bool IsInBounds(Point position)
+        private void UIElement_OnPointerMoved(object sender, PointerRoutedEventArgs e)
         {
-            return position.X >= 0 && position.Y >= 0 && position.Y <= LayoutRoot.ActualHeight &&
-                   position.X <= LayoutRoot.ActualWidth;
+            if (_pointerPressed)
+            {
+                SetJoyStickToPoint(e.GetCurrentPoint(LayoutRoot).Position);
+            }
         }
 
         private bool SignificantlyDifferent(double oldValue, double value)
@@ -110,8 +105,9 @@ namespace AR_Drone_Remote_for_Windows_Phone
             Y = 0.0;
         }
 
-        private void SetJoystickToNewPoint(Point newPoint)
+        private void SetJoyStickToPoint(Point newPoint)
         {
+            _pointerPressed = true;
             X = Normalize((newPoint.X - ControlRadius) / ((KnobUpperBound - KnobLowerBound) / 2));
             Y = Normalize((newPoint.Y - ControlRadius) / ((KnobUpperBound - KnobLowerBound) / 2));
         }

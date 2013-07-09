@@ -1,39 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
-
-  <Identity Name="0c0bec15-e348-4c17-97df-74fdba56d7a9"
-            Publisher="CN=Thomas"
-            Version="1.0.0.0" />
-
+  <Identity Name="9525TISoftware.ARDroneRemote" Publisher="CN=767287B8-2BBF-4473-8D71-AFFB0BF57F6E" Version="1.0.0.1" />
   <Properties>
-    <DisplayName>AR Drone Remote for Windows 8</DisplayName>
-    <PublisherDisplayName>Thomas</PublisherDisplayName>
+    <DisplayName>AR Drone Remote</DisplayName>
+    <PublisherDisplayName>T &amp; I Software</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
-
   <Prerequisites>
     <OSMinVersion>6.2.1</OSMinVersion>
     <OSMaxVersionTested>6.2.1</OSMaxVersionTested>
   </Prerequisites>
-
   <Resources>
-    <Resource Language="x-generate"/>
+    <Resource Language="x-generate" />
   </Resources>
-
   <Applications>
-    <Application Id="App"
-        Executable="$targetnametoken$.exe"
-        EntryPoint="AR_Drone_Remote_for_Windows_8.App">
-        <VisualElements
-            DisplayName="AR Drone Remote for Windows 8"
-            Logo="Assets\Logo.png"
-            SmallLogo="Assets\SmallLogo.png"
-            Description="AR Drone Remote for Windows 8"
-            ForegroundText="light"
-            BackgroundColor="#464646">
-            <DefaultTile ShowName="allLogos" />
-            <SplashScreen Image="Assets\SplashScreen.png" />
-        </VisualElements>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="AR_Drone_Remote_for_Windows_8.App">
+      <VisualElements DisplayName="AR Drone Remote" Logo="Assets\Logo.png" SmallLogo="Assets\SmallLogo.png" Description="AR Drone Remote" ForegroundText="light" BackgroundColor="#464646">
+        <DefaultTile ShowName="allLogos" />
+        <SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#2A2A30" />
+        <InitialRotationPreference>
+          <Rotation Preference="landscape" />
+        </InitialRotationPreference>
+      </VisualElements>
     </Application>
   </Applications>
   <Capabilities>

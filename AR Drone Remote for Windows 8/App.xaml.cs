@@ -6,6 +6,8 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.ApplicationSettings;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -71,6 +73,40 @@ namespace AR_Drone_Remote_for_Windows_8
             }
             // Ensure the current window is active
             Window.Current.Activate();
+        }
+
+        protected override void OnWindowCreated(WindowCreatedEventArgs args)
+        {
+            base.OnWindowCreated(args);
+            SettingsPane.GetForCurrentView().CommandsRequested += OnCommandsRequested;
+        }
+
+        private void OnCommandsRequested(SettingsPane sender, SettingsPaneCommandsRequestedEventArgs eventArgs)
+        {
+            var aboutCommand = new SettingsCommand("OnlineHelpId", "Online Help", OnOnlineHelpCommand);
+            var privacyCommand = new SettingsCommand("PrivacyId", "Privacy Statement", OnPrivacyCommand);
+            var rateAndReviewCommand = new SettingsCommand("RateAndReviewId", "Rate and Review", OnRateAndReviewCommand);
+            eventArgs.Request.ApplicationCommands.Add(aboutCommand);
+            eventArgs.Request.ApplicationCommands.Add(privacyCommand);
+            eventArgs.Request.ApplicationCommands.Add(rateAndReviewCommand);
+        }
+
+        void OnOnlineHelpCommand(IUICommand command)
+        {
+            var uri = new Uri("http://tadams1138.blogspot.com/p/ar-drone-remote_4115.html");
+            Windows.System.Launcher.LaunchUriAsync(uri);
+        }
+
+        void OnRateAndReviewCommand(IUICommand command)
+        {
+            var uri = new Uri("ms-windows-store:REVIEW?PFN=9525TISoftware.ARDroneRemote_bc0wgwa5kk60m");
+            Windows.System.Launcher.LaunchUriAsync(uri);
+        }
+
+        void OnPrivacyCommand(IUICommand command)
+        {
+            var uri = new Uri("http://tadams1138.blogspot.com/p/ar-drone-remote-privacy-policy.html");
+            Windows.System.Launcher.LaunchUriAsync(uri);
         }
 
         /// <summary>

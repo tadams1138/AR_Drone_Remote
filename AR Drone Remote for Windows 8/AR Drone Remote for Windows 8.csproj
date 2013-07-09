@@ -12,7 +12,9 @@
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{BC8A1FFA-BEE3-4634-8014-F334798102B3};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <PackageCertificateKeyFile>AR Drone Remote for Windows 8_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>AR Drone Remote for Windows 8_StoreKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateThumbprint>6FED979DD655ED157D220F818F8AC2C8EE2108B8</PackageCertificateThumbprint>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -110,22 +112,59 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="BindableCompass.cs" />
+    <Compile Include="Common\BatteryPercentageToColorConverter.cs" />
+    <Compile Include="Common\AngleRotator.cs" />
+    <Compile Include="Common\BatteryPercentageToVisibilityConvert.cs" />
+    <Compile Include="Common\PitchTranslator.cs" />
+    <Compile Include="AttitudeIndicator.xaml.cs">
+      <DependentUpon>AttitudeIndicator.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="BatteryIndicator.xaml.cs">
+      <DependentUpon>BatteryIndicator.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CompassControl.xaml.cs">
+      <DependentUpon>CompassControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DependencyObjectExtensions.cs" />
+    <Compile Include="DispatcherWrapper.cs" />
+    <Compile Include="Joystick.xaml.cs">
+      <DependentUpon>Joystick.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="KeyboardInput.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SocketFactory.cs" />
+    <Compile Include="TcpSocket.cs" />
+    <Compile Include="UdpSocket.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <None Include="AR Drone Remote for Windows 8_StoreKey.pfx" />
     <None Include="AR Drone Remote for Windows 8_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Assets\Logo.png" />
-    <Content Include="Assets\SmallLogo.png" />
-    <Content Include="Assets\SplashScreen.png" />
-    <Content Include="Assets\StoreLogo.png" />
+    <Content Include="Assets\appbar.connect.png" />
+    <Content Include="Assets\appbar.controller.xbox.png" />
+    <Content Include="Assets\appbar.dimension.line.height.png" />
+    <Content Include="Assets\appbar.measure.meter.png" />
+    <Content Include="Assets\appbar.tools.png" />
+    <Content Include="Assets\compass.png" />
+    <Content Include="Assets\heading.png" />
+    <Content Include="Assets\heading2.png" />
+    <Content Include="Assets\HorizonGroundSky.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Logo.scale-100.png" />
+    <Content Include="Assets\SmallLogo.scale-100.png" />
+    <Content Include="Assets\SplashScreen.scale-100.png" />
+    <Content Include="Assets\StoreLogo.scale-100.png" />
+    <None Include="Package.StoreAssociation.xml" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -136,11 +175,28 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="BatteryIndicator.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="CompassControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Joystick.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="AttitudeIndicator.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>
   </PropertyGroup>

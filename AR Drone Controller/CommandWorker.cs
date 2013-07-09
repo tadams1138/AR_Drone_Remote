@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AR_Drone_Controller
 {
-    class CommandWorker
+    public class CommandWorker
     {
         private const int CommandPort = 5556;
         private const int TimeoutValue = 500;
@@ -223,15 +223,17 @@ namespace AR_Drone_Controller
 
                 if (CombineYaw)
                 {
-                    mode &= (int)Modes.CombineYaw;
+                    mode |= (int)Modes.CombineYaw;
                 }
 
                 string message;
                 if (AbsoluteControl)
                 {
-                    int magnetoPsiAsInt = ConvertFloatToInt32(MagnetoPsi);
-                    int magnetoPsiAccuracyAsInt = ConvertFloatToInt32(MagnetoPsiAccuracy);
-                    mode &= (int)Modes.AbsoluteControl;
+                    float normalizedMagnetoPsi = NormalizeMagnetoPsiDegrees();
+                    float normalizedMagnetoPsiAccuracy = NormalizedMagnetoPsiAccuracy();
+                    int magnetoPsiAsInt = ConvertFloatToInt32(normalizedMagnetoPsi);
+                    int magnetoPsiAccuracyAsInt = ConvertFloatToInt32(normalizedMagnetoPsiAccuracy);
+                    mode |= (int)Modes.AbsoluteControl;
                     message = string.Format("{0},{1},{2},{3},{4},{5},{6}", mode, rollAsInt, pitchAsInt, gazAsInt,
                                             yawAsInt, magnetoPsiAsInt, magnetoPsiAccuracyAsInt);
                 }
@@ -250,6 +252,24 @@ namespace AR_Drone_Controller
                 EnableProgressiveCommands = 1,
                 CombineYaw = 2,
                 AbsoluteControl = 4
+            }
+
+            private float NormalizedMagnetoPsiAccuracy()
+            {
+                return Math.Abs(MagnetoPsiAccuracy / 360f);
+            }
+
+            private float NormalizeMagnetoPsiDegrees()
+            {
+                float degrees = MagnetoPsi % 360f;
+                if (degrees <= 180)
+                {
+                    return degrees / 180;
+                }
+                else
+                {
+                    return degrees / 180 - 2;
+                }
             }
 
             private int ConvertFloatToInt32(float value)

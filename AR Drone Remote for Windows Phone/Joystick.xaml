@@ -25,14 +25,12 @@
         </RadialGradientBrush>
     </UserControl.Resources>
     <Viewbox Stretch="Uniform">
-        <Canvas x:Name="LayoutRoot" Background="Transparent" Width="4" Height="4">
-            <Ellipse Width="4" Height="4" Fill="{StaticResource Background}"/>
-            <Ellipse x:Name="Handle" 
-                     Width="2" 
-                     Height="2" 
-                     Fill="{StaticResource Joystick}" 
-                     ManipulationCompleted="Joystick_OnManipulationCompleted"
-                     ManipulationDelta="Joystick_OnManipulationDelta">
+        <Canvas x:Name="LayoutRoot" Background="Transparent" Width="100" Height="100">
+            <Ellipse Width="100" Height="100" Fill="{StaticResource Background}"/>
+            <Ellipse x:Name="Knob" 
+                     Width="50" 
+                     Height="50" 
+                     Fill="{StaticResource Joystick}" >
             </Ellipse>
         </Canvas>
     </Viewbox>

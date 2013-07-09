@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using AR_Drone_Controller.NavData;
 using System;
@@ -14,6 +15,7 @@ namespace AR_Drone_Controller
         private const int ControlPort = 5559;
 
         private const string _ipAddress = DefaultDroneIp;
+
         public ISocketFactory SocketFactory { get; set; }
 
         // videoSocket udp for AR Drone 1 and tcp for AR Drone 2
@@ -25,7 +27,16 @@ namespace AR_Drone_Controller
         private NavDataWorker _navDataWorker;
         private NavData.NavData _navData = new NavData.NavData();
 
-        private Task _worker;     
+        private Task _worker;
+
+        public static Uri HelpUri { get { return new Uri("http://tadams1138.blogspot.com/p/ar-drone-remote_4115.html"); } }
+
+        public static Uri PrivacyUri { get { return new Uri("http://tadams1138.blogspot.com/p/ar-drone-remote-privacy-policy.html"); } }
+
+        public DroneController()
+        {
+            CreateLedCommandsList();
+        }
 
         public NavData.NavData NavData
         {
@@ -41,7 +52,7 @@ namespace AR_Drone_Controller
 
         public bool Connected
         {
-            get { return _connected; } 
+            get { return _connected; }
             private set
             {
                 _connected = value;
@@ -209,7 +220,11 @@ namespace AR_Drone_Controller
         public void TakeOff()
         {
             _commandWorker.SendRefCommand(CommandWorker.RefCommands.TakeOff);
-           // _commandWorker.SendCalibrationCommand();
+        }
+
+        public void Cailbrate()
+        {
+            _commandWorker.SendCalibrationCommand();
         }
 
         public void Land()
@@ -238,11 +253,149 @@ namespace AR_Drone_Controller
             _commandWorker.SendRefCommand(CommandWorker.RefCommands.Emergency);
         }
 
-        public void Blink()
+        public void SendLedCommand(CommandWorker.LedAnimation animation, float frequencyInHz, int durationInSeconds)
         {
-            _commandWorker.SendLedCommand(CommandWorker.LedAnimation.BlinkRed, 0.5f, 5);
+            if (_commandWorker == null)
+            {
+                throw new DroneControllerNotConnectedException();
+            }
+
+            _commandWorker.SendLedCommand(animation, frequencyInHz, durationInSeconds);
         }
 
         public bool CombineYaw { get; set; }
+
+        public List<LedCommand> LedCommands { get; private set; }
+
+        private void CreateLedCommandsList()
+        {
+            LedCommands = new List<LedCommand>
+                {
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.Blank,
+                            Title = "Blank",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.BlinkGreen,
+                            Title = "Blink Green",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.BlinkGreenRed,
+                            Title = "Blink Green Red",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.BlinkOrange,
+                            Title = "Blink Orange",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.BlinkRed,
+                            Title = "Blink Red",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.BlinkStandard,
+                            Title = "Blink Standard",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.DoubleMissile,
+                            Title = "Double Missile",
+                            DroneController = this
+                        },
+                    new LedCommand {Animation = CommandWorker.LedAnimation.Fire, Title = "Fire", DroneController = this},
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.FrontLeftGreenOthersRed,
+                            Title = "Front Left Green Others Red",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.FrontRightGreenOthersRed,
+                            Title = "Front Right Green Others Red",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.Green,
+                            Title = "Green",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.LeftGreenRightRed,
+                            Title = "Left Green Right Red",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.LeftMissile,
+                            Title = "Left Missile",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.LeftRedRightGreen,
+                            Title = "Left Red Right Green",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.RearLeftGreenOthersRed,
+                            Title = "Rear Left Green Others Red",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.RearRightGreenOthersRed,
+                            Title = "Rear Right Green Others Red",
+                            DroneController = this
+                        },
+                    new LedCommand {Animation = CommandWorker.LedAnimation.Red, Title = "Red", DroneController = this},
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.RedSnake,
+                            Title = "Red Snake",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.RightMissile,
+                            Title = "Right Missile",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.SnakeGreenRed,
+                            Title = "Snake Green Red",
+                            DroneController = this
+                        },
+                    new LedCommand
+                        {
+                            Animation = CommandWorker.LedAnimation.Standard,
+                            Title = "Standard",
+                            DroneController = this
+                        }
+                };
+        }
+
+        public class DroneControllerNotConnectedException : Exception
+        {
+            public DroneControllerNotConnectedException()
+                : base("The operation is invalid because the drone controller is not connected.")
+            {
+            }
+        }
     }
 }

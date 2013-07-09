@@ -1,38 +1,219 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using AR_Drone_Controller;
+using Windows.Devices.Sensors;
+using Windows.Graphics.Display;
+using Windows.UI.Core;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-
-// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace AR_Drone_Remote_for_Windows_8
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainPage : Page
+    public sealed partial class MainPage
     {
+        public static DroneController StaticDroneController;
+        private static Compass _compass;
+        private static Accelerometer _accelerometer;
+        private KeyboardInput _keyboardInput;
+        private float gain = 1f;
+
         public MainPage()
         {
-            this.InitializeComponent();
+            DroneController = new DroneController
+            {
+                SocketFactory = new SocketFactory(),
+                Dispatcher = new DispatcherWrapper(Dispatcher)
+            };
+
+            InitializeComponent();
+
+            InitializeKeyboardInput();
+            InitializeCompass();
+            InitializeAccelerometer();
         }
 
-        /// <summary>
-        /// Invoked when this page is about to be displayed in a Frame.
-        /// </summary>
-        /// <param name="e">Event data that describes how this page was reached.  The Parameter
-        /// property is typically used to configure the page.</param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        public DroneController DroneController
         {
+            get { return StaticDroneController; }
+            set { StaticDroneController = value; }
+        }
+
+        protected override void OnNavigatedTo(Windows.UI.Xaml.Navigation.NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            DisplayProperties.AutoRotationPreferences = DisplayOrientations.Landscape; 
+        }
+
+        private void InitializeAccelerometer()
+        {
+            _accelerometer = Accelerometer.GetDefault();
+            if (_accelerometer != null)
+            {
+                _accelerometer.ReadingChanged += AccelerometerOnCurrentValueChanged;
+                UseAccelerometer.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                UseAccelerometer.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void InitializeCompass()
+        {
+            _compass = Compass.GetDefault();
+            if (_compass != null)
+            {
+                _compass.ReadingChanged += CompassOnCurrentValueChanged;
+                AbsoluteControl.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                AbsoluteControl.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void InitializeKeyboardInput()
+        {
+            _keyboardInput = new KeyboardInput { DroneController = DroneController };
+            Window.Current.CoreWindow.KeyDown += KeyboardStateChanged;
+            Window.Current.CoreWindow.KeyUp += KeyboardStateChanged;
+        }
+
+        private void AccelerometerOnCurrentValueChanged(Accelerometer accelerometer, AccelerometerReadingChangedEventArgs args)
+        {
+            if (_useAccelerometer)
+            {
+                DroneController.Roll = (float) args.Reading.AccelerationY*-1;
+                DroneController.Pitch = (float) args.Reading.AccelerationX*-1;
+            }
+        }
+
+        private void CompassOnCurrentValueChanged(Compass compass, CompassReadingChangedEventArgs args)
+        {
+            var heading = (float)args.Reading.HeadingMagneticNorth;
+            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => CompassIndicator.ControllerHeading = heading);
+            DroneController.ControllerHeading = heading;
+        }
+
+        private void KeyboardStateChanged(CoreWindow sender, KeyEventArgs args)
+        {
+            args.Handled = false;
+            _keyboardInput.UpdateDroneController();
+        }
+
+        private void LeftJoystickOnXValueChanged(object sender, double e)
+        {
+            DroneController.Roll = (float)e * gain;
+        }
+
+        private void LeftJoystickOnYValueChanged(object sender, double e)
+        {
+            DroneController.Pitch = (float)e * gain;
+        }
+
+        private void RightJoystickOnXValueChanged(object sender, double d)
+        {
+            DroneController.Yaw = (float)d * gain;
+        }
+
+        private void RightJoystickOnYValueChanged(object sender, double d)
+        {
+            DroneController.Gaz = -(float)d * gain;
+        }
+
+        private void LaunchLand_Click(object sender, RoutedEventArgs e)
+        {
+            if (!DroneController.NavData.Flying)
+            {
+                DroneController.TakeOff();
+            }
+            else
+            {
+                DroneController.Land();
+            }
+        }
+
+        private void Emergency_Click(object sender, RoutedEventArgs e)
+        {
+            DroneController.Emergency();
+        }
+
+        private bool _useAccelerometer;
+
+        private void AbsoluteControl_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            DroneController.AbsoluteControlMode = ((ToggleSwitch)sender).IsOn;
+        }
+
+        private void UseAccelerometer_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            _useAccelerometer = ((ToggleSwitch) sender).IsOn;
+            if (_useAccelerometer)
+            {
+                LeftJoystick.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                LeftJoystick.Visibility = Visibility.Visible;
+                DroneController.Pitch = 0;
+                DroneController.Roll = 0;
+            }
+        }
+
+        private void Connect_OnClick(object sender, RoutedEventArgs routedEventArgs)
+        {
+            if (DroneController.Connected)
+            {
+                DroneController.Disconnect();
+            }
+            else
+            {
+                try
+                {
+                    DroneController.Connect();
+                }
+                catch
+                {
+                    var dialog =
+                        new MessageDialog(
+                            "Could not connect to AR Drone. Please verify you are connected to drone's WIFI.",
+                            "Unable to connect.");
+                    dialog.ShowAsync();
+                }
+            }
+        }
+
+        private void ShowOptions_OnClick(object sender, RoutedEventArgs e)
+        {
+            FlightControls.Visibility = Visibility.Collapsed;
+            Tools.Visibility = Visibility.Visible;
+        }
+
+        private void ShowControls_OnClick(object sender, RoutedEventArgs e)
+        {
+            FlightControls.Visibility = Visibility.Visible;
+            Tools.Visibility = Visibility.Collapsed;
+        }
+
+        private void LedCommands_OnItemClick(object sender, RoutedEventArgs routedEventArgs)
+        {
+            try
+            {
+                var button = (Button) sender;
+                var ledCommand = (LedCommand) button.Content;
+                ledCommand.Execute();
+            }
+            catch (Exception ex)
+            {
+                var dialog =
+                    new MessageDialog(
+                        ex.Message,
+                        "Unable to send LED command.");
+                dialog.ShowAsync();
+            }
         }
     }
 }

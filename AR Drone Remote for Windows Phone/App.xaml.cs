@@ -67,13 +67,14 @@ namespace AR_Drone_Remote_for_Windows_Phone
         // This code will not execute when the application is first launched
         private void Application_Activated(object sender, ActivatedEventArgs e)
         {
+            MainPage.Activate();
         }
 
         // Code to execute when the application is deactivated (sent to background)
         // This code will not execute when the application is closing
         private void Application_Deactivated(object sender, DeactivatedEventArgs e)
         {
-            MainPage.StaticDroneController.Disconnect();
+            MainPage.Deactivate();
         }
 
         // Code to execute when the application is closing (eg, user hit Back)

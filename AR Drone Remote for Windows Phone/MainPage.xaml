@@ -5,7 +5,7 @@
     xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                            xmlns:local="clr-namespace:AR_Drone_Remote_for_Windows_Phone"
+    xmlns:local="clr-namespace:AR_Drone_Remote_for_Windows_Phone"
     xmlns:controlsPrimitives="clr-namespace:Microsoft.Phone.Controls.Primitives;assembly=Microsoft.Phone"
     xmlns:telerikPrimitives="clr-namespace:Telerik.Windows.Controls;assembly=Telerik.Windows.Controls.Primitives"
     x:Class="AR_Drone_Remote_for_Windows_Phone.MainPage"
@@ -43,7 +43,7 @@
             </Setter>
         </Style>
     </phone:PhoneApplicationPage.Resources>
-    
+
     <phone:PhoneApplicationPage.ApplicationBar>
         <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True" Mode="Default" Opacity="1.0" >
             <shell:ApplicationBar.MenuItems>
@@ -57,6 +57,7 @@
             <shell:ApplicationBarIconButton IconUri="/Assets/appbar.connect.png" Text="Connect" Click="Connect_OnClick" />
         </shell:ApplicationBar>
     </phone:PhoneApplicationPage.ApplicationBar>
+
     <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot" Background="Transparent" RenderTransformOrigin="0.5,0.5">
         <Grid.Resources>
@@ -128,14 +129,16 @@
                 <VisualState x:Name="Landscape"/>
                 <VisualState x:Name="LandscapeLeft">
                     <Storyboard>
-                        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="LayoutRoot" 
+                                                       Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
                             <DiscreteDoubleKeyFrame KeyTime="0" Value="0"/>
                         </DoubleAnimationUsingKeyFrames>
                     </Storyboard>
                 </VisualState>
                 <VisualState x:Name="LandscapeRight">
                     <Storyboard>
-                        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="LayoutRoot" 
+                                                       Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
                             <DiscreteDoubleKeyFrame KeyTime="0" Value="180"/>
                         </DoubleAnimationUsingKeyFrames>
                     </Storyboard>
@@ -161,7 +164,10 @@
                 <TextBlock VerticalAlignment="Center" Text="%"/>
             </StackPanel>
             <StackPanel Grid.Column="3" Orientation="Horizontal">
-                <local:BatteryIndicator Height="30" BatteryPercentage="{Binding DroneController.NavData.Demo.BatteryPercentage}" Margin="0,21,0,0" VerticalAlignment="Top" />
+                <local:BatteryIndicator Height="30" 
+                                        BatteryPercentage="{Binding DroneController.NavData.Demo.BatteryPercentage}" 
+                                        Margin="0,21,0,0" 
+                                        VerticalAlignment="Top" />
                 <TextBlock VerticalAlignment="Center" Text="{Binding DroneController.NavData.Demo.BatteryPercentage}"/>
                 <TextBlock VerticalAlignment="Center" Text="%"/>
             </StackPanel>
@@ -179,9 +185,9 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel HorizontalAlignment="Center" Visibility="Collapsed">
+                <StackPanel x:Name="UseAccelerometer" HorizontalAlignment="Center">
                     <TextBlock Text="Use phone tilt"/>
-                    <telerikPrimitives:RadToggleSwitch x:Name="UsePhoneTilt"  HorizontalAlignment="Center" CheckedChanged="UsePhoneTilt_OnCheckedChanged" />
+                    <telerikPrimitives:RadToggleSwitch HorizontalAlignment="Center" CheckedChanged="UseAccelerometer_OnCheckedChanged" />
                 </StackPanel>
                 <local:Joystick x:Name="LeftJoystick" 
 					    Grid.Row="1" 
@@ -189,9 +195,6 @@
 					    YValueChanged="LeftJoystickOnYValueChanged"/>
 
                 <Grid Grid.Column="1" Grid.RowSpan="2">
-                    <Grid.Resources>
-                        <local:AngleRotator x:Key="CounterClockwiseConverter" Offset="90"  />
-                    </Grid.Resources>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="1*"/>
@@ -199,59 +202,67 @@
                     <local:AttitudeIndicator Phi="{Binding DroneController.NavData.Demo.Phi}"
 						Theta="{Binding DroneController.NavData.Demo.Theta}"
 						Grid.Row="0"/>
-                    <local:CompassControl ControllerHeading="{Binding 
-                        ControllerDirection.CurrentValue.TrueHeading, Converter={StaticResource CounterClockwiseConverter}}"
+                    <local:CompassControl x:Name="CompassIndicator"
 						DroneHeading="{Binding DroneController.NavData.Demo.Psi}"
 						Grid.Row="1"/>
                 </Grid>
 
-
-                <StackPanel Grid.Column="2" HorizontalAlignment="Center" Visibility="Collapsed">
-                    <TextBlock Text="Use phone direction" TextWrapping="Wrap"/>
-                    <telerikPrimitives:RadToggleSwitch HorizontalAlignment="Center" CheckedChanged="LockToCompass_OnCheckedChanged" />
+                <StackPanel x:Name="AbsoluteControl" Grid.Column="2" HorizontalAlignment="Center">
+                    <TextBlock Text="Steer relative to controller" TextWrapping="Wrap"/>
+                    <telerikPrimitives:RadToggleSwitch HorizontalAlignment="Center" CheckedChanged="AbsoluteConstrol_OnCheckedChanged" />
                 </StackPanel>
                 <local:Joystick x:Name="RightJoystick" 
                     Grid.Column="2"
                     Grid.Row="1" 
                     XValueChanged="RightJoystickOnXValueChanged" 
                     YValueChanged="RightJoystickOnYValueChanged"/>
-
             </Grid>
+
             <phone:Pivot x:Name="Tools" Style="{StaticResource PivotStyle1}" Visibility="Collapsed">
                 <phone:PivotItem x:Name="LedLightControls">
                     <phone:PivotItem.Header>
                         <TextBlock Style="{StaticResource PhoneTextNormalStyle}" Text="LED Lights"/>
                     </phone:PivotItem.Header>
-                    <Grid>
-                        <ScrollViewer>
-                            <StackPanel>
-                                <Button Click="Blink_Click" IsEnabled="{Binding DroneController.Connected}" Content="Blink"/>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Grid>
+                    <phone:LongListSelector 
+                            IsEnabled="{Binding DroneController.Connected}"
+                            ItemsSource="{Binding DroneController.LedCommands}">
+                        <phone:LongListSelector.ItemTemplate>
+                            <DataTemplate>
+                                <Button Click="LedCommands_OnItemClick"
+                                        Content="{Binding}" />
+                            </DataTemplate>
+                        </phone:LongListSelector.ItemTemplate>
+                    </phone:LongListSelector>
                 </phone:PivotItem>
             </phone:Pivot>
         </Grid>
 
-        <Grid Background="Transparent" x:Name="Footer" Grid.Row="2">
+        <Grid x:Name="Footer" Grid.Row="2" Background="Transparent">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
             <StackPanel Background="Transparent" HorizontalAlignment="Center" Orientation="Horizontal">
-
                 <Button Width="20" MaxHeight="76" BorderThickness="0" Style="{StaticResource IconButton}" >
                     <ImageBrush Stretch="UniformToFill" ImageSource="/Assets/appbar.dimension.line.height.png"/>
                 </Button>
-                <TextBlock FontSize="{StaticResource PhoneFontSizeMediumLarge}" VerticalAlignment="Center" Text="{Binding DroneController.NavData.Demo.Altitude}"/>
+                <TextBlock FontSize="{StaticResource PhoneFontSizeMediumLarge}" 
+                           VerticalAlignment="Center" 
+                           Text="{Binding DroneController.NavData.Demo.Altitude}"/>
                 <Button Width="40" MaxHeight="76" BorderThickness="0" Style="{StaticResource IconButton}" >
                     <ImageBrush Stretch="UniformToFill" ImageSource="/Assets/appbar.measure.meter.png"/>
                 </Button>
             </StackPanel>
-            <Button Click="LaunchLand_Click" Content="Take Off/Land" IsEnabled="{Binding DroneController.Connected}" Grid.Column="1"/>
+            <Button Grid.Column="1" 
+                    Content="Take Off/Land" 
+                    Click="LaunchLand_Click" 
+                    IsEnabled="{Binding DroneController.Connected}" />
+            <Button Grid.Column="2" 
+                    Content="Calibrate" 
+                    Click="Calibrate_Click" 
+                    IsEnabled="{Binding DroneController.Connected}" />
         </Grid>
 
     </Grid>
-
 </phone:PhoneApplicationPage>
