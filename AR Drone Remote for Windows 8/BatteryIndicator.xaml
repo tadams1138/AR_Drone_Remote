@@ -14,7 +14,7 @@
                                                  LowStrengthColor="Red"
                                                  GoodStrengthColor="{StaticResource ApplicationForegroundThemeBrush}"/>
         <SolidColorBrush x:Key="BatteryColor" 
-                         Color="{Binding BatteryPercentage, Converter={StaticResource BatteryPercentageToColorConverter}}"/>
+                         Color="{Binding Path=BatteryPercentage, Converter={StaticResource BatteryPercentageToColorConverter}}"/>
         <common:BatteryPercentageToVisibilityConvert x:Key="BatteryPercentageToVisibilityConvert" />
     </Control.Resources>
     <Viewbox Stretch="Uniform">
@@ -46,9 +46,9 @@
                 </Grid>
             </Border>
             <Rectangle Grid.Column="1" 
-                       Height="4" 
-                       Stroke="{StaticResource BatteryColor}" 
-                       Fill="{StaticResource BatteryColor}"/>
+                        Height="4" 
+                        Stroke="{StaticResource BatteryColor}" 
+                        Fill="{StaticResource BatteryColor}"/>
         </Grid>
     </Viewbox>
 </UserControl>

@@ -1,11 +1,15 @@
-﻿namespace AR_Drone_Controller
+﻿using System;
+
+namespace AR_Drone_Controller
 {
-    public interface IUdpSocket
+    public interface IUdpSocket : IDisposable
     {
         void Write(string s);
 
         void Write(int i);
 
-        byte[] Receive();
+        event EventHandler<DataReceivedEventArgs> DataReceived;
+
+        event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
     }
 }

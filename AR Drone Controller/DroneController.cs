@@ -1,42 +1,36 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using AR_Drone_Controller.NavData;
+﻿using AR_Drone_Controller.NavData;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace AR_Drone_Controller
 {
     public class DroneController : INotifyPropertyChanged, IDisposable
     {
         private const string DefaultDroneIp = "192.168.1.1";
-        private const int VideoPort = 5555;
         private const int ControlPort = 5559;
 
-        private const string _ipAddress = DefaultDroneIp;
+        private string _ipAddress = DefaultDroneIp;
 
         public ISocketFactory SocketFactory { get; set; }
 
         // videoSocket udp for AR Drone 1 and tcp for AR Drone 2
         private ITcpSocket _controlSocket;
 
-        private const int defaultDronePort = 23;
-        private const String droneConfigurationCommand = "cat /data/config.ini";
+        //private const int defaultDronePort = 23;
+        //private const String droneConfigurationCommand = "cat /data/config.ini";
 
+        private CommandWorker _commandWorker;
+        private VideoWorker _videoWorker;
         private NavDataWorker _navDataWorker;
         private NavData.NavData _navData = new NavData.NavData();
 
-        private Task _worker;
+        private Timer _commandTimer;
 
         public static Uri HelpUri { get { return new Uri("http://tadams1138.blogspot.com/p/ar-drone-remote_4115.html"); } }
 
         public static Uri PrivacyUri { get { return new Uri("http://tadams1138.blogspot.com/p/ar-drone-remote-privacy-policy.html"); } }
-
-        public DroneController()
-        {
-            CreateLedCommandsList();
-        }
 
         public NavData.NavData NavData
         {
@@ -44,7 +38,7 @@ namespace AR_Drone_Controller
             set
             {
                 _navData = value;
-                NotifyPropertyChanged();
+                NotifyPropertyChanged("NavData");
             }
         }
 
@@ -56,14 +50,13 @@ namespace AR_Drone_Controller
             private set
             {
                 _connected = value;
-                NotifyPropertyChanged();
+                NotifyPropertyChanged("Connected");
             }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        private CommandWorker _commandWorker;
 
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        private void NotifyPropertyChanged(string propertyName)
         {
             if (PropertyChanged != null)
             {
@@ -73,62 +66,41 @@ namespace AR_Drone_Controller
 
         public void Connect()
         {
-            string ardroneSessionId = ("T&I AR Drone Remote SessionId").GetHashCode().ToString("X").ToLowerInvariant();     // SessionID
-            string ardroneProfileId = ("T&I AR Drone Remote ProfileId").GetHashCode().ToString("X").ToLowerInvariant();    // Profile ID
-            string ardroneApplicationId = ("T&I AR Drone Remote ApplicationId").GetHashCode().ToString("X").ToLowerInvariant();      // Application ID
-
             try
             {
                 _controlSocket = SocketFactory.GetTcpSocket(_ipAddress, ControlPort);
+                _controlSocket.Disconnected += ControlSocketOnDisconnected;
+                _controlSocket.UnhandledException += UnhandledException;
                 if (_controlSocket.Connected)
                 {
-                    var clientDone = new ManualResetEvent(false);
-
-                    _navDataWorker = new NavDataWorker
+                    using (var manualResetEvent = new ManualResetEvent(false))
                     {
-                        RemoteIpAddress = _ipAddress,
-                        SocketFactory = SocketFactory
-                    };
-                    _navDataWorker.NavDataReceived += NavDataWorkerOnNavDataReceived;
-                    _navDataWorker.NavDataUnhandledException += NavDataWorkerOnNavDataUnhandledException;
-                    _navDataWorker.Run();
+                        InitializeCommandWorker();
+                        manualResetEvent.WaitOne(100);
+                        InitializeNavDataWorker();
+                        manualResetEvent.WaitOne(100);
 
-                    clientDone.WaitOne(100);
+                        _commandWorker.SendConfigCommand("general:video_enable", "TRUE");
+                        _commandWorker.SendConfigCommand("video:bitrate_ctrl_mode", "0");
+                        _commandWorker.SendConfigCommand("video:video_channel", "0");
 
-                    _commandWorker = new CommandWorker
-                        {
-                            RemoteIpAddress = _ipAddress,
-                            SocketFactory = SocketFactory,
-                            ApplocationId = ardroneApplicationId,
-                            ProfileId = ardroneProfileId,
-                            SessionId = ardroneSessionId
-                        };
-                    _commandWorker.Run();
+                        const uint navDataOptions = (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.Demo) +
+                                            (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.HdVideoStream) +
+                                            (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.Wifi);
+                        
+                        _commandWorker.SendConfigCommand("general:navdata_demo", "TRUE");
+                        _commandWorker.SendConfigCommand("general:navdata_options", navDataOptions.ToString());
 
-                    clientDone.WaitOne(100);
+                        _commandWorker.SendFlatTrimCommand();
 
-                    _commandWorker.SendPModeCommand(2);
-                    _commandWorker.SendMiscellaneousCommand(string.Format("{0},{1},{2},{3}", 2, 20, 2000, 3000));
-                    _commandWorker.SendConfigCommand("custom:session_id", ardroneSessionId);
-                    _commandWorker.SendConfigCommand("custom:profile_id", ardroneProfileId);
-                    _commandWorker.SendConfigCommand("custom:application_id", ardroneApplicationId);
+                        _commandWorker.ExitBootStrapMode();
 
-                    _commandWorker.SendConfigCommand("general:video_enable", "FALSE");
-                    //_commandWorker.SendConfigCommand("video:bitrate_ctrl_mode", "0");
-                    //_commandWorker.SendConfigCommand("video:video_codec", string.Format("{0}", 0x81)); // H264_360P_CODEC
-
-                    //_commandWorker.SendConfigCommand("video:video_channel", "0");
-
-                    _commandWorker.SendFtrimCommand();
-
-                    // _commandWorker.SendConfigCommand("general:navdata_options", "105971713");
-                    _commandWorker.SendConfigCommand("general:navdata_demo", "TRUE");
-
-                    //_commandWorker.SendAck();
-
-                    _worker = Task.Factory.StartNew(DoWork);
-
-                    Connected = true;
+                        manualResetEvent.WaitOne(100);
+                        
+                        _commandTimer = new Timer(DoWork, null, 30, 30);
+                       
+                        Connected = true;
+                    }
                 }
             }
             catch
@@ -138,49 +110,102 @@ namespace AR_Drone_Controller
             }
         }
 
-        private void DoWork()
+        private void ControlSocketOnDisconnected(object sender, EventArgs eventArgs)
         {
-            using (var manualResetEvent = new ManualResetEvent(false))
-            {
-                do
-                {
-                    if (_navData.CommWatchDog)
-                    {
-                        _commandWorker.SendResetWatchDogCommand();
-                    }
-                    else if (_navData.Flying)
-                    {
-                        var args = new CommandWorker.ProgressiveCommandArguments
-                            {
-                                AbsoluteControl = AbsoluteControlMode,
-                                CombineYaw = CombineYaw,
-                                Pitch = Pitch,
-                                Roll = Roll,
-                                Gaz = Gaz,
-                                Yaw = Yaw,
-                                MagnetoPsi = ControllerHeading,
-                                MagnetoPsiAccuracy = ControllerHeadingAccuracy
-                            };
-                        _commandWorker.SendProgressiveCommand(args);
-                    }
+            Disconnect();
+        }
 
-                    manualResetEvent.WaitOne(30);
-                } while (_controlSocket != null);
+        private void InitializeCommandWorker()
+        {
+            string ardroneSessionId =
+                ("T&I AR Drone Remote SessionId").GetHashCode().ToString("X").ToLowerInvariant();
+            string ardroneProfileId =
+                ("T&I AR Drone Remote ProfileId").GetHashCode().ToString("X").ToLowerInvariant();
+            string ardroneApplicationId =
+                ("T&I AR Drone Remote ApplicationId").GetHashCode().ToString("X").ToLowerInvariant();
+
+            _commandWorker = new CommandWorker
+                {
+                    RemoteIpAddress = _ipAddress,
+                    SocketFactory = SocketFactory,
+                    ApplicationId = ardroneApplicationId,
+                    ProfileId = ardroneProfileId,
+                    SessionId = ardroneSessionId
+                };
+            _commandWorker.Run();
+
+            _commandWorker.SendPModeCommand(2);
+            _commandWorker.SendMiscellaneousCommand("2,20,2000,3000");
+
+            _commandWorker.SendConfigCommand("custom:session_id", ardroneSessionId);
+            _commandWorker.SendConfigCommand("custom:profile_id", ardroneProfileId);
+            _commandWorker.SendConfigCommand("custom:application_id", ardroneApplicationId);
+            _commandWorker.SendConfigCommand("custom:application_desc", "AR Drone Remote");
+            _commandWorker.SendConfigCommand("custom:proﬁle_desc", ".Primary Profile");
+            _commandWorker.SendConfigCommand("custom:session_desc", "Session " + ardroneSessionId);
+        }
+
+        private void InitializeNavDataWorker()
+        {
+            _navDataWorker = new NavDataWorker
+                {
+                    RemoteIpAddress = _ipAddress,
+                    SocketFactory = SocketFactory
+                };
+            _navDataWorker.NavDataReceived += NavDataWorkerOnNavDataReceived;
+            _navDataWorker.UnhandledException += UnhandledException;
+            _navDataWorker.Run();
+        }
+
+        private void InitializeVideoWorker()
+        {
+            _videoWorker = new VideoWorker
+            {
+                RemoteIpAddress = _ipAddress,
+                SocketFactory = SocketFactory
+            };
+            _videoWorker.UnhandledException += UnhandledException;
+
+            _videoWorker.Run();
+        }
+
+        private void DoWork(object state)
+        {
+            if (_navData.CommWatchDog)
+            {
+                _commandWorker.SendResetWatchDogCommand();
+            }
+            else if (_navData.Flying)
+            {
+                var args = new CommandWorker.ProgressiveCommandArguments
+                    {
+                        AbsoluteControl = AbsoluteControlMode,
+                        CombineYaw = CombineYaw,
+                        Pitch = Pitch,
+                        Roll = Roll,
+                        Gaz = Gaz,
+                        Yaw = Yaw,
+                        MagnetoPsi = ControllerHeading,
+                        MagnetoPsiAccuracy = ControllerHeadingAccuracy
+                    };
+                _commandWorker.SendProgressiveCommand(args);
             }
         }
 
         public void Disconnect()
         {
+            Connected = false;
+
             if (_controlSocket != null)
             {
                 _controlSocket.Dispose();
                 _controlSocket = null;
             }
 
-            if (_worker != null)
+            if (_commandTimer != null)
             {
-                _worker.Wait(1000);
-                _worker = null;
+                _commandTimer.Dispose();
+                _commandTimer = null;
             }
 
             if (_commandWorker != null)
@@ -195,21 +220,24 @@ namespace AR_Drone_Controller
                 _navDataWorker = null;
             }
 
-            Connected = false;
+            ShutdownVideoWorker();
         }
 
-        private void NavDataWorkerOnNavDataUnhandledException(object sender, NavDataUnhandledExceptionEventArgs e)
+        private void UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         private void NavDataWorkerOnNavDataReceived(object sender, NavDataReceivedEventArgs e)
         {
             NavData = e.NavData;
-            if (e.NavData.Demo == null && _commandWorker != null)
+            if ((e.NavData.Wifi == null || e.NavData.Demo == null) && _commandWorker != null)
             {
-                _commandWorker.SendConfigCommand("general:navdata_demo", "FALSE");
+                const uint navDataOptions = (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.Demo) +
+                                            (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.HdVideoStream) +
+                                            (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.Wifi);
                 _commandWorker.SendConfigCommand("general:navdata_demo", "TRUE");
+                _commandWorker.SendConfigCommand("general:navdata_options", navDataOptions.ToString());
             }
         }
 
@@ -222,9 +250,14 @@ namespace AR_Drone_Controller
             _commandWorker.SendRefCommand(CommandWorker.RefCommands.TakeOff);
         }
 
-        public void Cailbrate()
+        public void CailbrateCompass()
         {
-            _commandWorker.SendCalibrationCommand();
+            _commandWorker.SendCalibrateCompassCommand();
+        }
+
+        public void FlatTrim()
+        {
+            _commandWorker.SendFlatTrimCommand();
         }
 
         public void Land()
@@ -253,141 +286,36 @@ namespace AR_Drone_Controller
             _commandWorker.SendRefCommand(CommandWorker.RefCommands.Emergency);
         }
 
-        public void SendLedCommand(CommandWorker.LedAnimation animation, float frequencyInHz, int durationInSeconds)
+        public void SendLedAnimationCommand(CommandWorker.LedAnimation animation, float frequencyInHz, int durationInSeconds)
         {
             if (_commandWorker == null)
             {
                 throw new DroneControllerNotConnectedException();
             }
 
-            _commandWorker.SendLedCommand(animation, frequencyInHz, durationInSeconds);
+            _commandWorker.SendLedAnimationCommand(animation, frequencyInHz, durationInSeconds);
+        }
+
+        public void SendFlightAnimationCommand(CommandWorker.FlightAnimation animation, int maydayTimeoutInMilliseconds)
+        {
+            if (_commandWorker == null)
+            {
+                throw new DroneControllerNotConnectedException();
+            }
+
+            _commandWorker.SendFlightAnimationCommand(animation, maydayTimeoutInMilliseconds);
         }
 
         public bool CombineYaw { get; set; }
 
-        public List<LedCommand> LedCommands { get; private set; }
-
-        private void CreateLedCommandsList()
+        public List<LedAnimation> LedAnimations
         {
-            LedCommands = new List<LedCommand>
-                {
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.Blank,
-                            Title = "Blank",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.BlinkGreen,
-                            Title = "Blink Green",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.BlinkGreenRed,
-                            Title = "Blink Green Red",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.BlinkOrange,
-                            Title = "Blink Orange",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.BlinkRed,
-                            Title = "Blink Red",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.BlinkStandard,
-                            Title = "Blink Standard",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.DoubleMissile,
-                            Title = "Double Missile",
-                            DroneController = this
-                        },
-                    new LedCommand {Animation = CommandWorker.LedAnimation.Fire, Title = "Fire", DroneController = this},
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.FrontLeftGreenOthersRed,
-                            Title = "Front Left Green Others Red",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.FrontRightGreenOthersRed,
-                            Title = "Front Right Green Others Red",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.Green,
-                            Title = "Green",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.LeftGreenRightRed,
-                            Title = "Left Green Right Red",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.LeftMissile,
-                            Title = "Left Missile",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.LeftRedRightGreen,
-                            Title = "Left Red Right Green",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.RearLeftGreenOthersRed,
-                            Title = "Rear Left Green Others Red",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.RearRightGreenOthersRed,
-                            Title = "Rear Right Green Others Red",
-                            DroneController = this
-                        },
-                    new LedCommand {Animation = CommandWorker.LedAnimation.Red, Title = "Red", DroneController = this},
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.RedSnake,
-                            Title = "Red Snake",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.RightMissile,
-                            Title = "Right Missile",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.SnakeGreenRed,
-                            Title = "Snake Green Red",
-                            DroneController = this
-                        },
-                    new LedCommand
-                        {
-                            Animation = CommandWorker.LedAnimation.Standard,
-                            Title = "Standard",
-                            DroneController = this
-                        }
-                };
+            get { return LedAnimation.GenerateLedAnimationList(this); }
+        }
+
+        public List<FlightAnimation> FlightAnimations
+        {
+            get { return FlightAnimation.GenerateFlightAnimationList(this); }
         }
 
         public class DroneControllerNotConnectedException : Exception
@@ -396,6 +324,46 @@ namespace AR_Drone_Controller
                 : base("The operation is invalid because the drone controller is not connected.")
             {
             }
+        }
+
+        public void StartRecording()
+        {
+            if (_commandWorker == null)
+            {
+                throw new DroneControllerNotConnectedException();
+            }
+
+            _commandWorker.SendConfigCommand("video:video_on_usb", "TRUE");
+            _commandWorker.SendConfigCommand("video:video_codec", string.Format("{0}", 0x82)); // H264_720P_CODEC
+
+            ShutdownVideoWorker();
+            InitializeVideoWorker();
+        }
+
+        public void StopRecording()
+        {
+            if (_commandWorker == null)
+            {
+                throw new DroneControllerNotConnectedException();
+            }
+
+            _commandWorker.SendConfigCommand("video:video_on_usb", "FALSE");
+            _commandWorker.SendConfigCommand("video:video_codec", string.Format("{0}", 0x81)); // H264_720P_CODEC
+            ShutdownVideoWorker();
+        }
+
+        private void ShutdownVideoWorker()
+        {
+            if (_videoWorker != null)
+            {
+                _videoWorker.Stop();
+                _videoWorker = null;
+            }
+        }
+
+        public void GetConfig()
+        {
+            _commandWorker.SendCtrlCommand(CommandWorker.ControlMode.CfgGetControlMode);
         }
     }
 }

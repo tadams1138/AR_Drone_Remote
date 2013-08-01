@@ -4,7 +4,7 @@
   <Languages xmlns="">
     <Language code="en-US" />
   </Languages>
-  <App xmlns="" ProductID="{a654e9a7-7bbb-4b09-964d-3b8c8a0c5602}" Title="AR Drone Remote" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="Thomas Adams" Description="Remote Control for Parrot Brand AR Drone" Publisher="Thomas Adams" PublisherID="{0d70b939-c353-4a9f-ad4b-c18f829c7686}">
+  <App xmlns="" ProductID="{a654e9a7-7bbb-4b09-964d-3b8c8a0c5602}" Title="AR Drone Remote" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="Thomas Adams" Description="Remote Control for Parrot Brand AR Drone 2.0" Publisher="Thomas Adams" PublisherID="{0d70b939-c353-4a9f-ad4b-c18f829c7686}">
     <IconPath IsRelative="true" IsResource="false">Assets\AppIcon.png</IconPath>
     <Capabilities>
       <Capability Name="ID_CAP_NETWORKING" />

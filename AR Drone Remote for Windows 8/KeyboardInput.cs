@@ -93,11 +93,11 @@ namespace AR_Drone_Remote_for_Windows_8
             float upDown;
             if (IsKeyDown(RiseKey) && !IsKeyDown(DropKey))
             {
-                upDown = -1;
+                upDown = 1;
             }
             else if (IsKeyDown(DropKey) && !IsKeyDown(RiseKey))
             {
-                upDown = 1;
+                upDown = -1;
             }
             else
             {

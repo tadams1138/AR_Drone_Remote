@@ -8,7 +8,6 @@ namespace AR_Drone_Remote_for_Windows_8
         {
             DataContext = this;
             InitializeComponent();
-            Theta = 35f;
         }
 
         public static readonly DependencyProperty PhiProperty = DependencyProperty.Register(

@@ -7,7 +7,6 @@ using Microsoft.Phone.Tasks;
 using System;
 using System.Windows;
 using Telerik.Windows.Controls;
-using GestureEventArgs = System.Windows.Input.GestureEventArgs;
 
 namespace AR_Drone_Remote_for_Windows_Phone
 {
@@ -207,12 +206,7 @@ namespace AR_Drone_Remote_for_Windows_Phone
             FlightControls.Visibility = Visibility.Visible;
             Tools.Visibility = Visibility.Collapsed;
         }
-
-        private void Record_OnClick(object sender, EventArgs e)
-        {
-            // TODO
-        }
-
+        
         private void HelpClick(object sender, EventArgs e)
         {
             var webBrowserTask = new WebBrowserTask { Uri = DroneController.HelpUri };
@@ -231,13 +225,13 @@ namespace AR_Drone_Remote_for_Windows_Phone
             marketplaceReviewTask.Show();
         }
 
-        private void LedCommands_OnItemClick(object sender, RoutedEventArgs routedEventArgs)
+        private void LedAnimations_OnItemClick(object sender, RoutedEventArgs routedEventArgs)
         {
             try
             {
                 var button = (Button)sender;
-                var ledCommand = (LedCommand)button.Content;
-                ledCommand.Execute();
+                var ledAnimation = (LedAnimation)button.Content;
+                ledAnimation.Execute();
             }
             catch (Exception ex)
             {
@@ -246,9 +240,41 @@ namespace AR_Drone_Remote_for_Windows_Phone
             }
         }
 
-        private void Calibrate_Click(object sender, RoutedEventArgs e)
+        private void CalibrateCompass_Click(object sender, RoutedEventArgs e)
         {
-            DroneController.Cailbrate();
+            DroneController.CailbrateCompass();
+        }
+
+        private void FlightAnimations_OnItemClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var button = (Button)sender;
+                var flightAnimation = (FlightAnimation)button.Content;
+                flightAnimation.Execute();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message,
+                                "Unable to send flight animation command.", MessageBoxButton.OK);
+            }
+        }
+
+        private void FlatTrim_Click(object sender, RoutedEventArgs e)
+        {
+            DroneController.FlatTrim();
+        }
+
+        private void Record_Click(object sender, RoutedEventArgs e)
+        {
+            if (DroneController.NavData.HdVideoStream.UsbKeyIsRecording)
+            {
+                DroneController.StopRecording();
+            }
+            else
+            {
+                DroneController.StartRecording();
+            }
         }
     }
 }

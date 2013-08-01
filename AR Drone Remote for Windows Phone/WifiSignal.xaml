@@ -8,8 +8,7 @@
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
-    d:DesignHeight="60" d:DesignWidth="100"
-             x:Name="This">
+    d:DesignHeight="60" d:DesignWidth="100">
     <UserControl.Resources>
         <local:WifiColorConverter x:Key="WifiColorConverter"
             HighStrengthColor="White"
@@ -19,11 +18,11 @@
     <Viewbox Stretch="UniformToFill">
         <Grid x:Name="LayoutRoot" Background="Transparent" >
             <Grid Height="60" Width="100">
-                <Path Stroke="{Binding ElementName=This, Path=Strength, Converter={StaticResource WifiColorConverter}, ConverterParameter=66}" 
+                <Path Stroke="{Binding Path=Strength, Converter={StaticResource WifiColorConverter}, ConverterParameter=66}" 
                   StrokeThickness="8" Data="M 10,30 A 50,50 45 0 1 90,30"/>
-                <Path Stroke="{Binding ElementName=This, Path=Strength, Converter={StaticResource WifiColorConverter}, ConverterParameter=33}"
+                <Path Stroke="{Binding Path=Strength, Converter={StaticResource WifiColorConverter}, ConverterParameter=33}"
                   StrokeThickness="8" Data="M 30,40 A 25,25 45 0 1 70,40"/>
-                <Ellipse Fill="{Binding ElementName=This, Path=Strength, Converter={StaticResource WifiColorConverter}, ConverterParameter=0}" 
+                <Ellipse Fill="{Binding Path=Strength, Converter={StaticResource WifiColorConverter}, ConverterParameter=0}" 
                      Width="16" Height="16" VerticalAlignment="Bottom" />
             </Grid>
         </Grid>

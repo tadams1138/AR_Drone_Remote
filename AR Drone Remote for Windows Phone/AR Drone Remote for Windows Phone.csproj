@@ -102,10 +102,10 @@
       <DependentUpon>BatteryIndicator.xaml</DependentUpon>
     </Compile>
     <Compile Include="BatteryPercentageToVisibilityConvert.cs" />
+    <Compile Include="BooleanToBrushConverter.cs" />
     <Compile Include="CompassControl.xaml.cs">
       <DependentUpon>CompassControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="DegreeToCompassHeadingConverter.cs" />
     <Compile Include="DispatcherWrapper.cs" />
     <Compile Include="Joystick.xaml.cs">
       <DependentUpon>Joystick.xaml</DependentUpon>
@@ -123,6 +123,7 @@
       <DependentUpon>AppResources.resx</DependentUpon>
     </Compile>
     <Compile Include="SocketFactory.cs" />
+    <Compile Include="StringConverter.cs" />
     <Compile Include="TcpSocket.cs" />
     <Compile Include="UdpSocket.cs" />
     <Compile Include="WifiColorConverter.cs" />
@@ -161,8 +162,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <None Include="AR_Drone_Remote_for_Windows_Phone_2013_06_29_17_17_07.sap" />
-    <None Include="AR_Drone_Remote_for_Windows_Phone_2013_06_29_17_18_59.sap" />
     <None Include="Properties\AppManifest.xml" />
     <None Include="Properties\WMAppManifest.xml">
       <SubType>Designer</SubType>

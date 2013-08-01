@@ -16,7 +16,8 @@
     SupportedOrientations="Landscape"  Orientation="Landscape"
     shell:SystemTray.IsVisible="True"
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
-    OrientationChanged="MainPage_OnOrientationChanged">
+    OrientationChanged="MainPage_OnOrientationChanged"
+    x:Name="This">
 
     <phone:PhoneApplicationPage.Resources>
         <Style x:Key="IconButton" TargetType="Button">
@@ -158,14 +159,9 @@
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource PhoneTextNormalStyle}" Text="{StaticResource AppName}" />
             <Button Click="Emergency_Click" Content="Emergency" IsEnabled="{Binding DroneController.Connected}" Grid.Column="1"/>
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="Collapsed">
-                <local:WifiSignal Height="40" HorizontalAlignment="Center" Strength="100"/>
-                <TextBlock VerticalAlignment="Center" Text="{Binding DroneController.NavData.Demo.BatteryPercentage}"/>
-                <TextBlock VerticalAlignment="Center" Text="%"/>
-            </StackPanel>
             <StackPanel Grid.Column="3" Orientation="Horizontal">
                 <local:BatteryIndicator Height="30" 
-                                        BatteryPercentage="{Binding DroneController.NavData.Demo.BatteryPercentage}" 
+                                        BatteryPercentage="{Binding ElementName=This, Path=DroneController.NavData.Demo.BatteryPercentage}" 
                                         Margin="0,21,0,0" 
                                         VerticalAlignment="Top" />
                 <TextBlock VerticalAlignment="Center" Text="{Binding DroneController.NavData.Demo.BatteryPercentage}"/>
@@ -199,11 +195,11 @@
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="1*"/>
                     </Grid.RowDefinitions>
-                    <local:AttitudeIndicator Phi="{Binding DroneController.NavData.Demo.Phi}"
-						Theta="{Binding DroneController.NavData.Demo.Theta}"
+                    <local:AttitudeIndicator Phi="{Binding ElementName=This, Path=DroneController.NavData.Demo.Phi}"
+						Theta="{Binding ElementName=This, Path=DroneController.NavData.Demo.Theta}"
 						Grid.Row="0"/>
                     <local:CompassControl x:Name="CompassIndicator"
-						DroneHeading="{Binding DroneController.NavData.Demo.Psi}"
+						DroneHeading="{Binding ElementName=This, Path=DroneController.NavData.Demo.Psi}"
 						Grid.Row="1"/>
                 </Grid>
 
@@ -219,17 +215,54 @@
             </Grid>
 
             <phone:Pivot x:Name="Tools" Style="{StaticResource PivotStyle1}" Visibility="Collapsed">
+                <phone:PivotItem x:Name="CalibrateControls">
+                    <phone:PivotItem.Header>
+                        <TextBlock Style="{StaticResource PhoneTextNormalStyle}" Text="Calibrate"/>
+                    </phone:PivotItem.Header>
+                    <Grid Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+                        <Button Grid.Column="0" Grid.Row="0" IsEnabled="{Binding DroneController.NavData.Flying}" Click="CalibrateCompass_Click" Content="Calibrate Compass"/>
+                        <Button Grid.Column="0" Grid.Row="1" IsEnabled="{Binding DroneController.NavData.Landed}" Click="FlatTrim_Click" Content="Flat Trim"/>
+
+                    </Grid>
+                </phone:PivotItem>
                 <phone:PivotItem x:Name="LedLightControls">
                     <phone:PivotItem.Header>
                         <TextBlock Style="{StaticResource PhoneTextNormalStyle}" Text="LED Lights"/>
                     </phone:PivotItem.Header>
                     <phone:LongListSelector 
                             IsEnabled="{Binding DroneController.Connected}"
-                            ItemsSource="{Binding DroneController.LedCommands}">
+                            ItemsSource="{Binding DroneController.LedAnimations}">
                         <phone:LongListSelector.ItemTemplate>
                             <DataTemplate>
-                                <Button Click="LedCommands_OnItemClick"
-                                        Content="{Binding}" />
+                                <Button Click="LedAnimations_OnItemClick"
+                                        Content="{Binding}" 
+                                        Width="400"/>
+                            </DataTemplate>
+                        </phone:LongListSelector.ItemTemplate>
+                    </phone:LongListSelector>
+                </phone:PivotItem>
+                <phone:PivotItem x:Name="FlightAnimationControls">
+                    <phone:PivotItem.Header>
+                        <TextBlock Style="{StaticResource PhoneTextNormalStyle}" Text="Flight Animations"/>
+                    </phone:PivotItem.Header>
+                    <phone:LongListSelector 
+                            IsEnabled="{Binding DroneController.NavData.Flying}"
+                            ItemsSource="{Binding DroneController.FlightAnimations}">
+                        <phone:LongListSelector.ItemTemplate>
+                            <DataTemplate>
+                                <Button Click="FlightAnimations_OnItemClick"
+                                        Content="{Binding}" 
+                                        Width="400"/>
                             </DataTemplate>
                         </phone:LongListSelector.ItemTemplate>
                     </phone:LongListSelector>
@@ -243,7 +276,17 @@
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
+            <Grid.Resources>
+                <local:BooleanToBrushConverter x:Key="RecordingColorConverter" TrueColor="Red" FalseColor="DarkGray" />
+                <local:StringConverter x:Key="VelocityConverter"/>
+            </Grid.Resources>
             <StackPanel Background="Transparent" HorizontalAlignment="Center" Orientation="Horizontal">
+                <TextBlock FontSize="{StaticResource PhoneFontSizeMediumLarge}" 
+                           VerticalAlignment="Center" 
+                           Text="{Binding DroneController.NavData.Demo.Velocity, Converter={StaticResource VelocityConverter}, ConverterParameter='{0:0.0}'}"/>
+                <TextBlock FontSize="{StaticResource PhoneFontSizeMediumLarge}" 
+                           VerticalAlignment="Center" 
+                           Text="m/s   "/>
                 <Button Width="20" MaxHeight="76" BorderThickness="0" Style="{StaticResource IconButton}" >
                     <ImageBrush Stretch="UniformToFill" ImageSource="/Assets/appbar.dimension.line.height.png"/>
                 </Button>
@@ -254,14 +297,21 @@
                     <ImageBrush Stretch="UniformToFill" ImageSource="/Assets/appbar.measure.meter.png"/>
                 </Button>
             </StackPanel>
-            <Button Grid.Column="1" 
+            <Button Grid.Column="1"
                     Content="Take Off/Land" 
                     Click="LaunchLand_Click" 
                     IsEnabled="{Binding DroneController.Connected}" />
-            <Button Grid.Column="2" 
-                    Content="Calibrate" 
-                    Click="Calibrate_Click" 
-                    IsEnabled="{Binding DroneController.Connected}" />
+            <StackPanel Background="Transparent" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Column="2">
+                <Ellipse Fill="{Binding DroneController.NavData.HdVideoStream.UsbKeyIsRecording, Converter={StaticResource RecordingColorConverter}}" 
+                         Stroke="White" 
+                         Width="40" 
+                         Height="40"/>
+                <Button Grid.Column="1" 
+                        Grid.Row="1" 
+                        IsEnabled="{Binding DroneController.NavData.HdVideoStream.CanRecord}" 
+                        Click="Record_Click" 
+                        Content="Recording"/>
+            </StackPanel>
         </Grid>
 
     </Grid>

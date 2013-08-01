@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace AR_Drone_Controller
 {
@@ -12,75 +11,81 @@ namespace AR_Drone_Controller
         private const int CommandPort = 5556;
         private const int TimeoutValue = 500;
 
-        private int _seq;
-
-        private IUdpSocket _cmdSocket;
-        private bool _run;
         private readonly Queue<string> _commands = new Queue<string>();
         private readonly object _syncLock = new object();
+        
+        private int _seq;
+        private IUdpSocket _cmdSocket;
+        private bool _run;
         private DateTime _timeSinceLastSend;
+        private Timer _workerTimer;
+
+        public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
 
         public string RemoteIpAddress { get; set; }
-
         public ISocketFactory SocketFactory { get; set; }
-
         public string SessionId { get; set; }
         public string ProfileId { get; set; }
-        public string ApplocationId { get; set; }
-
+        public string ApplicationId { get; set; }
+        
         internal void Run()
         {
             if (!_run)
             {
                 _run = true;
                 _seq = 1;
-                Task.Factory.StartNew(DoWork);
+                CreateSocket();
+                _workerTimer = new Timer(DoWork, null, 30, 30);
             }
         }
 
         internal void Stop()
         {
+            if (_workerTimer != null)
+            {
+                _workerTimer.Dispose();
+                _workerTimer = null;
+            }
+
+            if (_cmdSocket != null)
+            {
+                _cmdSocket.Dispose();
+                _cmdSocket = null;
+            }
+
             _run = false;
         }
 
         const int MaxCommandLength = 1024;
 
-        private void DoWork()
+        private void DoWork(object state)
         {
-            var message = new StringBuilder();
-            CreateSocket();
-
-            using (var manualResetEvent = new ManualResetEvent(false))
+            try
             {
-                do
+                string message = AppendCommands();
+
+                if (!string.IsNullOrEmpty(message))
                 {
-                    bool anyCommands;
-
-                    lock (_syncLock)
-                    {
-                        anyCommands = _commands.Any();
-                    }
-
-                    if (anyCommands)
-                    {
-                        AppendCommands(message);
-                        _cmdSocket.Write(message.ToString());
-                        _timeSinceLastSend = DateTime.UtcNow;
-                    }
-                    else if ((DateTime.UtcNow - _timeSinceLastSend).Milliseconds > 200)
-                    {
-                        SendAck();
-                    }
-
-                    // Sleep
-                    manualResetEvent.WaitOne(30);
-                } while (_run);
+                    _cmdSocket.Write(message);
+                    _timeSinceLastSend = DateTime.UtcNow;
+                }
+                else if ((DateTime.UtcNow - _timeSinceLastSend).Milliseconds > 200)
+                {
+                    SendAck();
+                }
+            }
+            catch (Exception ex)
+            {
+                if (UnhandledException != null)
+                {
+                    UnhandledException(this, new UnhandledExceptionEventArgs(ex));
+                }
             }
         }
 
-        private void AppendCommands(StringBuilder message)
+        private string AppendCommands()
         {
-            message.Clear();
+            var message = new StringBuilder();
             lock (_syncLock)
             {
                 while (_commands.Any() && message.Length + _commands.Peek().Length <= MaxCommandLength)
@@ -88,6 +93,8 @@ namespace AR_Drone_Controller
                     message.Append(_commands.Dequeue());
                 }
             }
+
+            return message.ToString();
         }
 
         private void CreateSocket()
@@ -96,9 +103,9 @@ namespace AR_Drone_Controller
                                                     TimeoutValue);
         }
 
-        public void SendFtrimCommand()
+        public void SendFlatTrimCommand()
         {
-            EnqueCommand("FTRIM", string.Empty);
+            EnqueCommand("FTRIM");
         }
 
         public void SendMiscellaneousCommand(string message)
@@ -113,7 +120,7 @@ namespace AR_Drone_Controller
 
         public void SendConfigCommand(string key, string value)
         {
-            string configId = string.Format("\"{0}\",\"{1}\",\"{2}\"", SessionId, ProfileId, ApplocationId);
+            string configId = string.Format("\"{0}\",\"{1}\",\"{2}\"", SessionId, ProfileId, ApplicationId);
             string config = string.Format("\"{0}\",\"{1}\"", key, value);
             EnqueCommand("CONFIG_IDS", configId);
             EnqueCommand("CONFIG", config);
@@ -156,7 +163,7 @@ namespace AR_Drone_Controller
             BlinkStandard = 20
         }
 
-        public void SendLedCommand(LedAnimation command, float frequencyInHz, int durationInSeconds)
+        public void SendLedAnimationCommand(LedAnimation command, float frequencyInHz, int durationInSeconds)
         {
             int frequency = ConvertFloatToInt32(frequencyInHz);
             string message = string.Format("{0},{1},{2}", (int)command, frequency,
@@ -164,9 +171,71 @@ namespace AR_Drone_Controller
             EnqueCommand("LED", message);
         }
 
-        public void SendAck()
+        public enum FlightAnimation
         {
-            EnqueCommand("CTRL", "0");
+            PhiMinus30Degrees = 0,
+            PhiPlus30Degrees,
+            ThetaMinus30Degrees,
+            ThetaPlus30Degrees,
+            Theta20DegYaw200Degrees,
+            Theta20DegYawM200Degrees,
+            Turnaround,
+            TurnaroundAndGoDown,
+            YawShake,
+            YawDance,
+            PhiDance,
+            ThetaDance,
+            VzDance,
+            Wave,
+            PhiThetaMixed,
+            DoublePhiThetaMixed,
+            FlipAhead,
+            FlipBehind,
+            FlipLeft,
+            FlipRight
+        }
+
+        public void SendFlightAnimationCommand(FlightAnimation command, int maydayTimeoutInMilliseconds)
+        {
+            string message = string.Format("{0},{1}", (int)command, maydayTimeoutInMilliseconds);
+            EnqueCommand("ANIM", message);
+        }
+
+        public void ExitBootStrapMode()
+        {
+            SendConfigCommand("general:navdata_demo", "TRUE");
+            SendAck();
+        }
+
+        public enum ControlMode
+        {
+            NoControlMode = 0, /*<! Doing nothing */
+            ArdroneUpdateControlMode, /*<! Not used */
+            PicUpdateControlMode, /*<! Not used */
+            LogsGetControlMode, /*<! Not used */
+            CfgGetControlMode, /*<! Send active configuration file to a client through the 'control' socket UDP 5559 */
+            AckControlMode, /*<! Reset command mask in navdata */
+            CustomCfgGetControlMode /*<! Requests the list of custom configuration IDs */
+        }
+
+        public void SendCtrlCommand(ControlMode mode)
+        {
+            string message = ((int)mode).ToString() + ",0";
+            EnqueCommand("CTRL", message);
+        }
+
+        private void SendAck()
+        {
+            SendCtrlCommand(0);
+        }
+
+        private void EnqueCommand(string type)
+        {
+            string command = string.Format("AT*{0}={1}\r", type, _seq++);
+            lock (_syncLock)
+            {
+                _commands.Enqueue(command);
+            }
         }
 
         private void EnqueCommand(string type, string message)
@@ -266,10 +335,8 @@ namespace AR_Drone_Controller
                 {
                     return degrees / 180;
                 }
-                else
-                {
-                    return degrees / 180 - 2;
-                }
+                
+                return degrees / 180 - 2;
             }
 
             private int ConvertFloatToInt32(float value)
@@ -287,7 +354,7 @@ namespace AR_Drone_Controller
             return result;
         }
 
-        internal void SendCalibrationCommand()
+        internal void SendCalibrateCompassCommand()
         {
             EnqueCommand("CALIB", "0");
         }

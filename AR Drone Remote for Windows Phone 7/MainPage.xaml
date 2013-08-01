@@ -1,0 +1,323 @@
+﻿<controls:PhoneApplicationPage 
+    x:Class="AR_Drone_Remote_for_Windows_Phone_7.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:AR_Drone_Remote_for_Windows_Phone_7"
+    xmlns:telerikPrimitives="clr-namespace:Telerik.Windows.Controls;assembly=Telerik.Windows.Controls.Primitives"
+    xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls"
+    xmlns:controls="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
+    xmlns:controlsPrimitives="clr-namespace:Microsoft.Phone.Controls.Primitives;assembly=Microsoft.Phone.Controls"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    mc:Ignorable="d"
+    FontFamily="{StaticResource PhoneFontFamilyNormal}"
+    FontSize="{StaticResource PhoneFontSizeNormal}"
+    Foreground="{StaticResource PhoneForegroundBrush}"
+    SupportedOrientations="Landscape"  Orientation="Landscape"
+    shell:SystemTray.IsVisible="True"
+    DataContext="{Binding RelativeSource={RelativeSource Self}}"
+    OrientationChanged="MainPage_OnOrientationChanged"
+    x:Name="This">
+
+    <controls:PhoneApplicationPage.Resources>
+        <Style x:Key="IconButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{StaticResource PhoneForegroundBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource PhoneForegroundBrush}"/>
+            <Setter Property="BorderThickness" Value="{StaticResource PhoneBorderThickness}"/>
+            <Setter Property="FontFamily" Value="{StaticResource PhoneFontFamilySemiBold}"/>
+            <Setter Property="FontSize" Value="{StaticResource PhoneFontSizeMediumLarge}"/>
+            <Setter Property="Padding" Value="10,3,10,5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent">
+                            <VisualStateManager.VisualStateGroups>
+
+                            </VisualStateManager.VisualStateGroups>
+                            <Border x:Name="ButtonBackground" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" CornerRadius="0" Margin="0">
+                                <Grid x:Name="ContentContainer" OpacityMask="{TemplateBinding Content}" Background="{TemplateBinding Foreground}"/>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </controls:PhoneApplicationPage.Resources>
+
+    <controls:PhoneApplicationPage.ApplicationBar>
+        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True" Mode="Default" Opacity="1.0" >
+            <shell:ApplicationBar.MenuItems>
+                <shell:ApplicationBarMenuItem Text="Online Help" Click="HelpClick" />
+                <shell:ApplicationBarMenuItem Text="Rate &amp; Review" Click="RateAndReviewClick" />
+                <shell:ApplicationBarMenuItem Text="Privacy Policy" Click="PrivacyClick" />
+            </shell:ApplicationBar.MenuItems>
+            <shell:ApplicationBarIconButton IconUri="/Assets/appbar.tools.png" Text="Options" Click="ShowOptions_OnClick" />
+            <shell:ApplicationBarIconButton IconUri="/Assets/appbar.controller.xbox.png" Text="Controls" Click="ShowControls_OnClick" />
+            <!--<shell:ApplicationBarIconButton IconUri="/Assets/appbar.video.png" Text="Record" Click="Record_OnClick" />-->
+            <shell:ApplicationBarIconButton IconUri="/Assets/appbar.connect.png" Text="Connect" Click="Connect_OnClick" />
+        </shell:ApplicationBar>
+    </controls:PhoneApplicationPage.ApplicationBar>
+
+    <!--LayoutRoot is the root grid where all page content is placed-->
+    <Grid x:Name="LayoutRoot" Background="Transparent" RenderTransformOrigin="0.5,0.5">
+        <Grid.Resources>
+            <Style x:Key="PivotStyle1" TargetType="phone:Pivot">
+                <Setter Property="Margin" Value="0"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Foreground" Value="{StaticResource PhoneForegroundBrush}"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="ItemsPanel">
+                    <Setter.Value>
+                        <ItemsPanelTemplate>
+                            <Grid/>
+                        </ItemsPanelTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="phone:Pivot">
+                            <Grid HorizontalAlignment="{TemplateBinding HorizontalAlignment}" VerticalAlignment="{TemplateBinding VerticalAlignment}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid Background="{TemplateBinding Background}" CacheMode="BitmapCache" Grid.RowSpan="3"/>
+                                <!--<ContentPresenter ContentTemplate="{TemplateBinding TitleTemplate}" Content="{TemplateBinding Title}" Margin="24,17,0,-7"/>-->
+                                <ContentPresenter ContentTemplate="{TemplateBinding TitleTemplate}" Content="{TemplateBinding Title}" Margin="0"/>
+                                <controlsPrimitives:PivotHeadersControl x:Name="HeadersListElement" Grid.Row="1"/>
+                                <ItemsPresenter x:Name="PivotItemPresenter" Margin="{TemplateBinding Padding}" Grid.Row="2"/>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- LOCALIZATION NOTE:
+            To localize the displayed strings copy their values to appropriately named
+            keys in the app's neutral language resource file (AppResources.resx) then
+            replace the hard-coded text value between the attributes' quotation marks
+            with the binding clause whose path points to that string name.
+
+            For example:
+
+                Text="{Binding Path=LocalizedResources.ApplicationTitle, Source={StaticResource LocalizedStrings}}"
+
+            This binding points to the template's string resource named "ApplicationTitle".
+
+            Adding supported languages in the Project Properties tab will create a
+            new resx file per language that can carry the translated values of your
+            UI strings. The binding in these examples will cause the value of the
+            attributes to be drawn from the .resx file that matches the
+            CurrentUICulture of the app at run time.
+         -->
+
+        <!-- Necessary to insert Grid.RenderTransform to allow VisualStateManager
+        Torotate the grid -->
+        <Grid.RenderTransform>
+            <RotateTransform/>
+        </Grid.RenderTransform>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="OrientationStates">
+                <VisualState x:Name="Landscape"/>
+                <VisualState x:Name="LandscapeLeft">
+                    <Storyboard>
+                        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="LayoutRoot" 
+                                                       Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                            <DiscreteDoubleKeyFrame KeyTime="0" Value="0"/>
+                        </DoubleAnimationUsingKeyFrames>
+                    </Storyboard>
+                </VisualState>
+                <VisualState x:Name="LandscapeRight">
+                    <Storyboard>
+                        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="LayoutRoot" 
+                                                       Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                            <DiscreteDoubleKeyFrame KeyTime="0" Value="180"/>
+                        </DoubleAnimationUsingKeyFrames>
+                    </Storyboard>
+                </VisualState>
+                <VisualState x:Name="Portrait"/>
+                <VisualState x:Name="PortraitUp"/>
+                <VisualState x:Name="PortraitDown"/>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid x:Name="HeaderPanel" Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width=".5*"/>
+                <ColumnDefinition Width=".5*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource PhoneTextNormalStyle}" Text="{StaticResource AppName}" />
+            <Button Click="Emergency_Click" Content="Emergency" IsEnabled="{Binding DroneController.Connected}" Grid.Column="1"/>
+            <StackPanel Grid.Column="3" Orientation="Horizontal">
+                <local:BatteryIndicator Height="30" 
+                                        BatteryPercentage="{Binding ElementName=This, Path=DroneController.NavData.Demo.BatteryPercentage}" 
+                                        Margin="0,21,0,0" 
+                                        VerticalAlignment="Top" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding DroneController.NavData.Demo.BatteryPercentage}"/>
+                <TextBlock VerticalAlignment="Center" Text="%"/>
+            </StackPanel>
+        </Grid>
+
+        <Grid x:Name="MainPanel" Grid.Row="1">
+            <Grid x:Name="FlightControls">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel x:Name="UseAccelerometer" HorizontalAlignment="Center">
+                    <TextBlock Text="Use phone tilt"/>
+                    <telerikPrimitives:RadToggleSwitch HorizontalAlignment="Center" CheckedChanged="UseAccelerometer_OnCheckedChanged" />
+                </StackPanel>
+                <local:Joystick x:Name="LeftJoystick" 
+					    Grid.Row="1" 
+					    XValueChanged="LeftJoystickOnXValueChanged" 
+					    YValueChanged="LeftJoystickOnYValueChanged"/>
+
+                <Grid Grid.Column="1" Grid.RowSpan="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="1*"/>
+                    </Grid.RowDefinitions>
+                    <local:AttitudeIndicator Phi="{Binding ElementName=This, Path=DroneController.NavData.Demo.Phi}"
+						Theta="{Binding ElementName=This, Path=DroneController.NavData.Demo.Theta}"
+						Grid.Row="0"/>
+                    <local:CompassControl x:Name="CompassIndicator"
+						DroneHeading="{Binding ElementName=This, Path=DroneController.NavData.Demo.Psi}"
+						Grid.Row="1"/>
+                </Grid>
+
+                <StackPanel x:Name="AbsoluteControl" Grid.Column="2" HorizontalAlignment="Center">
+                    <TextBlock Text="Steer relative to controller" TextWrapping="Wrap"/>
+                    <telerikPrimitives:RadToggleSwitch HorizontalAlignment="Center" CheckedChanged="AbsoluteConstrol_OnCheckedChanged" />
+                </StackPanel>
+                <local:Joystick x:Name="RightJoystick" 
+                    Grid.Column="2"
+                    Grid.Row="1" 
+                    XValueChanged="RightJoystickOnXValueChanged" 
+                    YValueChanged="RightJoystickOnYValueChanged"/>
+            </Grid>
+
+            <phone:Pivot x:Name="Tools" Style="{StaticResource PivotStyle1}" Visibility="Collapsed">
+                <phone:PivotItem x:Name="CalibrateControls">
+                    <phone:PivotItem.Header>
+                        <TextBlock Style="{StaticResource PhoneTextNormalStyle}" Text="Calibrate"/>
+                    </phone:PivotItem.Header>
+                    <Grid Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+                        <Button Grid.Column="0" Grid.Row="0" IsEnabled="{Binding DroneController.NavData.Flying}" Click="CalibrateCompass_Click" Content="Calibrate Compass"/>
+                        <Button Grid.Column="0" Grid.Row="1" IsEnabled="{Binding DroneController.NavData.Landed}" Click="FlatTrim_Click" Content="Flat Trim"/>
+
+                    </Grid>
+                </phone:PivotItem>
+                <phone:PivotItem x:Name="LedLightControls">
+                    <phone:PivotItem.Header>
+                        <TextBlock Style="{StaticResource PhoneTextNormalStyle}" Text="LED Lights"/>
+                    </phone:PivotItem.Header>
+                    <ListBox 
+                            IsEnabled="{Binding DroneController.Connected}"
+                            ItemsSource="{Binding DroneController.LedAnimations}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Button Click="LedAnimations_OnItemClick"
+                                        Content="{Binding}" 
+                                        Width="400"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </phone:PivotItem>
+                <phone:PivotItem x:Name="FlightAnimationControls">
+                    <phone:PivotItem.Header>
+                        <TextBlock Style="{StaticResource PhoneTextNormalStyle}" Text="Flight Animations"/>
+                    </phone:PivotItem.Header>
+                    <ListBox 
+                            IsEnabled="{Binding DroneController.NavData.Flying}"
+                            ItemsSource="{Binding DroneController.FlightAnimations}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Button Click="FlightAnimations_OnItemClick"
+                                        Content="{Binding}" 
+                                        Width="400"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </phone:PivotItem>
+            </phone:Pivot>
+        </Grid>
+
+        <Grid x:Name="Footer" Grid.Row="2" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.Resources>
+                <local:BooleanToBrushConverter x:Key="RecordingColorConverter" TrueColor="Red" FalseColor="DarkGray" />
+                <local:StringConverter x:Key="VelocityConverter"/>
+                <sys:String x:Key="VelocityFormat">{0:0.0}</sys:String>
+            </Grid.Resources>
+            <StackPanel Background="Transparent" HorizontalAlignment="Center" Orientation="Horizontal">
+                <TextBlock FontSize="{StaticResource PhoneFontSizeMediumLarge}" 
+                           VerticalAlignment="Center" 
+                           Text="{Binding DroneController.NavData.Demo.KilometersPerHour, 
+                                        Converter={StaticResource VelocityConverter}, 
+                                        ConverterParameter={StaticResource VelocityFormat}}"/>
+                <TextBlock FontSize="{StaticResource PhoneFontSizeMediumLarge}" 
+                           VerticalAlignment="Center" 
+                           Text="km/h   "/>
+                <Button Width="20" MaxHeight="76" BorderThickness="0" Style="{StaticResource IconButton}" >
+                    <ImageBrush Stretch="UniformToFill" ImageSource="/Assets/appbar.dimension.line.height.png"/>
+                </Button>
+                <TextBlock FontSize="{StaticResource PhoneFontSizeMediumLarge}" 
+                           VerticalAlignment="Center" 
+                           Text="{Binding DroneController.NavData.Demo.Altitude}"/>
+                <Button Width="40" MaxHeight="76" BorderThickness="0" Style="{StaticResource IconButton}" >
+                    <ImageBrush Stretch="UniformToFill" ImageSource="/Assets/appbar.measure.meter.png"/>
+                </Button>
+            </StackPanel>
+            <Button Grid.Column="1"
+                    Content="Take Off/Land" 
+                    Click="LaunchLand_Click" 
+                    IsEnabled="{Binding DroneController.Connected}" />
+            <StackPanel Background="Transparent" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Column="2">
+                <Ellipse Fill="{Binding DroneController.NavData.HdVideoStream.UsbKeyIsRecording, Converter={StaticResource RecordingColorConverter}}" 
+                         Stroke="White" 
+                         Width="40" 
+                         Height="40"/>
+                <Button Grid.Column="1" 
+                        Grid.Row="1" 
+                        IsEnabled="{Binding DroneController.NavData.HdVideoStream.CanRecord}" 
+                        Click="Record_Click" 
+                        Content="Record"/>
+            </StackPanel>
+        </Grid>
+
+    </Grid>
+</controls:PhoneApplicationPage>

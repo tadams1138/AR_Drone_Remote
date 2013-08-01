@@ -1,7 +1,7 @@
 ﻿namespace AR_Drone_Controller.NavData
 {
     using System;
-    using System.Threading.Tasks;
+    using System.Threading;
 
     class NavDataWorker
     {
@@ -10,74 +10,111 @@
 
         private IUdpSocket _navDataSocket;
         private bool _run;
+        private Timer _keepAliveTimer;
+        private DateTime _timeSinceLastReception;
 
         public string RemoteIpAddress { get; set; }
         public ISocketFactory SocketFactory { get; set; }
 
-        public delegate void NavDataReceivedEventHandler(object sender, NavDataReceivedEventArgs e);
-        public event NavDataReceivedEventHandler NavDataReceived;
-
-        public delegate void NavDataUnhandledExceptionEventHandler(object sender, NavDataUnhandledExceptionEventArgs e);
-        public event NavDataUnhandledExceptionEventHandler NavDataUnhandledException;
-
-
+        public event EventHandler<NavDataReceivedEventArgs> NavDataReceived;
+        public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
+        
         internal void Run()
         {
             if (!_run)
             {
+                NavData.ResetSequence();
+                CreateSocket();
+                _keepAliveTimer = new Timer(KeepAlive, null, 0, TimeoutValue);
                 _run = true;
-                Task.Factory.StartNew(DoWork);
             }
         }
 
         internal void Stop()
         {
+            if (_keepAliveTimer != null)
+            {
+                _keepAliveTimer.Dispose();
+                _keepAliveTimer = null;
+            }
+            
+            if (_navDataSocket != null)
+            {
+                _navDataSocket.Dispose();
+                _navDataSocket = null;
+            }
+
             _run = false;
         }
 
-        private void DoWork()
+        private void KeepAlive(object state)
         {
-            NavData.ResetSequence();
-            CreateSocket(); 
-            InitiateCommunication();
-
-            do
+            if (TimeoutExceeded())
             {
-                byte[] bytesReceived = null;
                 try
-                {
-                    bytesReceived = _navDataSocket.Receive();
-                }
-                catch
                 {
                     InitiateCommunication();
                 }
-
-                if (bytesReceived != null && NavDataReceived != null)
+                catch (Exception ex)
                 {
-                    try
+                    if (UnhandledException != null)
                     {
-                        var navData = NavData.FromBytes(bytesReceived);
-                        var navDataReceivedEventArgs = new NavDataReceivedEventArgs(navData);
-                        NavDataReceived(this, navDataReceivedEventArgs);
-                    }
-                    catch (NavData.OutOfSequenceException)
-                    {
-                        // ignore, we'll get the next one
-                    }
-                    catch (Exception ex)
-                    {
-                        var navDataUnhandledExceptionEventArgs = new NavDataUnhandledExceptionEventArgs(ex);
-                        NavDataUnhandledException(this, navDataUnhandledExceptionEventArgs);
+                        UnhandledException(this, new UnhandledExceptionEventArgs(ex));
                     }
                 }
-            } while (_run);
+            }
+        }
+
+        private void NavDataSocketOnDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            ResetTimeout();
+
+            if (e.Data != null && NavDataReceived != null)
+            {
+                try
+                {
+                    var navData = NavData.FromBytes(e.Data);
+                    var navDataReceivedEventArgs = new NavDataReceivedEventArgs(navData);
+                    NavDataReceived(this, navDataReceivedEventArgs);
+                }
+                catch (NavData.OutOfSequenceException)
+                {
+                    // ignore, we'll get the next one
+                }
+                catch (Exception ex)
+                {
+                    if (UnhandledException != null)
+                    {
+                        UnhandledException(this, new UnhandledExceptionEventArgs(ex));
+                    }
+                }
+            }
+        }
+
+        private void NavDataSocketOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            if (UnhandledException != null)
+            {
+                UnhandledException(this, e);
+            }
+        }
+
+        private bool TimeoutExceeded()
+        {
+            return (DateTime.UtcNow - _timeSinceLastReception).TotalMilliseconds > TimeoutValue;
+        }
+
+        private void ResetTimeout()
+        {
+            _timeSinceLastReception = DateTime.UtcNow;
         }
 
         private void CreateSocket()
         {
             _navDataSocket = SocketFactory.GetUdpSocket(NavDataPort, RemoteIpAddress, NavDataPort,
                                                         TimeoutValue);
+            _navDataSocket.DataReceived += NavDataSocketOnDataReceived;
+            _navDataSocket.UnhandledException += NavDataSocketOnUnhandledException;
         }
 
         private void InitiateCommunication()

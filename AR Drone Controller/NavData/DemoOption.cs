@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
 
 namespace AR_Drone_Controller.NavData
 {
@@ -42,7 +42,7 @@ namespace AR_Drone_Controller.NavData
             get { return _batteryPercentage; }
             set
             {
-                _batteryPercentage = value; NotifyPropertyChanged();
+                _batteryPercentage = value; NotifyPropertyChanged("BatteryPercentage");
             }
         }
 
@@ -70,6 +70,11 @@ namespace AR_Drone_Controller.NavData
 
         public float Vz { get; internal set; }
 
+        public float KilometersPerHour
+        {
+            get { return (float)Math.Sqrt(Vx * Vx + Vy * Vy + Vz * Vz) * 3.6f; }
+        }
+
         public uint FrameNumber { get; internal set; }
 
         public uint DetectionTagIndex { get; internal set; }
@@ -87,9 +92,9 @@ namespace AR_Drone_Controller.NavData
                 Phi = reader.ReadSingle() / 1000f,
                 Psi = reader.ReadSingle() / 1000f,
                 Altitude = reader.ReadInt32() / 1000,
-                Vx = reader.ReadSingle(),
-                Vy = reader.ReadSingle(),
-                Vz = reader.ReadSingle(),
+                Vx = reader.ReadSingle() / 1000f,
+                Vy = reader.ReadSingle() / 1000f,
+                Vz = reader.ReadSingle() / 1000f,
                 FrameNumber = reader.ReadUInt32(),
                 _detectionCameraRotation = Matrix33.FromReader(reader),
                 _detectionCameraTrans = Vector.FromReader(reader),
@@ -112,7 +117,7 @@ namespace AR_Drone_Controller.NavData
             return degrees;
         }
 
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        private void NotifyPropertyChanged(string propertyName)
         {
             if (PropertyChanged != null)
             {
@@ -124,7 +129,5 @@ namespace AR_Drone_Controller.NavData
         {
             // TODO: validate the size
         }
-
-
     }
 }

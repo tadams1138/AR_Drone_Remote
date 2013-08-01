@@ -10,8 +10,8 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AR_Drone_Controller</RootNamespace>
     <AssemblyName>ARDroneController</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile78</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Profile4</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>
@@ -36,16 +36,21 @@
     <Compile Include="CommandWorker.cs" />
     <Compile Include="Common\Matrix33.cs" />
     <Compile Include="Common\Vector.cs" />
+    <Compile Include="DataReceivedEventArgs.cs" />
     <Compile Include="DroneController.cs" />
+    <Compile Include="FlightAnimation.cs" />
     <Compile Include="IDispatcher.cs" />
     <Compile Include="ITcpSocket.cs" />
     <Compile Include="ISocketFactory.cs" />
     <Compile Include="IUdpSocket.cs" />
-    <Compile Include="LedCommand.cs" />
+    <Compile Include="LedAnimation.cs" />
     <Compile Include="NavData\CheckSumOption.cs" />
+    <Compile Include="NavData\HdVideoStreamOption.cs" />
+    <Compile Include="NavData\WifiOption.cs" />
+    <Compile Include="VideoWorker.cs" />
     <Compile Include="NavData\DemoOption.cs" />
     <Compile Include="NavData\NavDataReceivedEventArgs.cs" />
-    <Compile Include="NavData\NavDataUnhandledExceptionEventArgs.cs" />
+    <Compile Include="UnhandledExceptionEventArgs.cs" />
     <Compile Include="NavData\NavDataWorker.cs" />
     <Compile Include="NavData\NavData.cs" />
     <Compile Include="NavData\VisionDetectionOption.cs" />

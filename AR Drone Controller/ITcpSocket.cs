@@ -6,8 +6,12 @@ namespace AR_Drone_Controller
     {
         bool Connected { get; }
 
-        void Write(string s);
+        void Write(int i);
 
-        string Read();
+        event EventHandler<DataReceivedEventArgs> DataReceived;
+
+        event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
+
+        event EventHandler Disconnected;
     }
 }

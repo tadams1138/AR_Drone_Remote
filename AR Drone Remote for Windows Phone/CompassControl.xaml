@@ -8,7 +8,7 @@
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
-             x:Name="This">
+    DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <Viewbox Stretch="Uniform">
         <Grid x:Name="LayoutRoot" Background="Transparent" Width="614" Height="614">
             <Image Source ="Assets\heading.png" Width="49" Height="37">
@@ -25,12 +25,12 @@
                     <Image.RenderTransform>
                         <TransformGroup>
                             <TranslateTransform Y="-288.5"/>
-                            <RotateTransform Angle="{Binding ElementName=This, Path=DroneHeading}"/>
+                            <RotateTransform Angle="{Binding Path=DroneHeading}"/>
                         </TransformGroup>
                     </Image.RenderTransform>
                 </Image>
                 <Grid.RenderTransform>
-                    <RotateTransform Angle="{Binding ElementName=This, Path=ControllerHeading, Converter={StaticResource ControlRotationConverter}}"/>
+                    <RotateTransform Angle="{Binding Path=ControllerHeading, Converter={StaticResource ControlRotationConverter}}"/>
                 </Grid.RenderTransform>
             </Grid>
         </Grid>

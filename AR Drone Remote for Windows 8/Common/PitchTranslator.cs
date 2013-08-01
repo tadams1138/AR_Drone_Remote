@@ -20,7 +20,7 @@ namespace AR_Drone_Remote_for_Windows_8
 
         public object Convert(object value, Type targetType, object parameter, string culture)
         {
-            var ratio = ImageHeight * ActualWidth / (ImageWidth * 180.0);
+            var ratio = ImageHeight * ActualWidth / (ImageWidth * 360.0);
             return ratio * (float)value;
         }
 

@@ -7,9 +7,7 @@
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
-    d:DesignHeight="200" d:DesignWidth="200"
-    x:Name="This"  
-    >
+    d:DesignHeight="200" d:DesignWidth="200">
     <UserControl.Resources>
         <RadialGradientBrush x:Key="Background" GradientOrigin="0.3,0.3" Center="0.5,0.5"
         RadiusX="0.5" RadiusY="0.5">

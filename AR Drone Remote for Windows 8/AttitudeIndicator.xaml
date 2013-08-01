@@ -8,26 +8,26 @@
     mc:Ignorable="d"
     d:DesignHeight="200" d:DesignWidth="200"
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
-    >
+    x:Name="This">
     <UserControl.Resources>
         <local:PitchTranslator x:Key="PitchTranslator" 
                                ImageHeight="720" 
                                ImageWidth="250"
-                               ActualWidth ="{Binding ActualWidth}" />
-        <common:AngleRotator x:Key="PhiConverter" InvertDegrees="True"></common:AngleRotator>
+                               ActualWidth ="{Binding ElementName=This, Path=ActualWidth}" />
+        <common:AngleRotator x:Key="PhiConverter" InvertDegrees="True"/>
     </UserControl.Resources>
     <Viewbox Stretch="Uniform">
         <Grid Width="200" Height="200">
             <Grid.Resources>
                 <ImageBrush ImageSource="Assets/HorizonGroundSky.png" x:Key="Horizon" Stretch="UniformToFill" >
                     <ImageBrush.Transform>
-                        <CompositeTransform TranslateY="{Binding Theta, Converter={StaticResource PitchTranslator}}" />
+                        <CompositeTransform TranslateY="{Binding ElementName=This, Path=Theta, Converter={StaticResource PitchTranslator}}" />
                     </ImageBrush.Transform>
                 </ImageBrush>
             </Grid.Resources>
             <Ellipse Fill="{StaticResource Horizon}" RenderTransformOrigin="0.5,0.5" >
                 <Ellipse.RenderTransform>
-                    <RotateTransform Angle="{Binding Phi, Converter={StaticResource PhiConverter}}"/>
+                    <RotateTransform Angle="{Binding ElementName=This, Path=Phi, Converter={StaticResource PhiConverter}}"/>
                 </Ellipse.RenderTransform>
             </Ellipse>
             <Grid Width="200" Height="200">

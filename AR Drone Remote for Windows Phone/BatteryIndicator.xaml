@@ -7,27 +7,18 @@
     x:Class="AR_Drone_Remote_for_Windows_Phone.BatteryIndicator"
     mc:Ignorable="d"
     d:DesignHeight="30" d:DesignWidth="60"
-    x:Name="This">
+    DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <UserControl.Resources>
         <local:BatteryPercentageToColorConverter x:Key="BatteryPercentageToColorConverter"
                                                  LowPowerThreshold="15"
                                                  LowStrengthColor="Red"
                                                  GoodStrengthColor="{StaticResource PhoneForegroundBrush}"/>
         <SolidColorBrush x:Key="BatteryColor" 
-                         Color="{Binding BatteryPercentage, Converter={StaticResource BatteryPercentageToColorConverter}, ElementName=This}"/>
+                         Color="{Binding Path=BatteryPercentage, Converter={StaticResource BatteryPercentageToColorConverter}}"/>
         <local:BatteryPercentageToVisibilityConvert x:Key="BatteryPercentageToVisibilityConvert" />
     </UserControl.Resources>
-    <UserControl.FontFamily>
-        <StaticResource ResourceKey="PhoneFontFamilyNormal"/>
-    </UserControl.FontFamily>
-    <UserControl.FontSize>
-        <StaticResource ResourceKey="PhoneFontSizeNormal"/>
-    </UserControl.FontSize>
-    <UserControl.Foreground>
-        <StaticResource ResourceKey="PhoneForegroundBrush"/>
-    </UserControl.Foreground>
     <Viewbox Stretch="Uniform">
-        <Grid x:Name="LayoutRoot" Width="20" Height="10" Background="Transparent">
+        <Grid Width="20" Height="10" Background="Transparent">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="18*"/>
                 <ColumnDefinition Width="2*"/>
@@ -43,21 +34,21 @@
                     <Rectangle Grid.Column="0" 
 						Margin="1,1,0,1" 
 						Fill="{StaticResource BatteryColor}"
-						Visibility="{Binding BatteryPercentage, ConverterParameter=7, Converter={StaticResource BatteryPercentageToVisibilityConvert}, ElementName=This}"/>
+						Visibility="{Binding Path=BatteryPercentage, ConverterParameter=7, Converter={StaticResource BatteryPercentageToVisibilityConvert}}"/>
                     <Rectangle Grid.Column="1" 
 						Margin="1" 
 						Fill="{StaticResource BatteryColor}"
-						Visibility="{Binding BatteryPercentage, ConverterParameter=33, Converter={StaticResource BatteryPercentageToVisibilityConvert}, ElementName=This}"/>
+						Visibility="{Binding Path=BatteryPercentage, ConverterParameter=33, Converter={StaticResource BatteryPercentageToVisibilityConvert}}"/>
                     <Rectangle Grid.Column="2" 
 						Margin="0,1,1,1" 
 						Fill="{StaticResource BatteryColor}"
-						Visibility="{Binding BatteryPercentage, ConverterParameter=66, Converter={StaticResource BatteryPercentageToVisibilityConvert}, ElementName=This}"/>
+						Visibility="{Binding Path=BatteryPercentage, ConverterParameter=66, Converter={StaticResource BatteryPercentageToVisibilityConvert}}"/>
                 </Grid>
             </Border>
             <Rectangle Grid.Column="1" 
-				Height="4" 
-				Stroke="{StaticResource BatteryColor}" 
-				Fill="{StaticResource BatteryColor}"/>
+				        Height="4" 
+				        Stroke="{StaticResource BatteryColor}" 
+				        Fill="{StaticResource BatteryColor}"/>
         </Grid>
     </Viewbox>
 </UserControl>

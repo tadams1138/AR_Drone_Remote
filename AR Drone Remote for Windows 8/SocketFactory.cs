@@ -11,7 +11,7 @@ namespace AR_Drone_Remote_for_Windows_8
 
         public IUdpSocket GetUdpSocket(int localPort, string remoteIp, int remotePort, int timeout)
         {
-            return new UdpSocket(localPort, remoteIp, remotePort, timeout);
+            return new UdpSocket(remoteIp, remotePort, timeout);
         }
     }
 }

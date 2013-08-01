@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using UnhandledExceptionEventArgs = AR_Drone_Controller.UnhandledExceptionEventArgs;
 
 namespace AR_Drone_Remote_for_Windows_Phone
 {
@@ -13,84 +14,126 @@ namespace AR_Drone_Remote_for_Windows_Phone
 
         private readonly ManualResetEvent _clientDone = new ManualResetEvent(false);
         private readonly Socket _socket;
-        private readonly string _remoteIp;
-        private readonly int _localPort;
-        private readonly int _remotePort;
         private readonly int _timeoutMilliseconds;
         private readonly byte[] _buffer = new byte[MaxBufferSize];
+        private readonly SocketAsyncEventArgs _receiveSocketEventArg;
+        private readonly SocketAsyncEventArgs _sendSocketEventArg;
+        private readonly object _syncLock = new object();
+        private bool _disposed;
 
         public UdpSocket(int localPort, string remoteIp, int remotePort, int timeout)
         {
             _timeoutMilliseconds = timeout;
-            _localPort = localPort;
-            _remoteIp = remoteIp;
-            _remotePort = remotePort;
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            _receiveSocketEventArg = CreateReceiveSocketEventArg(localPort);
+            _sendSocketEventArg = CreateSendSocketAsyncEventArgs(remoteIp, remotePort);
+            InitializeSocket();
+            ListenForIncomingData();
+        }
+
+        public event EventHandler<DataReceivedEventArgs> DataReceived;
+        public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
+
+        public void Dispose()
+        {
+            lock (_syncLock)
+            {
+                _disposed = true;
+                _socket.Dispose();
+            }
         }
 
         public void Write(string s)
         {
             byte[] payload = Encoding.UTF8.GetBytes(s);
-            Send(_remoteIp, _remotePort, payload);
+            Send(payload);
         }
 
         public void Write(int i)
         {
             byte[] payload = BitConverter.GetBytes(i);
-            Send(_remoteIp, _remotePort, payload);
+            Send(payload);
         }
 
-        public void Send(string serverName, int portNumber, byte[] payload)
+        private void InitializeSocket()
         {
-            var socketEventArg = new SocketAsyncEventArgs { RemoteEndPoint = new DnsEndPoint(serverName, portNumber) };
-            socketEventArg.Completed += (s, e) => _clientDone.Set();
-            socketEventArg.SetBuffer(payload, 0, payload.Length);
-            _clientDone.Reset();
-            _socket.SendToAsync(socketEventArg);
-            _clientDone.WaitOne(_timeoutMilliseconds);
+            Write(1);
         }
 
-        public byte[] Receive()
+        private SocketAsyncEventArgs CreateSendSocketAsyncEventArgs(string remoteIp, int remotePort)
         {
-            byte[] response = null;
+            var sendSocketEventArg = new SocketAsyncEventArgs { RemoteEndPoint = new DnsEndPoint(remoteIp, remotePort) };
+            sendSocketEventArg.Completed += (s, e) => _clientDone.Set();
+            return sendSocketEventArg;
+        }
 
-            var socketEventArg = new SocketAsyncEventArgs
-                {
-                    RemoteEndPoint = new IPEndPoint(IPAddress.Any, _localPort)
-                };
-
-            socketEventArg.SetBuffer(_buffer, 0, MaxBufferSize);
-            socketEventArg.Completed += delegate(object s, SocketAsyncEventArgs e)
-                {
-                    if (e.BytesTransferred > 0)
-                    {
-                        response = new byte[e.BytesTransferred];
-                        Buffer.BlockCopy(e.Buffer, 0, response, 0, e.BytesTransferred);
-                    }
-
-                    _clientDone.Set();
-                };
-            
-            _clientDone.Reset();
-            _socket.ReceiveFromAsync(socketEventArg);
-            _clientDone.WaitOne(_timeoutMilliseconds);
-
-            if (response == null)
+        private SocketAsyncEventArgs CreateReceiveSocketEventArg(int localPort)
+        {
+            var receiveSocketEventArg = new SocketAsyncEventArgs
             {
-                throw new UdpSocketReceiveTimeoutException(_localPort, _timeoutMilliseconds);
+                RemoteEndPoint = new IPEndPoint(IPAddress.Any, localPort)
+            };
+            receiveSocketEventArg.SetBuffer(_buffer, 0, _buffer.Length);
+            receiveSocketEventArg.Completed += ReceiveSocketEventArgOnCompleted;
+            return receiveSocketEventArg;
+        }
+
+        private void Send(byte[] payload)
+        {
+            lock (_syncLock)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _sendSocketEventArg.SetBuffer(payload, 0, payload.Length);
+                _clientDone.Reset();
+                _socket.SendToAsync(_sendSocketEventArg);
+                _clientDone.WaitOne(_timeoutMilliseconds);
+            }
+        }
+
+        private void ListenForIncomingData()
+        {
+            if (!_disposed && !_socket.ReceiveFromAsync(_receiveSocketEventArg))
+            {
+                ProcessSocketEvent(_receiveSocketEventArg);
+            }
+        }
+
+        private void ReceiveSocketEventArgOnCompleted(object sender, SocketAsyncEventArgs e)
+        {
+            try
+            {
+                lock (_syncLock)
+                {
+                    ProcessSocketEvent(e);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (UnhandledException != null)
+                {
+                    UnhandledException(this, new UnhandledExceptionEventArgs(ex));
+                }
+            }
+        }
+
+        private void ProcessSocketEvent(SocketAsyncEventArgs e)
+        {
+            if (e.BytesTransferred > 0)
+            {
+                var buffer = new byte[e.BytesTransferred];
+                Buffer.BlockCopy(e.Buffer, 0, buffer, 0, e.BytesTransferred);
+                DataReceived(this, new DataReceivedEventArgs(buffer));
+            }
+            else if (e.SocketError != SocketError.Success)
+            {
+                throw new SocketException((int)e.SocketError);
             }
 
-            return response;
-        }
-
-        class UdpSocketReceiveTimeoutException : Exception
-        {
-            private const string MessageFormat = "Time exceeded {0} milliseconds waiting to receive on port {1}.";
-
-            public UdpSocketReceiveTimeoutException(int portNumber, int timeoutMilliseconds)
-                : base(string.Format(MessageFormat, timeoutMilliseconds, portNumber))
-            {
-            }
+            ListenForIncomingData();
         }
     }
 }

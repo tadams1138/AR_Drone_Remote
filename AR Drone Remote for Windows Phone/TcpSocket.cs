@@ -1,64 +1,127 @@
-﻿using System;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-using AR_Drone_Controller;
-
-namespace AR_Drone_Remote_for_Windows_Phone
+﻿namespace AR_Drone_Remote_for_Windows_Phone
 {
+    using System;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Threading;
+    using AR_Drone_Controller;
+    using UnhandledExceptionEventArgs = AR_Drone_Controller.UnhandledExceptionEventArgs;
+
     internal class TcpSocket : ITcpSocket
     {
-        private readonly Socket _socket;
-        private readonly ManualResetEvent _clientDone = new ManualResetEvent(false);
-        private readonly int _timeoutMilliseconds = 500;
+        private const int TimeoutMilliseconds = 5000;
+        private const int BufferSize = 2 ^ 16;
 
-        // TODO: TCP sockets for Windows phone
+        private readonly Socket _socket;
+        private readonly ManualResetEvent _manualResetEvent = new ManualResetEvent(false);
+        private readonly byte[] _receiveBuffer = new byte[BufferSize];
+        private readonly SocketAsyncEventArgs _responseListener;
+
         public TcpSocket(string ipAddress, int port)
         {
-            bool connected = false;
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             var socketEventArg = new SocketAsyncEventArgs { RemoteEndPoint = new DnsEndPoint(ipAddress, port) };
             socketEventArg.Completed += (s, e) =>
                 {
-                    connected = true;
-                    _clientDone.Set();
+                    Connected = true;
+                    _manualResetEvent.Set();
                 };
-            _clientDone.Reset();
+            _manualResetEvent.Reset();
             _socket.ConnectAsync(socketEventArg);
-            _clientDone.WaitOne(_timeoutMilliseconds);
+            _manualResetEvent.WaitOne(TimeoutMilliseconds);
+            _responseListener = CreateResponseListenerSocketAsyncEventArgs();
 
-            if (!connected)
+            if (Connected)
             {
-                throw new TcpSocketConnectTimeoutException(ipAddress, port, _timeoutMilliseconds);
+                ListenForIncomingData();
+            }
+            else
+            {
+                throw new TcpSocketConnectTimeoutException(ipAddress, port, TimeoutMilliseconds);
             }
         }
 
+        public event EventHandler<DataReceivedEventArgs> DataReceived;
+        public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
+        public event EventHandler Disconnected;
+
         public void Dispose()
         {
+            Connected = false;
             _socket.Dispose();
         }
 
-        public bool Connected { get { return true; } private set { } }
+        public bool Connected { get; private set; }
 
-        public void Write(string s)
+        public void Write(int s)
         {
             // throw new NotImplementedException();
         }
 
-        public string Read()
+        private SocketAsyncEventArgs CreateResponseListenerSocketAsyncEventArgs()
         {
-            return null;
-            // throw new NotImplementedException();
+            var responseListener = new SocketAsyncEventArgs();
+            responseListener.Completed += (sender, args) => ProcessSocketEvent(args);
+            return responseListener;
         }
-    }
 
-    internal class TcpSocketConnectTimeoutException : Exception
-    {
-        private const string MessageFormat = "Time exceeded {2} milliseconds waiting to connect to {0}:{1}.";
-
-        public TcpSocketConnectTimeoutException(string ipAddress, int port, int timeoutMilliseconds)
-            : base(string.Format(MessageFormat, ipAddress, port, timeoutMilliseconds))
+        private void ListenForIncomingData()
         {
+            _responseListener.SetBuffer(_receiveBuffer, 0, _receiveBuffer.Length);
+            if (Connected && !_socket.ReceiveAsync(_responseListener))
+            {
+                ProcessSocketEvent(_responseListener);
+            }
+        }
+
+        private void ProcessSocketEvent(SocketAsyncEventArgs e)
+        {
+            try
+            {
+                if (!Connected)
+                {
+                    return;
+                }
+
+                if (e.BytesTransferred > 0)
+                {
+                    var buffer = new byte[e.BytesTransferred];
+                    Buffer.BlockCopy(e.Buffer, 0, buffer, 0, e.BytesTransferred);
+                    DataReceived(this, new DataReceivedEventArgs(buffer));
+                }
+                
+                if (e.SocketError == SocketError.Success)
+                {
+                    ListenForIncomingData();
+                }
+                else
+                {
+                    throw new SocketException((int)e.SocketError);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (UnhandledException != null)
+                {
+                    UnhandledException(this, new UnhandledExceptionEventArgs(ex));
+                }
+
+                Dispose();
+                if (Disconnected != null)
+                {
+                    Disconnected(this, null);
+                }
+            }
+        }
+
+        internal class TcpSocketConnectTimeoutException : Exception
+        {
+            private const string MessageFormat = "Time exceeded {2} milliseconds waiting to connect to {0}:{1}.";
+
+            public TcpSocketConnectTimeoutException(string ipAddress, int port, int timeoutMilliseconds)
+                : base(string.Format(MessageFormat, ipAddress, port, timeoutMilliseconds))
+            {
+            }
         }
     }
 }

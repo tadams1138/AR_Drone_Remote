@@ -17,6 +17,7 @@ namespace AR_Drone_Remote_for_Windows_8
         public static DroneController StaticDroneController;
         private static Compass _compass;
         private static Accelerometer _accelerometer;
+        private bool _useAccelerometer;
         private KeyboardInput _keyboardInput;
         private float gain = 1f;
 
@@ -114,14 +115,14 @@ namespace AR_Drone_Remote_for_Windows_8
             DroneController.Pitch = (float)e * gain;
         }
 
-        private void RightJoystickOnXValueChanged(object sender, double d)
+        private void RightJoystickOnXValueChanged(object sender, double e)
         {
-            DroneController.Yaw = (float)d * gain;
+            DroneController.Yaw = (float)e * gain;
         }
 
-        private void RightJoystickOnYValueChanged(object sender, double d)
+        private void RightJoystickOnYValueChanged(object sender, double e)
         {
-            DroneController.Gaz = -(float)d * gain;
+            DroneController.Gaz = -(float)e * gain;
         }
 
         private void LaunchLand_Click(object sender, RoutedEventArgs e)
@@ -140,8 +141,6 @@ namespace AR_Drone_Remote_for_Windows_8
         {
             DroneController.Emergency();
         }
-
-        private bool _useAccelerometer;
 
         private void AbsoluteControl_OnCheckedChanged(object sender, RoutedEventArgs e)
         {
@@ -179,7 +178,7 @@ namespace AR_Drone_Remote_for_Windows_8
                 {
                     var dialog =
                         new MessageDialog(
-                            "Could not connect to AR Drone. Please verify you are connected to drone's WIFI.",
+                            "Could not connect to AR Drone. Please verify you are connected to the drone's WIFI and that you are the only device connected. If necessary, restart the drone.",
                             "Unable to connect.");
                     dialog.ShowAsync();
                 }
@@ -203,8 +202,8 @@ namespace AR_Drone_Remote_for_Windows_8
             try
             {
                 var button = (Button) sender;
-                var ledCommand = (LedCommand) button.Content;
-                ledCommand.Execute();
+                var ledAnimation = (LedAnimation) button.Content;
+                ledAnimation.Execute();
             }
             catch (Exception ex)
             {
@@ -213,6 +212,46 @@ namespace AR_Drone_Remote_for_Windows_8
                         ex.Message,
                         "Unable to send LED command.");
                 dialog.ShowAsync();
+            }
+        }
+
+        private void CalibrateCompass_Click(object sender, RoutedEventArgs e)
+        {
+            DroneController.CailbrateCompass();
+        }
+
+        private void FlightAnimations_OnItemClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var button = (Button)sender;
+                var flightAnimation = (FlightAnimation)button.Content;
+                flightAnimation.Execute();
+            }
+            catch
+            {
+                var dialog =
+                        new MessageDialog(
+                            "Unable to send flight animation command.",
+                            "Unable to connect.");
+                dialog.ShowAsync();
+            }
+        }
+
+        private void FlatTrim_Click(object sender, RoutedEventArgs e)
+        {
+            DroneController.FlatTrim();
+        }
+
+        private void Record_Click(object sender, RoutedEventArgs e)
+        {
+            if (DroneController.NavData.HdVideoStream.UsbKeyIsRecording)
+            {
+                DroneController.StopRecording();
+            }
+            else
+            {
+                DroneController.StartRecording();
             }
         }
     }
