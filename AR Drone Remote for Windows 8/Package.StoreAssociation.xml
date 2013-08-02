@@ -345,10 +345,5 @@
   <AccountPackageIdentityNames>
     <MainPackageIdentityName>9525TISoftware.xkcdTheBrowser</MainPackageIdentityName>
   </AccountPackageIdentityNames>
-  <PackageInfoList LandingUrl="https://appdev.microsoft.com:443/StorePortals/Developer/Catalog/ReleaseAnchor/9c1f3f2a-8d3b-48cd-b5af-bab709192f1e">
-    <PackageInfo>
-      <PackageArchitecture>neutral</PackageArchitecture>
-      <PackageMaxArchitectureVersion>1.0.0.0</PackageMaxArchitectureVersion>
-    </PackageInfo>
-  </PackageInfoList>
+  <PackageInfoList LandingUrl="https://appdev.microsoft.com:443/StorePortals/Developer/Catalog/ReleaseAnchor/9c1f3f2a-8d3b-48cd-b5af-bab709192f1e" />
 </StoreAssociation>

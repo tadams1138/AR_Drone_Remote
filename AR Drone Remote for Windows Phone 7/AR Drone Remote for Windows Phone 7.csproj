@@ -120,6 +120,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <None Include="AR_Drone_Remote_for_Windows_Phone_7_2013_08_01_23_49_28.sap" />
     <None Include="Properties\AppManifest.xml" />
     <None Include="Properties\WMAppManifest.xml" />
   </ItemGroup>

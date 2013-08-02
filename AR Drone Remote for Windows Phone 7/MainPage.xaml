@@ -56,7 +56,6 @@
             </shell:ApplicationBar.MenuItems>
             <shell:ApplicationBarIconButton IconUri="/Assets/appbar.tools.png" Text="Options" Click="ShowOptions_OnClick" />
             <shell:ApplicationBarIconButton IconUri="/Assets/appbar.controller.xbox.png" Text="Controls" Click="ShowControls_OnClick" />
-            <!--<shell:ApplicationBarIconButton IconUri="/Assets/appbar.video.png" Text="Record" Click="Record_OnClick" />-->
             <shell:ApplicationBarIconButton IconUri="/Assets/appbar.connect.png" Text="Connect" Click="Connect_OnClick" />
         </shell:ApplicationBar>
     </controls:PhoneApplicationPage.ApplicationBar>
@@ -222,18 +221,12 @@
                         <TextBlock Style="{StaticResource PhoneTextNormalStyle}" Text="Calibrate"/>
                     </phone:PivotItem.Header>
                     <Grid Margin="10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="1*"/>
-                        </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="1*"/>
                             <RowDefinition Height="1*"/>
-                            <RowDefinition Height="1*"/>
                         </Grid.RowDefinitions>
-                        <Button Grid.Column="0" Grid.Row="0" IsEnabled="{Binding DroneController.NavData.Flying}" Click="CalibrateCompass_Click" Content="Calibrate Compass"/>
-                        <Button Grid.Column="0" Grid.Row="1" IsEnabled="{Binding DroneController.NavData.Landed}" Click="FlatTrim_Click" Content="Flat Trim"/>
+                        <Button Grid.Row="0" IsEnabled="{Binding DroneController.NavData.Flying}" Click="CalibrateCompass_Click" Content="Calibrate Compass"/>
+                        <Button Grid.Row="1" IsEnabled="{Binding DroneController.NavData.Landed}" Click="FlatTrim_Click" Content="Flat Trim"/>
 
                     </Grid>
                 </phone:PivotItem>

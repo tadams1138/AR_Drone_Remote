@@ -1,13 +1,14 @@
 ﻿namespace AR_Drone_Remote_for_Windows_Phone_7
 {
-    using System.Diagnostics;
-    using System.Windows.Controls;
     using AR_Drone_Controller;
     using Microsoft.Devices.Sensors;
     using Microsoft.Phone.Controls;
+    using Microsoft.Phone.Shell;
     using Microsoft.Phone.Tasks;
     using System;
+    using System.Diagnostics;
     using System.Windows;
+    using System.Windows.Controls;
     using Telerik.Windows.Controls;
 
     public partial class MainPage
@@ -26,26 +27,14 @@
             };
 
             InitializeComponent();
-
             InitializeCompass();
             InitializeAccelerometer();
         }
 
-        public static void Activate()
+        protected override void OnNavigatedFrom(System.Windows.Navigation.NavigationEventArgs e)
         {
-            if (_compass != null)
-            {
-                _compass.Start();
-            }
+            base.OnNavigatedFrom(e);
 
-            if (_accelerometer != null && _useAccelerometer)
-            {
-                _accelerometer.Start();
-            }
-        }
-
-        public static void Deactivate()
-        {
             _droneController.Disconnect();
 
             if (_compass != null)
@@ -59,6 +48,23 @@
             }
         }
 
+        protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            VerifyLicense();
+
+            if (_compass != null)
+            {
+                _compass.Start();
+            }
+
+            if (_accelerometer != null && _useAccelerometer)
+            {
+                _accelerometer.Start();
+            }
+        }
+        
         public DroneController DroneController { get { return _droneController; } }
 
         private void InitializeAccelerometer()
@@ -274,6 +280,16 @@
             else
             {
                 DroneController.StartRecording();
+            }
+        }
+
+        private void VerifyLicense()
+        {
+            App.TrialReminder.Notify();
+            if (ApplicationBar != null)
+            {
+                var connectButton = (ApplicationBarIconButton)ApplicationBar.Buttons[2];
+                connectButton.IsEnabled = !App.TrialReminder.IsTrialExpired;
             }
         }
     }

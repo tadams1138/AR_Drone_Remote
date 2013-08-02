@@ -148,7 +148,6 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="AR Drone Remote for Windows 8_StoreKey.pfx" />
-    <None Include="AR Drone Remote for Windows 8_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\appbar.connect.png" />
@@ -198,7 +197,11 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <SDKReference Include="RadControls for Windows 8, Version=2013.1.417">
+      <Name>RadControls for Windows 8</Name>
+    </SDKReference>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>
   </PropertyGroup>

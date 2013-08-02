@@ -32,6 +32,11 @@ namespace AR_Drone_Controller
 
         public static Uri PrivacyUri { get { return new Uri("http://tadams1138.blogspot.com/p/ar-drone-remote-privacy-policy.html"); } }
 
+        public DroneController()
+        {
+            ResetNavData();
+        }
+
         public NavData.NavData NavData
         {
             get { return _navData; }
@@ -85,8 +90,7 @@ namespace AR_Drone_Controller
                         _commandWorker.SendConfigCommand("video:video_channel", "0");
 
                         const uint navDataOptions = (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.Demo) +
-                                            (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.HdVideoStream) +
-                                            (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.Wifi);
+                                            (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.HdVideoStream);
                         
                         _commandWorker.SendConfigCommand("general:navdata_demo", "TRUE");
                         _commandWorker.SendConfigCommand("general:navdata_options", navDataOptions.ToString());
@@ -195,32 +199,54 @@ namespace AR_Drone_Controller
         public void Disconnect()
         {
             Connected = false;
+            ShutdownControlSocket();
+            ShutdownCommandTimer();
+            ShutdownCommandWorker();
+            ShutdownNavDataWorker();
+            ShutdownVideoWorker();
+        }
 
+        private void ResetNavData()
+        {
+            NavData = new NavData.NavData {Demo = new DemoOption(), HdVideoStream = new HdVideoStreamOption()};
+        }
+
+        private void ShutdownControlSocket()
+        {
             if (_controlSocket != null)
             {
                 _controlSocket.Dispose();
                 _controlSocket = null;
             }
+        }
 
+        private void ShutdownCommandTimer()
+        {
             if (_commandTimer != null)
             {
                 _commandTimer.Dispose();
                 _commandTimer = null;
             }
+        }
 
+        private void ShutdownCommandWorker()
+        {
             if (_commandWorker != null)
             {
                 _commandWorker.Stop();
                 _commandWorker = null;
             }
+        }
 
+        private void ShutdownNavDataWorker()
+        {
             if (_navDataWorker != null)
             {
                 _navDataWorker.Stop();
                 _navDataWorker = null;
             }
 
-            ShutdownVideoWorker();
+            ResetNavData();
         }
 
         private void UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -231,11 +257,10 @@ namespace AR_Drone_Controller
         private void NavDataWorkerOnNavDataReceived(object sender, NavDataReceivedEventArgs e)
         {
             NavData = e.NavData;
-            if ((e.NavData.Wifi == null || e.NavData.Demo == null) && _commandWorker != null)
+            if ((e.NavData.HdVideoStream == null || e.NavData.Demo == null) && _commandWorker != null)
             {
                 const uint navDataOptions = (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.Demo) +
-                                            (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.HdVideoStream) +
-                                            (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.Wifi);
+                                            (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.HdVideoStream);
                 _commandWorker.SendConfigCommand("general:navdata_demo", "TRUE");
                 _commandWorker.SendConfigCommand("general:navdata_options", navDataOptions.ToString());
             }
