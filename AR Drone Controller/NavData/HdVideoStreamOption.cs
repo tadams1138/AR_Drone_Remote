@@ -8,7 +8,7 @@ namespace AR_Drone_Controller.NavData
     public class HdVideoStreamOption
     {
         [Flags]
-        public enum hdvideo_states : uint
+        private enum hdvideo_states : uint
         {
             NAVDATA_HDVIDEO_STORAGE_FIFO_IS_FULL = (1 << 0),
             NAVDATA_HDVIDEO_USBKEY_IS_PRESENT = (1 << 8),

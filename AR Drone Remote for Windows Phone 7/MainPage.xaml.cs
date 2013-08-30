@@ -1,4 +1,6 @@
-﻿namespace AR_Drone_Remote_for_Windows_Phone_7
+﻿using System.Windows.Input;
+
+namespace AR_Drone_Remote_for_Windows_Phone_7
 {
     using AR_Drone_Controller;
     using Microsoft.Devices.Sensors;
@@ -64,7 +66,7 @@
                 _accelerometer.Start();
             }
         }
-        
+
         public DroneController DroneController { get { return _droneController; } }
 
         private void InitializeAccelerometer()
@@ -110,8 +112,19 @@
 
         private void AccelerometerOnCurrentValueChanged(object sender, SensorReadingEventArgs<AccelerometerReading> e)
         {
-            _droneController.Roll = e.SensorReading.Acceleration.Y * -1;
-            _droneController.Pitch = e.SensorReading.Acceleration.X * -1;
+            Dispatcher.BeginInvoke(delegate
+                {
+                    if (SteerButton.IsPressed)
+                    {
+                        _droneController.Roll = e.SensorReading.Acceleration.Y * -1;
+                        _droneController.Pitch = e.SensorReading.Acceleration.X * -1;
+                    }
+                    else
+                    {
+                        _droneController.Roll = 0;
+                        _droneController.Pitch = 0;
+                    }
+                });
         }
 
         private void CompassOnCurrentValueChanged(object sender, SensorReadingEventArgs<CompassReading> e)
@@ -170,12 +183,14 @@
             if (_useAccelerometer)
             {
                 LeftJoystick.Visibility = Visibility.Collapsed;
+                SteerButton.Visibility = Visibility.Visible;
                 _accelerometer.Start();
             }
             else
             {
-                LeftJoystick.Visibility = Visibility.Visible;
                 _accelerometer.Stop();
+                LeftJoystick.Visibility = Visibility.Visible;
+                SteerButton.Visibility = Visibility.Collapsed;
                 _droneController.Pitch = 0;
                 _droneController.Roll = 0;
             }
@@ -273,6 +288,11 @@
 
         private void Record_Click(object sender, RoutedEventArgs e)
         {
+            if (DroneController == null || DroneController.NavData == null ||
+    DroneController.NavData.HdVideoStream == null)
+                return; // TODO: actually resolve this so the button is not enabled when NavData is Null or HdVideoStream is null as I
+            //  suspect is the case
+
             if (DroneController.NavData.HdVideoStream.UsbKeyIsRecording)
             {
                 DroneController.StopRecording();

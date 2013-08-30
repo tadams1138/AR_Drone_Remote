@@ -125,8 +125,6 @@ namespace AR_Drone_Controller.NavData
 
         public bool Flying { get { return IsStateBitOne(ArdroneStateMask.Flying); } }
 
-        public bool Landed { get { return !IsStateBitOne(ArdroneStateMask.Flying); } }
-
         public bool MotorsProblem { get { return IsStateBitOne(ArdroneStateMask.MotorProblem); } }
 
         public bool NavdataBootstrap { get { return IsStateBitOne(ArdroneStateMask.NavdataBootstrap); } }

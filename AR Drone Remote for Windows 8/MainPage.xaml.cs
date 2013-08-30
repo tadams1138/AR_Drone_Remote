@@ -45,7 +45,7 @@ namespace AR_Drone_Remote_for_Windows_8
         protected override void OnNavigatedTo(Windows.UI.Xaml.Navigation.NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            DisplayProperties.AutoRotationPreferences = DisplayOrientations.Landscape; 
+            DisplayProperties.AutoRotationPreferences = DisplayOrientations.Landscape;
         }
 
         private void InitializeAccelerometer()
@@ -87,8 +87,19 @@ namespace AR_Drone_Remote_for_Windows_8
         {
             if (_useAccelerometer)
             {
-                DroneController.Roll = (float) args.Reading.AccelerationY*-1;
-                DroneController.Pitch = (float) args.Reading.AccelerationX*-1;
+                Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate
+                {
+                    if (SteerButton.IsPressed)
+                    {
+                        DroneController.Roll = (float)args.Reading.AccelerationY * -1;
+                        DroneController.Pitch = (float)args.Reading.AccelerationX * -1;
+                    }
+                    else
+                    {
+                        DroneController.Roll = 0;
+                        DroneController.Pitch = 0;
+                    }
+                });
             }
         }
 
@@ -149,7 +160,7 @@ namespace AR_Drone_Remote_for_Windows_8
 
         private void UseAccelerometer_OnCheckedChanged(object sender, RoutedEventArgs e)
         {
-            _useAccelerometer = ((ToggleSwitch) sender).IsOn;
+            _useAccelerometer = ((ToggleSwitch)sender).IsOn;
             if (_useAccelerometer)
             {
                 LeftJoystick.Visibility = Visibility.Collapsed;
@@ -201,8 +212,8 @@ namespace AR_Drone_Remote_for_Windows_8
         {
             try
             {
-                var button = (Button) sender;
-                var ledAnimation = (LedAnimation) button.Content;
+                var button = (Button)sender;
+                var ledAnimation = (LedAnimation)button.Content;
                 ledAnimation.Execute();
             }
             catch (Exception ex)
@@ -245,6 +256,11 @@ namespace AR_Drone_Remote_for_Windows_8
 
         private void Record_Click(object sender, RoutedEventArgs e)
         {
+            if (DroneController == null || DroneController.NavData == null ||
+                DroneController.NavData.HdVideoStream == null)
+                return; // TODO: actually resolve this so the button is not enabled when NavData is Null or HdVideoStream is null as I
+            //  suspect is the case
+
             if (DroneController.NavData.HdVideoStream.UsbKeyIsRecording)
             {
                 DroneController.StopRecording();

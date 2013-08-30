@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:local="using:AR_Drone_Remote_for_Windows_8" xmlns:sys="using:System"
+    xmlns:local="using:AR_Drone_Remote_for_Windows_8" 
     mc:Ignorable="d"
     FontSize="36"
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
@@ -83,7 +83,9 @@
 					    Grid.Row="1" 
 					    XValueChanged="LeftJoystickOnXValueChanged" 
 					    YValueChanged="LeftJoystickOnYValueChanged"/>
-
+                <Button x:Name="SteerButton"
+                        Grid.Row="1"
+                        Visibility="Collapsed">Press to steer</Button>
                 <Grid Grid.Column="1" Grid.RowSpan="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="1*"/>
@@ -124,7 +126,7 @@
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Style="{StaticResource PageSubheaderTextStyle}" Text="Calibrates"/>
                     <Button Grid.Column="1" Grid.Row="1" IsEnabled="{Binding DroneController.NavData.Flying}" Click="CalibrateCompass_Click" Content="Calibrate Compass"/>
-                    <Button Grid.Column="1" Grid.Row="2" IsEnabled="{Binding DroneController.NavData.Landed}" Click="FlatTrim_Click" Content="Flat Trim"/>
+                    <Button Grid.Column="1" Grid.Row="2" IsEnabled="{Binding DroneController.CanSendFlatTrimCommand}" Click="FlatTrim_Click" Content="Flat Trim"/>
                 </Grid>
 
                 <Grid>
@@ -155,7 +157,7 @@
                         </ListView.ItemsPanel>
                     </ListView>
                 </Grid>
-                
+
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -226,7 +228,7 @@
                         IsEnabled="{Binding DroneController.NavData.HdVideoStream.CanRecord}" 
                         Click="Record_Click" 
                         Content="Record"/>
-            </StackPanel>            
+            </StackPanel>
         </Grid>
 
     </Grid>

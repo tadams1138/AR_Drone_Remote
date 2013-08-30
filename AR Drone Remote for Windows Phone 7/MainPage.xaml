@@ -190,7 +190,9 @@
 					    Grid.Row="1" 
 					    XValueChanged="LeftJoystickOnXValueChanged" 
 					    YValueChanged="LeftJoystickOnYValueChanged"/>
-
+                <Button x:Name="SteerButton"
+                        Grid.Row="1" 
+                        Visibility="Collapsed">Press to steer</Button>
                 <Grid Grid.Column="1" Grid.RowSpan="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="1*"/>
@@ -226,7 +228,7 @@
                             <RowDefinition Height="1*"/>
                         </Grid.RowDefinitions>
                         <Button Grid.Row="0" IsEnabled="{Binding DroneController.NavData.Flying}" Click="CalibrateCompass_Click" Content="Calibrate Compass"/>
-                        <Button Grid.Row="1" IsEnabled="{Binding DroneController.NavData.Landed}" Click="FlatTrim_Click" Content="Flat Trim"/>
+                        <Button Grid.Row="1" IsEnabled="{Binding DroneController.CanSendFlatTrimCommand}" Click="FlatTrim_Click" Content="Flat Trim"/>
 
                     </Grid>
                 </phone:PivotItem>

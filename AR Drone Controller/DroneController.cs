@@ -44,11 +44,11 @@ namespace AR_Drone_Controller
             {
                 _navData = value;
                 NotifyPropertyChanged("NavData");
+                NotifyPropertyChanged("CanSendFlatTrimCommand");
             }
         }
 
         private bool _connected;
-
         public bool Connected
         {
             get { return _connected; }
@@ -56,7 +56,13 @@ namespace AR_Drone_Controller
             {
                 _connected = value;
                 NotifyPropertyChanged("Connected");
+                NotifyPropertyChanged("CanSendFlatTrimCommand");
             }
+        }
+
+        public bool CanSendFlatTrimCommand
+        {
+            get { return _connected && _navData != null && !_navData.Flying; }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -91,7 +97,7 @@ namespace AR_Drone_Controller
 
                         const uint navDataOptions = (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.Demo) +
                                             (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.HdVideoStream);
-                        
+
                         _commandWorker.SendConfigCommand("general:navdata_demo", "TRUE");
                         _commandWorker.SendConfigCommand("general:navdata_options", navDataOptions.ToString());
 
@@ -100,9 +106,9 @@ namespace AR_Drone_Controller
                         _commandWorker.ExitBootStrapMode();
 
                         manualResetEvent.WaitOne(100);
-                        
+
                         _commandTimer = new Timer(DoWork, null, 30, 30);
-                       
+
                         Connected = true;
                     }
                 }
@@ -208,7 +214,7 @@ namespace AR_Drone_Controller
 
         private void ResetNavData()
         {
-            NavData = new NavData.NavData {Demo = new DemoOption(), HdVideoStream = new HdVideoStreamOption()};
+            NavData = new NavData.NavData { Demo = new DemoOption(), HdVideoStream = new HdVideoStreamOption() };
         }
 
         private void ShutdownControlSocket()
