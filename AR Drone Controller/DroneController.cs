@@ -296,13 +296,13 @@ namespace AR_Drone_Controller
             _commandWorker.SendRefCommand(CommandWorker.RefCommands.LandOrReset);
         }
 
-        public float Pitch { get; set; }
+        public virtual float Pitch { get; set; }
 
-        public float Roll { get; set; }
+        public virtual float Roll { get; set; }
 
-        public float Yaw { get; set; }
+        public virtual float Yaw { get; set; }
 
-        public float Gaz { get; set; }
+        public virtual float Gaz { get; set; }
 
         public float ControllerHeading { get; set; }
 

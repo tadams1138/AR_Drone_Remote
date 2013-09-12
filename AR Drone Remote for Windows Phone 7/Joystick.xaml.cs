@@ -68,7 +68,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             var pointsInBounds = touchPoints.Where(p => IsInBounds(p.Position) && p.Action != TouchAction.Up).Select(p => p.Position);
             var pointArray = pointsInBounds as Point[] ?? pointsInBounds.ToArray();
 
-            if (pointArray.Any())
+            if (Visibility == Visibility.Visible && pointArray.Any())
             {
                 SetJoystickToNewPoint(pointArray.First());
             }

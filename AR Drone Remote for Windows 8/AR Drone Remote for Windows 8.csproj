@@ -133,6 +133,7 @@
       <DependentUpon>Joystick.xaml</DependentUpon>
     </Compile>
     <Compile Include="KeyboardInput.cs" />
+    <Compile Include="KeyStateIndicator.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

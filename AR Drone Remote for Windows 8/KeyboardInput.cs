@@ -1,27 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using AR_Drone_Controller;
 using Windows.System;
-using Windows.UI.Core;
-using Windows.UI.Xaml;
 
 namespace AR_Drone_Remote_for_Windows_8
 {
-    class KeyboardInput
+    internal class KeyboardInput
     {
-        private VirtualKey RollLeftKey = VirtualKey.A;
-        private VirtualKey RollRightKey = VirtualKey.D;
-        private VirtualKey PitchForwardKey = VirtualKey.W;
-        private VirtualKey PitchBackwardKey = VirtualKey.S;
-        private VirtualKey TurnLeftKey = VirtualKey.Left;
-        private VirtualKey TurnRightKey = VirtualKey.Right;
-        private VirtualKey RiseKey = VirtualKey.Up;
-        private VirtualKey DropKey = VirtualKey.Down;
+        public enum Keys
+        {
+            RollLeft,
+            RollRight,
+            PitchForward,
+            PitchBackward,
+            TurnLeft,
+            TurnRight,
+            Rise,
+            Drop
+        }
+
+        private Dictionary<Keys, VirtualKey> _keyMap;
+
+        public static Dictionary<Keys, VirtualKey> GetDefautlKeyMap()
+        {
+            return new Dictionary<Keys, VirtualKey>
+            {
+                {Keys.RollLeft, VirtualKey.A},
+                {Keys.RollRight, VirtualKey.D},
+                {Keys.PitchForward, VirtualKey.W},
+                {Keys.PitchBackward, VirtualKey.S},
+                {Keys.TurnLeft, VirtualKey.Left},
+                {Keys.TurnRight, VirtualKey.Right},
+                {Keys.Rise, VirtualKey.Up},
+                {Keys.Drop, VirtualKey.Down}
+            };
+        }
+        
+        public Dictionary<Keys, VirtualKey> KeyMaps
+        {
+            get { return _keyMap; }
+            set { _keyMap = value; }
+        }
 
         public DroneController DroneController { get; set; }
+        public KeyStateIndicator KeyStateIndicator { get; set; }
 
         public void UpdateDroneController()
         {
@@ -34,11 +55,11 @@ namespace AR_Drone_Remote_for_Windows_8
         private float GetRollFromKeyboard()
         {
             float roll;
-            if (IsKeyDown(RollLeftKey) && !IsKeyDown(RollRightKey))
+            if (IsKeyDown(Keys.RollLeft) && !IsKeyDown(Keys.RollRight))
             {
                 roll = -1;
             }
-            else if (IsKeyDown(RollRightKey) && !IsKeyDown(RollLeftKey))
+            else if (IsKeyDown(Keys.RollRight) && !IsKeyDown(Keys.RollLeft))
             {
                 roll = 1;
             }
@@ -53,11 +74,11 @@ namespace AR_Drone_Remote_for_Windows_8
         private float GetPitchFromKeyboard()
         {
             float pitch;
-            if (IsKeyDown(PitchForwardKey) && !IsKeyDown(PitchBackwardKey))
+            if (IsKeyDown(Keys.PitchForward) && !IsKeyDown(Keys.PitchBackward))
             {
                 pitch = -1;
             }
-            else if (IsKeyDown(PitchBackwardKey) && !IsKeyDown(PitchForwardKey))
+            else if (IsKeyDown(Keys.PitchBackward) && !IsKeyDown(Keys.PitchForward))
             {
                 pitch = 1;
             }
@@ -72,11 +93,11 @@ namespace AR_Drone_Remote_for_Windows_8
         private float GetTurnFromKeyboard()
         {
             float turn;
-            if (IsKeyDown(TurnLeftKey) && !IsKeyDown(TurnRightKey))
+            if (IsKeyDown(Keys.TurnLeft) && !IsKeyDown(Keys.TurnRight))
             {
                 turn = -1;
             }
-            else if (IsKeyDown(TurnRightKey) && !IsKeyDown(TurnLeftKey))
+            else if (IsKeyDown(Keys.TurnRight) && !IsKeyDown(Keys.TurnLeft))
             {
                 turn = 1;
             }
@@ -91,11 +112,11 @@ namespace AR_Drone_Remote_for_Windows_8
         private float GetGazFromKeyboard()
         {
             float upDown;
-            if (IsKeyDown(RiseKey) && !IsKeyDown(DropKey))
+            if (IsKeyDown(Keys.Rise) && !IsKeyDown(Keys.Drop))
             {
                 upDown = 1;
             }
-            else if (IsKeyDown(DropKey) && !IsKeyDown(RiseKey))
+            else if (IsKeyDown(Keys.Drop) && !IsKeyDown(Keys.Rise))
             {
                 upDown = -1;
             }
@@ -107,9 +128,9 @@ namespace AR_Drone_Remote_for_Windows_8
             return upDown;
         }
 
-        private static bool IsKeyDown(VirtualKey key)
+        private bool IsKeyDown(Keys key)
         {
-            return Window.Current.CoreWindow.GetAsyncKeyState(key) != CoreVirtualKeyStates.None;
+            return KeyStateIndicator.IsKeyDown(_keyMap[key]);
         }
     }
 }

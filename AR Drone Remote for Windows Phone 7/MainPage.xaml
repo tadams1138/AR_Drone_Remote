@@ -182,9 +182,9 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel x:Name="UseAccelerometer" HorizontalAlignment="Center">
+                <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="Use phone tilt"/>
-                    <telerikPrimitives:RadToggleSwitch HorizontalAlignment="Center" CheckedChanged="UseAccelerometer_OnCheckedChanged" />
+                    <telerikPrimitives:RadToggleSwitch x:Name="UseAccelerometer" HorizontalAlignment="Center" CheckedChanged="UseAccelerometer_OnCheckedChanged" />
                 </StackPanel>
                 <local:Joystick x:Name="LeftJoystick" 
 					    Grid.Row="1" 

@@ -78,7 +78,13 @@ namespace AR_Drone_Remote_for_Windows_8
 
         private void InitializeKeyboardInput()
         {
-            _keyboardInput = new KeyboardInput { DroneController = DroneController };
+            var keyStateIndicator = new KeyStateIndicator {CoreWindow = Window.Current.CoreWindow};
+            _keyboardInput = new KeyboardInput
+                {
+                    DroneController = DroneController,
+                    KeyStateIndicator = keyStateIndicator,
+                    KeyMaps = KeyboardInput.GetDefautlKeyMap()
+                };
             Window.Current.CoreWindow.KeyDown += KeyboardStateChanged;
             Window.Current.CoreWindow.KeyUp += KeyboardStateChanged;
         }

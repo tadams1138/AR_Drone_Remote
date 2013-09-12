@@ -218,12 +218,16 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         private void ShowOptions_OnClick(object sender, EventArgs e)
         {
+            LeftJoystick.Visibility =  Visibility.Collapsed;
+            RightJoystick.Visibility = Visibility.Collapsed;
             FlightControls.Visibility = Visibility.Collapsed;
             Tools.Visibility = Visibility.Visible;
         }
 
         private void ShowControls_OnClick(object sender, EventArgs e)
         {
+            LeftJoystick.Visibility = UseAccelerometer.IsChecked ? Visibility.Collapsed : Visibility.Visible;
+            RightJoystick.Visibility = Visibility.Visible;
             FlightControls.Visibility = Visibility.Visible;
             Tools.Visibility = Visibility.Collapsed;
         }
