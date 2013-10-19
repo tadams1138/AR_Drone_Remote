@@ -6,7 +6,7 @@ namespace AR_Drone_Remote_for_Windows_8
     {
         public ICoreWindow CoreWindow { get; set; }
 
-        public virtual bool IsKeyDown(Windows.System.VirtualKey key)
+        public virtual bool IsKeyPressed(Windows.System.VirtualKey key)
         {
             return CoreWindow.GetAsyncKeyState(key) != CoreVirtualKeyStates.None;
         }

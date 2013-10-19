@@ -8,14 +8,14 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
     {
         public DispatcherWrapper(Dispatcher dispatcher)
         {
-            this.Dispatcher = dispatcher;
+            Dispatcher = dispatcher;
         }
 
         protected Dispatcher Dispatcher { get; private set; }
 
         public void BeginInvoke(Action action)
         {
-            this.Dispatcher.BeginInvoke(action);
+            Dispatcher.BeginInvoke(action);
         }
     }
 }

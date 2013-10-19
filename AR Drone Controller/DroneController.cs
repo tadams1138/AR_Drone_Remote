@@ -1,19 +1,22 @@
 ﻿using AR_Drone_Controller.NavData;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading;
+using PropertyChanged;
 
 namespace AR_Drone_Controller
 {
-    public class DroneController : INotifyPropertyChanged, IDisposable
+    [ImplementPropertyChanged]
+    public class DroneController : IDisposable
     {
-        private const string DefaultDroneIp = "192.168.1.1";
-        private const int ControlPort = 5559;
+        public const string DefaultDroneIp = "192.168.1.1";
+
 
         private string _ipAddress = DefaultDroneIp;
 
         public ISocketFactory SocketFactory { get; set; }
+
+        internal WorkerFactory WorkerFactory;
 
         // videoSocket udp for AR Drone 1 and tcp for AR Drone 2
         private ITcpSocket _controlSocket;
@@ -21,10 +24,10 @@ namespace AR_Drone_Controller
         //private const int defaultDronePort = 23;
         //private const String droneConfigurationCommand = "cat /data/config.ini";
 
-        private CommandWorker _commandWorker;
-        private VideoWorker _videoWorker;
-        private NavDataWorker _navDataWorker;
-        private NavData.NavData _navData = new NavData.NavData();
+        internal CommandWorker _commandWorker;
+        internal VideoWorker _videoWorker;
+        internal NavDataWorker _navDataWorker;
+        internal ControlWorker _controlWorker;
 
         private Timer _commandTimer;
 
@@ -34,89 +37,113 @@ namespace AR_Drone_Controller
 
         public DroneController()
         {
+            WorkerFactory = new WorkerFactory();
             ResetNavData();
         }
 
-        public NavData.NavData NavData
-        {
-            get { return _navData; }
-            set
-            {
-                _navData = value;
-                NotifyPropertyChanged("NavData");
-                NotifyPropertyChanged("CanSendFlatTrimCommand");
-            }
-        }
+        public int Altitude { get; internal set; }
 
-        private bool _connected;
-        public bool Connected
-        {
-            get { return _connected; }
-            private set
-            {
-                _connected = value;
-                NotifyPropertyChanged("Connected");
-                NotifyPropertyChanged("CanSendFlatTrimCommand");
-            }
-        }
+        public uint BatteryPercentage { get; internal set; }
 
-        public bool CanSendFlatTrimCommand
-        {
-            get { return _connected && _navData != null && !_navData.Flying; }
-        }
+        public float Theta { get; internal set; }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public float Phi { get; internal set; }
 
-        private void NotifyPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-            {
-                Dispatcher.BeginInvoke(() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));
-            }
-        }
+        public float Psi { get; internal set; }
 
-        public void Connect()
+        public float KilometersPerHour { get; internal set; }
+
+        public bool Flying { get; internal set; }
+
+        public NavData.NavData NavData { get; internal set; }
+
+        public bool Connected { get; internal set; }
+
+        public bool CanRecord { get; internal set; }
+        
+        public bool UsbKeyIsRecording { get; internal set; }
+
+        public bool CanSendFlatTrimCommand { get; internal set; }
+        // get { return Connected && NavData != null && !NavData.Flying; }
+
+        public void Connect(ConnectParams connectParams)
         {
             try
             {
-                _controlSocket = SocketFactory.GetTcpSocket(_ipAddress, ControlPort);
-                _controlSocket.Disconnected += ControlSocketOnDisconnected;
-                _controlSocket.UnhandledException += UnhandledException;
-                if (_controlSocket.Connected)
+                DisposeWorkers();
+
+                _controlWorker = WorkerFactory.CreateControlWorker(SocketFactory, connectParams);
+                _commandWorker = WorkerFactory.CreateCommandWorker(SocketFactory, connectParams);
+                _navDataWorker = WorkerFactory.CreateNavDataWorker(SocketFactory, connectParams);
+
+                //var getTcpSocketParams = new GetTcpSocketParams
+                //    {
+                //        IpAddress = connectParams.NetworkAddress,
+                //        Port = connectParams.ControlPort
+                //    };
+                //_controlSocket = SocketFactory.GetTcpSocket(getTcpSocketParams);
+                //_controlSocket.Disconnected += ControlSocketOnDisconnected;
+                //_controlSocket.UnhandledException += UnhandledException;
+                //_controlSocket.Connect();
+
+                using (var manualResetEvent = new ManualResetEvent(false))
                 {
-                    using (var manualResetEvent = new ManualResetEvent(false))
-                    {
-                        InitializeCommandWorker();
-                        manualResetEvent.WaitOne(100);
-                        InitializeNavDataWorker();
-                        manualResetEvent.WaitOne(100);
+                    //InitializeCommandWorker();
+                    //manualResetEvent.WaitOne(100);
+                    //InitializeNavDataWorker();
+                    //manualResetEvent.WaitOne(100);
 
-                        _commandWorker.SendConfigCommand("general:video_enable", "TRUE");
-                        _commandWorker.SendConfigCommand("video:bitrate_ctrl_mode", "0");
-                        _commandWorker.SendConfigCommand("video:video_channel", "0");
+                    //_commandWorker.SendConfigCommand("general:video_enable", "TRUE");
+                    //_commandWorker.SendConfigCommand("video:bitrate_ctrl_mode", "0");
+                    //_commandWorker.SendConfigCommand("video:video_channel", "0");
 
-                        const uint navDataOptions = (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.Demo) +
-                                            (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.HdVideoStream);
+                    //const uint navDataOptions = (1 << (ushort) AR_Drone_Controller.NavData.NavData.NavDataTag.Demo) +
+                    //                            (1 <<
+                    //                             (ushort) AR_Drone_Controller.NavData.NavData.NavDataTag.HdVideoStream);
 
-                        _commandWorker.SendConfigCommand("general:navdata_demo", "TRUE");
-                        _commandWorker.SendConfigCommand("general:navdata_options", navDataOptions.ToString());
+                    //_commandWorker.SendConfigCommand("general:navdata_demo", "TRUE");
+                    //_commandWorker.SendConfigCommand("general:navdata_options", navDataOptions.ToString());
 
-                        _commandWorker.SendFlatTrimCommand();
+                    //_commandWorker.ExitBootStrapMode();
 
-                        _commandWorker.ExitBootStrapMode();
+                    //manualResetEvent.WaitOne(100);
 
-                        manualResetEvent.WaitOne(100);
+                    //_commandTimer = new Timer(DoWork, null, 30, 30);
 
-                        _commandTimer = new Timer(DoWork, null, 30, 30);
-
-                        Connected = true;
-                    }
+                    Connected = true;
                 }
             }
             catch
             {
                 Disconnect();
                 throw;
+            }
+        }
+
+        private void DisposeWorkers()
+        {
+            if (_controlWorker != null)
+            {
+                _controlWorker.Dispose();
+                _controlWorker = null;
+            }
+
+            if (_commandWorker != null)
+            {
+                _commandWorker.Dispose();
+                _commandWorker = null;
+            }
+
+            if (_navDataWorker != null)
+            {
+                _navDataWorker.Dispose();
+                _navDataWorker = null;
+            }
+
+            if (_videoWorker != null)
+            {
+                _videoWorker.Dispose();
+                _videoWorker = null;
             }
         }
 
@@ -181,11 +208,11 @@ namespace AR_Drone_Controller
 
         private void DoWork(object state)
         {
-            if (_navData.CommWatchDog)
+            if (NavData.CommWatchDog)
             {
                 _commandWorker.SendResetWatchDogCommand();
             }
-            else if (_navData.Flying)
+            else if (NavData.Flying)
             {
                 var args = new CommandWorker.ProgressiveCommandArguments
                     {
@@ -204,12 +231,29 @@ namespace AR_Drone_Controller
 
         public void Disconnect()
         {
+            //ShutdownControlSocket();
+            //ShutdownCommandTimer();
+            //ShutdownCommandWorker();
+            //ShutdownNavDataWorker();
+            //ShutdownVideoWorker();
+
+            DisposeWorkers();
+            ResetProperties();
+        }
+
+        private void ResetProperties()
+        {
+            Altitude = 0;
+            BatteryPercentage = 0;
+            Theta = 0;
+            Psi = 0;
+            Phi = 0;
+            KilometersPerHour = 0;
             Connected = false;
-            ShutdownControlSocket();
-            ShutdownCommandTimer();
-            ShutdownCommandWorker();
-            ShutdownNavDataWorker();
-            ShutdownVideoWorker();
+            CanSendFlatTrimCommand = false;
+            Flying = false;
+            CanRecord = false;
+            UsbKeyIsRecording = false;
         }
 
         private void ResetNavData()

@@ -12,14 +12,23 @@
         private const int BufferSize = 2 << 16;
 
         private readonly byte[] _receiveBuffer = new byte[BufferSize];
-        private readonly StreamSocket _socket;
-        private readonly DataWriter _writer;
-        private readonly DataReader _reader;
+        private StreamSocket _socket;
+        private DataWriter _writer;
+        private DataReader _reader;
+        private bool _connected;
+        readonly string _ipAddress;
+        readonly int _port;
 
         public TcpSocket(string ipAddress, int port)
         {
+            _ipAddress = ipAddress;
+            _port = port;
+        }
+
+        public void Connect()
+        {
             _socket = new StreamSocket();
-            var result = _socket.ConnectAsync(new HostName(ipAddress), port.ToString());
+            var result = _socket.ConnectAsync(new HostName(_ipAddress), _port.ToString());
             result.AsTask().Wait(TimeoutMilliseconds);
             if (result.ErrorCode != null)
             {
@@ -30,18 +39,16 @@
             _reader = new DataReader(_socket.InputStream);
 
             ListenForIncomingData();
-            Connected = true;
+            _connected = true;
         }
 
         public event EventHandler<DataReceivedEventArgs> DataReceived;
         public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
         public event EventHandler Disconnected;
-
-        public bool Connected { get; private set; }
-
+        
         public void Dispose()
         {
-            Connected = false;
+            _connected = false;
             _socket.Dispose();
             _writer.Dispose();
             _reader.Dispose();
@@ -69,12 +76,12 @@
                     _reader.ReadBytes(_receiveBuffer);
                     DataReceived(this, new DataReceivedEventArgs(_receiveBuffer));
 
-                    if (Connected)
+                    if (_connected)
                     {
                         ListenForIncomingData();
                     }
                 }
-                else if (Connected)
+                else if (_connected)
                 {
                     throw new UnexpectedDisconnectException();
                 }

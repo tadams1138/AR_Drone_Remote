@@ -189,7 +189,7 @@ namespace AR_Drone_Remote_for_Windows_8
             {
                 try
                 {
-                    DroneController.Connect();
+                    DroneController.Connect(new ConnectParams());
                 }
                 catch
                 {

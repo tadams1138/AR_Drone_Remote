@@ -3,7 +3,8 @@
     using System;
     using System.Threading;
 
-    class VideoWorker
+
+    class VideoWorker : IDisposable
     {
         private const int VideoPort = 5555;
         private const int TimeoutValue = 500;
@@ -23,7 +24,7 @@
         {
             if (!_run)
             {
-                CreateSocket(); 
+                CreateSocket();
                 _keepAliveTimer = new Timer(KeepAlive, null, 0, TimeoutValue);
                 _run = true;
             }
@@ -91,14 +92,21 @@
 
         private void CreateSocket()
         {
-            _videoSocket = SocketFactory.GetTcpSocket(RemoteIpAddress, VideoPort);
+            var getTcpSocketParams = new GetTcpSocketParams {IpAddress = RemoteIpAddress, Port = VideoPort};
+            _videoSocket = SocketFactory.GetTcpSocket(getTcpSocketParams);
             _videoSocket.DataReceived += VideoSocketOnDataReceived;
             _videoSocket.UnhandledException += VideoSocketOnUnhandledException;
+            _videoSocket.Connect();
         }
 
         private void InitiateCommunication()
         {
             _videoSocket.Write(1);
+        }
+
+        public virtual void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -3,8 +3,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:common="using:AR_Drone_Remote_for_Windows_8.Common"
-    mc:Ignorable="d"
+             xmlns:arDroneRemoteForWindows8="using:AR_Drone_Remote_for_Windows_8"
+             mc:Ignorable="d"
     DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <Viewbox Stretch="Uniform">
         <Grid Background="Transparent" Width="614" Height="614">
@@ -15,7 +15,7 @@
             </Image>
             <Grid RenderTransformOrigin="0.5,0.5">
                 <Grid.Resources>
-                    <common:AngleRotator x:Key="ControlRotationConverter" InvertDegrees="True" />
+                    <arDroneRemoteForWindows8:AngleInverter x:Key="ControlRotationConverter" />
                 </Grid.Resources>
                 <Image Source="Assets/compass.png"  Width="540" Height="540" />
                 <Image Source="Assets/heading2.png" Width="49" Height="37" RenderTransformOrigin="0.5,.5" >

@@ -55,11 +55,11 @@ namespace AR_Drone_Remote_for_Windows_8
         private float GetRollFromKeyboard()
         {
             float roll;
-            if (IsKeyDown(Keys.RollLeft) && !IsKeyDown(Keys.RollRight))
+            if (IsKeyPressed(Keys.RollLeft) && !IsKeyPressed(Keys.RollRight))
             {
                 roll = -1;
             }
-            else if (IsKeyDown(Keys.RollRight) && !IsKeyDown(Keys.RollLeft))
+            else if (IsKeyPressed(Keys.RollRight) && !IsKeyPressed(Keys.RollLeft))
             {
                 roll = 1;
             }
@@ -74,11 +74,11 @@ namespace AR_Drone_Remote_for_Windows_8
         private float GetPitchFromKeyboard()
         {
             float pitch;
-            if (IsKeyDown(Keys.PitchForward) && !IsKeyDown(Keys.PitchBackward))
+            if (IsKeyPressed(Keys.PitchForward) && !IsKeyPressed(Keys.PitchBackward))
             {
                 pitch = -1;
             }
-            else if (IsKeyDown(Keys.PitchBackward) && !IsKeyDown(Keys.PitchForward))
+            else if (IsKeyPressed(Keys.PitchBackward) && !IsKeyPressed(Keys.PitchForward))
             {
                 pitch = 1;
             }
@@ -93,11 +93,11 @@ namespace AR_Drone_Remote_for_Windows_8
         private float GetTurnFromKeyboard()
         {
             float turn;
-            if (IsKeyDown(Keys.TurnLeft) && !IsKeyDown(Keys.TurnRight))
+            if (IsKeyPressed(Keys.TurnLeft) && !IsKeyPressed(Keys.TurnRight))
             {
                 turn = -1;
             }
-            else if (IsKeyDown(Keys.TurnRight) && !IsKeyDown(Keys.TurnLeft))
+            else if (IsKeyPressed(Keys.TurnRight) && !IsKeyPressed(Keys.TurnLeft))
             {
                 turn = 1;
             }
@@ -112,11 +112,11 @@ namespace AR_Drone_Remote_for_Windows_8
         private float GetGazFromKeyboard()
         {
             float upDown;
-            if (IsKeyDown(Keys.Rise) && !IsKeyDown(Keys.Drop))
+            if (IsKeyPressed(Keys.Rise) && !IsKeyPressed(Keys.Drop))
             {
                 upDown = 1;
             }
-            else if (IsKeyDown(Keys.Drop) && !IsKeyDown(Keys.Rise))
+            else if (IsKeyPressed(Keys.Drop) && !IsKeyPressed(Keys.Rise))
             {
                 upDown = -1;
             }
@@ -128,9 +128,10 @@ namespace AR_Drone_Remote_for_Windows_8
             return upDown;
         }
 
-        private bool IsKeyDown(Keys key)
+        private bool IsKeyPressed(Keys key)
         {
-            return KeyStateIndicator.IsKeyDown(_keyMap[key]);
+            VirtualKey virtualKey = _keyMap[key];
+            return KeyStateIndicator.IsKeyPressed(virtualKey);
         }
     }
 }

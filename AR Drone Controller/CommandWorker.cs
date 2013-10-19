@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
 using System.Threading;
 
 namespace AR_Drone_Controller
 {
-    public class CommandWorker
+    public class CommandWorker : IDisposable
     {
         private const int CommandPort = 5556;
         private const int TimeoutValue = 500;
@@ -99,8 +100,15 @@ namespace AR_Drone_Controller
 
         private void CreateSocket()
         {
-            _cmdSocket = SocketFactory.GetUdpSocket(CommandPort, RemoteIpAddress, CommandPort,
-                                                    TimeoutValue);
+            var getUdpSocketParams = new GetUdpSocketParams
+                {
+                    LocalPort = CommandPort,
+                    RemoteIp = RemoteIpAddress,
+                    RemotePort = CommandPort,
+                    Timeout = TimeoutValue
+                };
+            _cmdSocket = SocketFactory.GetUdpSocket(getUdpSocketParams);
+            _cmdSocket.Connect();
         }
 
         public void SendFlatTrimCommand()
@@ -366,6 +374,11 @@ namespace AR_Drone_Controller
             {
                 _commands.Enqueue(command);
             }
+        }
+
+        public virtual void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 }

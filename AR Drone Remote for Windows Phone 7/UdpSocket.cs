@@ -13,20 +13,30 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         private const int MaxBufferSize = 8192;
 
         private readonly ManualResetEvent _clientDone = new ManualResetEvent(false);
-        private readonly Socket _socket;
+        private Socket _socket;
         private readonly int _timeoutMilliseconds;
         private readonly byte[] _buffer = new byte[MaxBufferSize];
-        private readonly SocketAsyncEventArgs _receiveSocketEventArg;
-        private readonly SocketAsyncEventArgs _sendSocketEventArg;
+        private SocketAsyncEventArgs _receiveSocketEventArg;
+        private SocketAsyncEventArgs _sendSocketEventArg;
         private readonly object _syncLock = new object();
         private bool _disposed;
+        private readonly int _localPort;
+        private readonly string _remoteIp;
+        private readonly int _remotePort;
 
         public UdpSocket(int localPort, string remoteIp, int remotePort, int timeout)
         {
+            _localPort = localPort;
+            _remoteIp = remoteIp;
+            _remotePort = remotePort;
             _timeoutMilliseconds = timeout;
+        }
+
+        public void Connect()
+        {
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            _receiveSocketEventArg = CreateReceiveSocketEventArg(localPort);
-            _sendSocketEventArg = CreateSendSocketAsyncEventArgs(remoteIp, remotePort);
+            _receiveSocketEventArg = CreateReceiveSocketEventArg(_localPort);
+            _sendSocketEventArg = CreateSendSocketAsyncEventArgs(_remoteIp, _remotePort);
             InitializeSocket();
             ListenForIncomingData();
         }

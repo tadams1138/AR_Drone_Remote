@@ -3,8 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:common="using:AR_Drone_Remote_for_Windows_8.Common"
-    xmlns:local="using:AR_Drone_Remote_for_Windows_8"
+             xmlns:local="using:AR_Drone_Remote_for_Windows_8"
     mc:Ignorable="d"
     d:DesignHeight="200" d:DesignWidth="200"
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
@@ -14,7 +13,7 @@
                                ImageHeight="720" 
                                ImageWidth="250"
                                ActualWidth ="{Binding ElementName=This, Path=ActualWidth}" />
-        <common:AngleRotator x:Key="PhiConverter" InvertDegrees="True"/>
+        <local:AngleInverter x:Key="PhiConverter"/>
     </UserControl.Resources>
     <Viewbox Stretch="Uniform">
         <Grid Width="200" Height="200">

@@ -4,8 +4,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="using:AR_Drone_Remote_for_Windows_8"
-    xmlns:common="using:AR_Drone_Remote_for_Windows_8.Common"
-    mc:Ignorable="d"
+             mc:Ignorable="d"
     d:DesignHeight="30" d:DesignWidth="60"
     DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <Control.Resources>
@@ -15,7 +14,7 @@
                                                  GoodStrengthColor="{StaticResource ApplicationForegroundThemeBrush}"/>
         <SolidColorBrush x:Key="BatteryColor" 
                          Color="{Binding Path=BatteryPercentage, Converter={StaticResource BatteryPercentageToColorConverter}}"/>
-        <common:BatteryPercentageToVisibilityConvert x:Key="BatteryPercentageToVisibilityConvert" />
+        <local:BatteryPercentageToVisibilityConverter x:Key="BatteryPercentageToVisibilityConvert" />
     </Control.Resources>
     <Viewbox Stretch="Uniform">
         <Grid Width="20" Height="10" Background="Transparent">

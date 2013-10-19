@@ -1,23 +1,13 @@
 ﻿using System;
 using Windows.UI.Xaml.Data;
 
-namespace AR_Drone_Remote_for_Windows_8.Common
+namespace AR_Drone_Remote_for_Windows_8
 {
-    class AngleRotator : IValueConverter
+    class AngleInverter : IValueConverter
     {
-        private double _factor = 1.0;
-
-        public double Offset { get; set; }
-
-        public bool InvertDegrees
-        {
-            get { return _factor < 0; }
-            set { _factor = value ? -1.0 : 1.0; }
-        }
-
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            double result = Offset;
+            double result = 0.0;
 
             if (value is float)
             {
@@ -28,7 +18,7 @@ namespace AR_Drone_Remote_for_Windows_8.Common
                 result += (double)value;
             }
 
-            result *= _factor;
+            result *= -1.0;
             result = NormalizeDegrees(result);
             return result;
         }

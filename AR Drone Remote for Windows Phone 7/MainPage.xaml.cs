@@ -206,7 +206,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             {
                 try
                 {
-                    _droneController.Connect();
+                    _droneController.Connect(new ConnectParams());
                 }
                 catch
                 {

@@ -114,10 +114,10 @@
     </Compile>
     <Compile Include="BindableCompass.cs" />
     <Compile Include="BooleanToBrushConverter.cs" />
-    <Compile Include="Common\BatteryPercentageToColorConverter.cs" />
-    <Compile Include="Common\AngleRotator.cs" />
-    <Compile Include="Common\BatteryPercentageToVisibilityConvert.cs" />
-    <Compile Include="Common\PitchTranslator.cs" />
+    <Compile Include="BatteryPercentageToColorConverter.cs" />
+    <Compile Include="AngleInverter.cs" />
+    <Compile Include="BatteryPercentageToVisibilityConverter.cs" />
+    <Compile Include="PitchTranslator.cs" />
     <Compile Include="AttitudeIndicator.xaml.cs">
       <DependentUpon>AttitudeIndicator.xaml</DependentUpon>
     </Compile>
@@ -199,7 +199,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <SDKReference Include="RadControls for Windows 8, Version=2013.1.417">
+    <SDKReference Include="RadControls for Windows 8, Version=2013.2.716">
       <Name>RadControls for Windows 8</Name>
     </SDKReference>
   </ItemGroup>

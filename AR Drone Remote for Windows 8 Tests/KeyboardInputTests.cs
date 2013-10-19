@@ -237,7 +237,7 @@ namespace AR_Drone_Remote_for_Windows_8
         private void SetKeyStateToDown(KeyboardInput.Keys keyMap, VirtualKey key)
         {
             _target.KeyMaps[keyMap] = key;
-            _mockKeyStateIndicator.Setup(x => x.IsKeyDown(key)).Returns(true);
+            _mockKeyStateIndicator.Setup(x => x.IsKeyPressed(key)).Returns(true);
         }
     }
 }

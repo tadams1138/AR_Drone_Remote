@@ -1,9 +1,10 @@
 ﻿namespace AR_Drone_Controller.NavData
 {
     using System;
+
     using System.Threading;
 
-    class NavDataWorker
+    class NavDataWorker : IDisposable
     {
         private const int NavDataPort = 5554;
         private const int TimeoutValue = 500;
@@ -111,15 +112,27 @@
 
         private void CreateSocket()
         {
-            _navDataSocket = SocketFactory.GetUdpSocket(NavDataPort, RemoteIpAddress, NavDataPort,
-                                                        TimeoutValue);
+            var getUdpSocketParams = new GetUdpSocketParams
+                {
+                    LocalPort = NavDataPort,
+                    RemoteIp = RemoteIpAddress,
+                    RemotePort = NavDataPort,
+                    Timeout = TimeoutValue
+                };
+            _navDataSocket = SocketFactory.GetUdpSocket(getUdpSocketParams);
             _navDataSocket.DataReceived += NavDataSocketOnDataReceived;
             _navDataSocket.UnhandledException += NavDataSocketOnUnhandledException;
+            _navDataSocket.Connect();
         }
 
         private void InitiateCommunication()
         {
             _navDataSocket.Write(1);
+        }
+
+        public virtual void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 }

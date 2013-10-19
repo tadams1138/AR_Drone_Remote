@@ -64,8 +64,11 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="..\AR Drone Remote for Windows 8\BooleanToBrushConverter.cs">
-      <Link>BooleanToBrushConverter.cs</Link>
+    <Compile Include="..\AR Drone Remote for Windows 8\AngleInverter.cs">
+      <Link>AngleInverter.cs</Link>
+    </Compile>
+    <Compile Include="..\AR Drone Remote for Windows 8\BatteryPercentageToVisibilityConverter.cs">
+      <Link>BatteryPercentageToVisibilityConverter.cs</Link>
     </Compile>
     <Compile Include="..\AR Drone Remote for Windows 8\KeyboardInput.cs">
       <Link>KeyboardInput.cs</Link>
@@ -79,6 +82,9 @@
     <Compile Include="KeyboardInputTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="KeyStateIndicatorTests.cs" />
+    <Compile Include="StringConverterTests.cs" />
+    <Compile Include="AngleInverterTests.cs" />
+    <Compile Include="BatteryPercentageToVisibilityConverterTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AR Drone Controller\AR Drone Controller.csproj">

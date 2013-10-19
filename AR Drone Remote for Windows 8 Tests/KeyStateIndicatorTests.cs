@@ -21,39 +21,39 @@ namespace AR_Drone_Remote_for_Windows_8
         }
 
         [TestMethod]
-        public void IsKeyDown_KeyIsDown_ReturnTrue()
+        public void IsKeyPressed_KeyIsDown_ReturnTrue()
         {
             // Arrange
             _mockCoreWindow.Setup(x => x.GetAsyncKeyState(Key)).Returns(CoreVirtualKeyStates.Down);
 
             // Act
-            bool result = _target.IsKeyDown(Key);
+            bool result = _target.IsKeyPressed(Key);
 
             // Assert
             result.Should().BeTrue();
         }
 
         [TestMethod]
-        public void IsKeyDown_KeyIsLocked_ReturnTrue()
+        public void IsKeyPressed_KeyIsLocked_ReturnTrue()
         {
             // Arrange
             _mockCoreWindow.Setup(x => x.GetAsyncKeyState(Key)).Returns(CoreVirtualKeyStates.Locked);
 
             // Act
-            bool result = _target.IsKeyDown(Key);
+            bool result = _target.IsKeyPressed(Key);
 
             // Assert
             result.Should().BeTrue();
         }
 
         [TestMethod]
-        public void IsKeyDown_KeyIsUp_ReturnFalse()
+        public void IsKeyPressed_KeyIsUp_ReturnFalse()
         {
             // Arrange
             _mockCoreWindow.Setup(x => x.GetAsyncKeyState(Key)).Returns(CoreVirtualKeyStates.None);
 
             // Act
-            bool result = _target.IsKeyDown(Key);
+            bool result = _target.IsKeyPressed(Key);
 
             // Assert
             result.Should().BeFalse();

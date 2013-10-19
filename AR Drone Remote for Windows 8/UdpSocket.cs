@@ -7,18 +7,28 @@ using Windows.Storage.Streams;
 
 namespace AR_Drone_Remote_for_Windows_8
 {
-    internal class UdpSocket : IUdpSocket
+    internal class UdpSocket :  IUdpSocket
     {
-        private readonly DatagramSocket _socket;
-        private readonly DataWriter _writer;
+        private DatagramSocket _socket;
+        private DataWriter _writer;
+        private readonly string _remoteIp;
+        private readonly int _remotePort;
+        private readonly int _timeout;
 
         public UdpSocket(string remoteIp, int remotePort, int timeout)
         {
+            _remoteIp = remoteIp;
+            _remotePort = remotePort;
+            _timeout = timeout;
+        }
+
+        public void Connect()
+        {
             _socket = new DatagramSocket();
             _socket.MessageReceived += socket_MessageReceived;
-            var result = _socket.ConnectAsync(new HostName(remoteIp), remotePort.ToString());
-            result.AsTask().Wait(timeout);
-            if (result.ErrorCode != null) 
+            var result = _socket.ConnectAsync(new HostName(_remoteIp), _remotePort.ToString());
+            result.AsTask().Wait(_timeout);
+            if (result.ErrorCode != null)
             {
                 throw result.ErrorCode;
             }

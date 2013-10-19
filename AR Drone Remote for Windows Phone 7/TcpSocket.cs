@@ -12,18 +12,27 @@
         private const int TimeoutMilliseconds = 5000;
         private const int BufferSize = 2 << 16;
 
-        private readonly Socket _socket;
+        private Socket _socket;
         private readonly ManualResetEvent _manualResetEvent = new ManualResetEvent(false);
         private readonly byte[] _receiveBuffer = new byte[BufferSize];
-        private readonly SocketAsyncEventArgs _responseListener;
+        private SocketAsyncEventArgs _responseListener;
+        private bool _connected;
+        private readonly string _ipAddress;
+        private readonly int _port;
 
         public TcpSocket(string ipAddress, int port)
         {
+            _ipAddress = ipAddress;
+            _port = port;
+        }
+
+        public void Connect()
+        {
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            var socketEventArg = new SocketAsyncEventArgs { RemoteEndPoint = new DnsEndPoint(ipAddress, port) };
+            var socketEventArg = new SocketAsyncEventArgs {RemoteEndPoint = new DnsEndPoint(_ipAddress, _port)};
             socketEventArg.Completed += (s, e) =>
                 {
-                    Connected = true;
+                    _connected = true;
                     _manualResetEvent.Set();
                 };
             _manualResetEvent.Reset();
@@ -31,13 +40,13 @@
             _manualResetEvent.WaitOne(TimeoutMilliseconds);
             _responseListener = CreateResponseListenerSocketAsyncEventArgs();
 
-            if (Connected)
+            if (_connected)
             {
                 ListenForIncomingData();
             }
             else
             {
-                throw new TcpSocketConnectTimeoutException(ipAddress, port, TimeoutMilliseconds);
+                throw new TcpSocketConnectTimeoutException(_ipAddress, _port, TimeoutMilliseconds);
             }
         }
 
@@ -47,11 +56,9 @@
 
         public void Dispose()
         {
-            Connected = false;
+            _connected = false;
             _socket.Dispose();
         }
-
-        public bool Connected { get; private set; }
 
         public void Write(int s)
         {
@@ -68,7 +75,7 @@
         private void ListenForIncomingData()
         {
             _responseListener.SetBuffer(_receiveBuffer, 0, _receiveBuffer.Length);
-            if (Connected && !_socket.ReceiveAsync(_responseListener))
+            if (_connected && !_socket.ReceiveAsync(_responseListener))
             {
                 ProcessSocketEvent(_responseListener);
             }
@@ -78,7 +85,7 @@
         {
             try
             {
-                if (!Connected)
+                if (!_connected)
                 {
                     return;
                 }

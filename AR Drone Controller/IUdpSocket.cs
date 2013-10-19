@@ -4,6 +4,8 @@ namespace AR_Drone_Controller
 {
     public interface IUdpSocket : IDisposable
     {
+        void Connect();
+
         void Write(string s);
 
         void Write(int i);
