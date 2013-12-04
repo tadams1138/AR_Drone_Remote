@@ -32,15 +32,15 @@ namespace AR_Drone_Controller.NavData
 
         public States State { get; internal set; }
 
-        public uint BatteryPercentage { get; internal set; }
+        public virtual uint BatteryPercentage { get; internal set; }
 
-        public float Theta { get; internal set; }
+        public virtual float Theta { get; internal set; }
 
-        public float Phi { get; internal set; }
+        public virtual float Phi { get; internal set; }
 
-        public float Psi { get; internal set; }
+        public virtual float Psi { get; internal set; }
         
-        public int Altitude { get; set; }
+        public virtual int Altitude { get; set; }
 
         public float Vx { get; internal set; }
 
@@ -48,7 +48,7 @@ namespace AR_Drone_Controller.NavData
 
         public float Vz { get; internal set; }
 
-        public float KilometersPerHour
+        public virtual float KilometersPerHour
         {
             get { return (float)Math.Sqrt(Vx * Vx + Vy * Vy + Vz * Vz) * 3.6f; }
         }

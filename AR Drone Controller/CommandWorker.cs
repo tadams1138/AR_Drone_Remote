@@ -1,218 +1,47 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-
-using System.Threading;
 
 namespace AR_Drone_Controller
 {
-    public class CommandWorker : IDisposable
+    internal class CommandWorker : IDisposable
     {
-        private const int CommandPort = 5556;
-        private const int TimeoutValue = 500;
+        public const int MaxMillisecondsOfInactivity = 200;
+        public const string FtrimCommand = "FTRIM";
+        public const string PmodeCommand = "PMODE";
+        public const string MiscCommand = "MISC";
+        public const string RefCommand = "REF";
+        public const string GeneralNavdataDemoConfigKey = "general:navdata_demo";
+        public const string TrueConfigValue = "TRUE";
+        public const string CalibCommand = "CALIB";
+        public const string ComwdgCommand = "COMWDG";
+        public const string ConfigCommand = "CONFIG";
+        public const string ConfigIdsCommand = "CONFIG_IDS";
+        public const string CtrlCommand = "CTRL";
+        public const string SessionIdConfigKey = "custom:session_id";
+        public const string ProfileIdConfigKey = "custom:profile_id";
+        public const string ApplicationIdConfigKey = "custom:application_id";
+        public const string ApplicationDescConfigKey = "custom:application_desc";
+        public const string ProﬁleDescConfigKey = "custom:proﬁle_desc";
+        public const string SessionDescConfigKey = "custom:session_desc";
+        public const string LedCommand = "LED";
+        public const string AnimCommand = "ANIM";
+        public const string PcmdMagCommand = "PCMD_MAG";
+        public const string PcmdCommand = "PCMD";
 
-        private readonly Queue<string> _commands = new Queue<string>();
-        private readonly object _syncLock = new object();
+        public readonly string SessionId =
+            ("T&I AR Drone Remote SessionId").GetHashCode().ToString("X").ToLowerInvariant();
+
+        public readonly string ProfileId =
+            ("T&I AR Drone Remote ProfileId").GetHashCode().ToString("X").ToLowerInvariant();
+
+        public readonly string ApplicationId =
+            ("T&I AR Drone Remote ApplicationId").GetHashCode().ToString("X").ToLowerInvariant();
         
-        private int _seq;
-        private IUdpSocket _cmdSocket;
-        private bool _run;
-        private DateTime _timeSinceLastSend;
-        private Timer _workerTimer;
-
-        public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
-
-        public string RemoteIpAddress { get; set; }
-        public ISocketFactory SocketFactory { get; set; }
-        public string SessionId { get; set; }
-        public string ProfileId { get; set; }
-        public string ApplicationId { get; set; }
-        
-        internal void Run()
-        {
-            if (!_run)
-            {
-                _run = true;
-                _seq = 1;
-                CreateSocket();
-                _workerTimer = new Timer(DoWork, null, 30, 30);
-            }
-        }
-
-        internal void Stop()
-        {
-            if (_workerTimer != null)
-            {
-                _workerTimer.Dispose();
-                _workerTimer = null;
-            }
-
-            if (_cmdSocket != null)
-            {
-                _cmdSocket.Dispose();
-                _cmdSocket = null;
-            }
-
-            _run = false;
-        }
-
-        const int MaxCommandLength = 1024;
-
-        private void DoWork(object state)
-        {
-            try
-            {
-                string message = AppendCommands();
-
-                if (!string.IsNullOrEmpty(message))
-                {
-                    _cmdSocket.Write(message);
-                    _timeSinceLastSend = DateTime.UtcNow;
-                }
-                else if ((DateTime.UtcNow - _timeSinceLastSend).Milliseconds > 200)
-                {
-                    SendAck();
-                }
-            }
-            catch (Exception ex)
-            {
-                if (UnhandledException != null)
-                {
-                    UnhandledException(this, new UnhandledExceptionEventArgs(ex));
-                }
-            }
-        }
-
-        private string AppendCommands()
-        {
-            var message = new StringBuilder();
-            lock (_syncLock)
-            {
-                while (_commands.Any() && message.Length + _commands.Peek().Length <= MaxCommandLength)
-                {
-                    message.Append(_commands.Dequeue());
-                }
-            }
-
-            return message.ToString();
-        }
-
-        private void CreateSocket()
-        {
-            var getUdpSocketParams = new GetUdpSocketParams
-                {
-                    LocalPort = CommandPort,
-                    RemoteIp = RemoteIpAddress,
-                    RemotePort = CommandPort,
-                    Timeout = TimeoutValue
-                };
-            _cmdSocket = SocketFactory.GetUdpSocket(getUdpSocketParams);
-            _cmdSocket.Connect();
-        }
-
-        public void SendFlatTrimCommand()
-        {
-            EnqueCommand("FTRIM");
-        }
-
-        public void SendMiscellaneousCommand(string message)
-        {
-            EnqueCommand("MISC", message);
-        }
-
-        public void SendPModeCommand(int mode)
-        {
-            EnqueCommand("PMODE", mode.ToString());
-        }
-
-        public void SendConfigCommand(string key, string value)
-        {
-            string configId = string.Format("\"{0}\",\"{1}\",\"{2}\"", SessionId, ProfileId, ApplicationId);
-            string config = string.Format("\"{0}\",\"{1}\"", key, value);
-            EnqueCommand("CONFIG_IDS", configId);
-            EnqueCommand("CONFIG", config);
-        }
-
         public enum RefCommands
         {
             LandOrReset = 290717696,
             Emergency = 290717952,
             TakeOff = 290718208
-        }
-
-        public void SendRefCommand(RefCommands command)
-        {
-            EnqueCommand("REF", ((int)command).ToString());
-        }
-
-        public enum LedAnimation
-        {
-            BlinkGreenRed = 0,
-            BlinkGreen = 1,
-            BlinkRed = 2,
-            BlinkOrange = 3,
-            SnakeGreenRed = 4,
-            Fire = 5,
-            Standard = 6,
-            Red = 7,
-            Green = 8,
-            RedSnake = 9,
-            Blank = 10,
-            RightMissile = 11,
-            LeftMissile = 12,
-            DoubleMissile = 13,
-            FrontLeftGreenOthersRed = 14,
-            FrontRightGreenOthersRed = 15,
-            RearRightGreenOthersRed = 16,
-            RearLeftGreenOthersRed = 17,
-            LeftGreenRightRed = 18,
-            LeftRedRightGreen = 19,
-            BlinkStandard = 20
-        }
-
-        public void SendLedAnimationCommand(LedAnimation command, float frequencyInHz, int durationInSeconds)
-        {
-            int frequency = ConvertFloatToInt32(frequencyInHz);
-            string message = string.Format("{0},{1},{2}", (int)command, frequency,
-                                           durationInSeconds);
-            EnqueCommand("LED", message);
-        }
-
-        public enum FlightAnimation
-        {
-            PhiMinus30Degrees = 0,
-            PhiPlus30Degrees,
-            ThetaMinus30Degrees,
-            ThetaPlus30Degrees,
-            Theta20DegYaw200Degrees,
-            Theta20DegYawM200Degrees,
-            Turnaround,
-            TurnaroundAndGoDown,
-            YawShake,
-            YawDance,
-            PhiDance,
-            ThetaDance,
-            VzDance,
-            Wave,
-            PhiThetaMixed,
-            DoublePhiThetaMixed,
-            FlipAhead,
-            FlipBehind,
-            FlipLeft,
-            FlipRight
-        }
-
-        public void SendFlightAnimationCommand(FlightAnimation command, int maydayTimeoutInMilliseconds)
-        {
-            string message = string.Format("{0},{1}", (int)command, maydayTimeoutInMilliseconds);
-            EnqueCommand("ANIM", message);
-        }
-
-        public void ExitBootStrapMode()
-        {
-            SendConfigCommand("general:navdata_demo", "TRUE");
-            SendAck();
         }
 
         public enum ControlMode
@@ -226,159 +55,168 @@ namespace AR_Drone_Controller
             CustomCfgGetControlMode /*<! Requests the list of custom configuration IDs */
         }
 
-        public void SendCtrlCommand(ControlMode mode)
+        public CommandWorker()
         {
-            string message = ((int)mode).ToString() + ",0";
-            EnqueCommand("CTRL", message);
+            TimeOfLastTransmission = DateTime.UtcNow;
         }
 
-        private void SendAck()
+        internal CommandQueue CommandQueue { get; set; }
+        internal CommandFormatter CommandFormatter { get; set; }
+        internal FloatToInt32Converter FloatToInt32Converter { get; set; }
+        public ProgressiveCommandFormatter ProgressiveCommandFormatter { get; set; }
+        internal IUdpSocket Socket { get; set; }
+
+        public DateTime TimeOfLastTransmission { get; set; }
+
+        public virtual void Run()
         {
-            SendCtrlCommand(0);
+            Socket.Connect();
+            SendPModeCommand(2);
+            SendMiscellaneousCommand("2,20,2000,3000");
+            SendSetConfigurationCommand();
         }
 
-        private void EnqueCommand(string type)
+        public virtual void SendFlatTrimCommand()
         {
-            string command = string.Format("AT*{0}={1}\r", type, _seq++);
-            lock (_syncLock)
-            {
-                _commands.Enqueue(command);
-            }
+            string command = CommandFormatter.CreateCommand(FtrimCommand);
+            CommandQueue.Enqueue(command);
         }
 
-        private void EnqueCommand(string type, string message)
+        public virtual void SendConfigCommand(string key, string value)
         {
-            string command = string.Format("AT*{0}={1},{2}\r", type, _seq++, message);
-            lock (_syncLock)
-            {
-                _commands.Enqueue(command);
-            }
+            var command = CreateConfigCommand(key, value);
+            CommandQueue.Enqueue(command);
         }
 
-        internal void SendProgressiveCommand(ProgressiveCommandArguments args)
+        private string CreateConfigCommand(string key, string value)
         {
-            EnqueCommand(args.GetCommand(), args.GetMessage());
+            string configIdsMessage = String.Format("\"{0}\",\"{1}\",\"{2}\"", SessionId, ProfileId, ApplicationId);
+            string configIdsCommand = CommandFormatter.CreateCommand(ConfigIdsCommand, configIdsMessage);
+            string configMessage = String.Format("\"{0}\",\"{1}\"", key, value);
+            string configCommand = CommandFormatter.CreateCommand(ConfigCommand, configMessage);
+            string command = configIdsCommand + configCommand;
+            return command;
         }
 
-        public class ProgressiveCommandArguments
+        public virtual void SendRefCommand(RefCommands refCommand)
         {
-            const float Threshold = 0.001f;
-
-            public float Pitch { get; set; }
-            public float Roll { get; set; }
-            public float Gaz { get; set; }
-            public float Yaw { get; set; }
-            public float MagnetoPsi { get; set; }
-            public float MagnetoPsiAccuracy { get; set; }
-            public bool AbsoluteControl { get; set; }
-            public bool CombineYaw { get; set; }
-
-            public string GetCommand()
-            {
-                return AbsoluteControl ? "PCMD_MAG" : "PCMD";
-            }
-
-            public string GetMessage()
-            {
-                int pitchAsInt;
-                int rollAsInt;
-                int gazAsInt = ConvertFloatToInt32(Gaz);
-                int yawAsInt = ConvertFloatToInt32(Yaw);
-                int mode = 0;
-
-                if (Math.Abs(Pitch) < Threshold && Math.Abs(Roll) < Threshold)
-                {
-                    pitchAsInt = 0;
-                    rollAsInt = 0;
-                }
-                else
-                {
-                    pitchAsInt = ConvertFloatToInt32(Pitch);
-                    rollAsInt = ConvertFloatToInt32(Roll);
-                    mode = (int)Modes.EnableProgressiveCommands;
-                }
-
-                if (CombineYaw)
-                {
-                    mode |= (int)Modes.CombineYaw;
-                }
-
-                string message;
-                if (AbsoluteControl)
-                {
-                    float normalizedMagnetoPsi = NormalizeMagnetoPsiDegrees();
-                    float normalizedMagnetoPsiAccuracy = NormalizedMagnetoPsiAccuracy();
-                    int magnetoPsiAsInt = ConvertFloatToInt32(normalizedMagnetoPsi);
-                    int magnetoPsiAccuracyAsInt = ConvertFloatToInt32(normalizedMagnetoPsiAccuracy);
-                    mode |= (int)Modes.AbsoluteControl;
-                    message = string.Format("{0},{1},{2},{3},{4},{5},{6}", mode, rollAsInt, pitchAsInt, gazAsInt,
-                                            yawAsInt, magnetoPsiAsInt, magnetoPsiAccuracyAsInt);
-                }
-                else
-                {
-                    message = string.Format("{0},{1},{2},{3},{4}", mode, rollAsInt, pitchAsInt, gazAsInt,
-                                            yawAsInt);
-                }
-
-                return message;
-            }
-
-            [Flags]
-            private enum Modes
-            {
-                EnableProgressiveCommands = 1,
-                CombineYaw = 2,
-                AbsoluteControl = 4
-            }
-
-            private float NormalizedMagnetoPsiAccuracy()
-            {
-                return Math.Abs(MagnetoPsiAccuracy / 360f);
-            }
-
-            private float NormalizeMagnetoPsiDegrees()
-            {
-                float degrees = MagnetoPsi % 360f;
-                if (degrees <= 180)
-                {
-                    return degrees / 180;
-                }
-                
-                return degrees / 180 - 2;
-            }
-
-            private int ConvertFloatToInt32(float value)
-            {
-                var bytes = BitConverter.GetBytes(value);
-                int result = BitConverter.ToInt32(bytes, 0);
-                return result;
-            }
+            string command = CommandFormatter.CreateCommand(RefCommand, ((int)refCommand).ToString());
+            CommandQueue.Enqueue(command);
         }
 
-        private int ConvertFloatToInt32(float value)
+        public virtual void SendLedAnimationCommand(ILedAnimation ledAnimatoin)
         {
-            var bytes = BitConverter.GetBytes(value);
-            int result = BitConverter.ToInt32(bytes, 0);
-            return result;
+            int freq = FloatToInt32Converter.Convert(ledAnimatoin.FrequencyInHz);
+            string message = string.Format("{0},{1},{2}", (int) ledAnimatoin.Animation, freq, ledAnimatoin.DurationInSeconds);
+            string command = CommandFormatter.CreateCommand(LedCommand, message);
+            CommandQueue.Enqueue(command);
         }
 
-        internal void SendCalibrateCompassCommand()
+        public virtual void SendFlightAnimationCommand(IFlightAnimation flightAnimation)
         {
-            EnqueCommand("CALIB", "0");
+            string message = string.Format("{0},{1}", (int) flightAnimation.Animation,
+                flightAnimation.MaydayTimeoutInMilliseconds);
+            string command = CommandFormatter.CreateCommand(AnimCommand, message);
+            CommandQueue.Enqueue(command);
         }
 
-        internal void SendResetWatchDogCommand()
+        public virtual void ExitBootStrapMode()
         {
-            string command = string.Format("AT*COMWDG={0}\r", _seq++);
-            lock (_syncLock)
+            SendConfigCommand(GeneralNavdataDemoConfigKey, TrueConfigValue);
+            var command = CreateAck();
+            CommandQueue.Enqueue(command);
+        }
+
+        private string CreateAck()
+        {
+            string ackMessage = String.Format("{0},0", (int) ControlMode.NoControlMode);
+            string command = CommandFormatter.CreateCommand(CtrlCommand, ackMessage);
+            return command;
+        }
+
+        internal virtual void SendProgressiveCommand(IProgressiveCommand args)
+        {
+            string command;
+            ProgressiveCommandFormatter.Load(args);
+
+            if (args.AbsoluteControlMode)
             {
-                _commands.Enqueue(command);
+                string message = string.Format("{0},{1},{2},{3},{4},{5},{6}", ProgressiveCommandFormatter.Mode,
+                    ProgressiveCommandFormatter.Roll, ProgressiveCommandFormatter.Pitch, ProgressiveCommandFormatter.Gaz,
+                    ProgressiveCommandFormatter.Yaw, ProgressiveCommandFormatter.MagnetoPsi,
+                    ProgressiveCommandFormatter.MagnetoPsiAccuracy);
+                command = CommandFormatter.CreateCommand(PcmdMagCommand, message);
             }
+            else
+            {
+                string message = string.Format("{0},{1},{2},{3},{4}", ProgressiveCommandFormatter.Mode,
+                    ProgressiveCommandFormatter.Roll, ProgressiveCommandFormatter.Pitch, ProgressiveCommandFormatter.Gaz,
+                    ProgressiveCommandFormatter.Yaw);
+                 command = CommandFormatter.CreateCommand(PcmdCommand, message);
+            }
+
+            CommandQueue.Enqueue(command);
+        }
+
+        internal virtual void SendCalibrateCompassCommand()
+        {
+            string command = CommandFormatter.CreateCommand(CalibCommand, "0");
+            CommandQueue.Enqueue(command);
+        }
+
+        internal virtual void SendResetWatchDogCommand()
+        {
+            string command = CommandFormatter.CreateCommand(ComwdgCommand);
+            CommandQueue.Enqueue(command);
         }
 
         public virtual void Dispose()
         {
-            throw new NotImplementedException();
+            Socket.Dispose();
+        }
+
+        internal virtual void Flush()
+        {
+            string message = CommandQueue.Flush();
+            if (!String.IsNullOrWhiteSpace(message))
+            {
+                TransmitCommand(message);
+            }
+            else if ((DateTime.UtcNow - TimeOfLastTransmission).TotalMilliseconds > MaxMillisecondsOfInactivity)
+            {
+                string ack = CreateAck();
+                TransmitCommand(ack);
+            }
+        }
+
+        private void TransmitCommand(string message)
+        {
+            Socket.Write(message);
+            TimeOfLastTransmission = DateTime.UtcNow;
+        }
+
+        private void SendMiscellaneousCommand(string message)
+        {
+            string command = CommandFormatter.CreateCommand(MiscCommand, message);
+            CommandQueue.Enqueue(command);
+        }
+
+        private void SendPModeCommand(int mode)
+        {
+            string command = CommandFormatter.CreateCommand(PmodeCommand, mode.ToString());
+            CommandQueue.Enqueue(command);
+        }
+
+        private void SendSetConfigurationCommand()
+        {
+            var command = new StringBuilder();
+            command.Append(CreateConfigCommand(SessionIdConfigKey, SessionId));
+            command.Append(CreateConfigCommand(ProfileIdConfigKey, ProfileId));
+            command.Append(CreateConfigCommand(ApplicationIdConfigKey, ApplicationId));
+            command.Append(CreateConfigCommand(ApplicationDescConfigKey, "AR Drone Remote"));
+            command.Append(CreateConfigCommand(ProﬁleDescConfigKey, ".Primary Profile"));
+            command.Append(CreateConfigCommand(SessionDescConfigKey, "Session " + SessionId));
+            CommandQueue.Enqueue(command.ToString());
         }
     }
 }

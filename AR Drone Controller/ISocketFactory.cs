@@ -2,8 +2,8 @@
 {
     public interface ISocketFactory
     {
-        ITcpSocket GetTcpSocket(GetTcpSocketParams getTcpSocketParams);
+        ITcpSocket GetTcpSocket(string address, int port);
 
-        IUdpSocket GetUdpSocket(GetUdpSocketParams getUdpSocketParams);
+        IUdpSocket GetUdpSocket(string address, int port);
     }
 }

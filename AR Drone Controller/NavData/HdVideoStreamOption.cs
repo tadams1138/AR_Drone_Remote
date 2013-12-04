@@ -24,11 +24,11 @@ namespace AR_Drone_Controller.NavData
         public uint frame_number { get; internal set; } /*! 'frame_number' PaVE field of the frame starting to be encoded for the HD stream */
         public uint usbkey_remaining_time { get; internal set; } /*! time in seconds */
 
-        public bool UsbKeyIsRecording { get { return (hdvideo_state & (uint)hdvideo_states.NAVDATA_HDVIDEO_USBKEY_IS_RECORDING) > 0; } }
+        public virtual bool UsbKeyIsRecording { get { return (hdvideo_state & (uint)hdvideo_states.NAVDATA_HDVIDEO_USBKEY_IS_RECORDING) > 0; } }
         public bool UsbKeyIsPresent { get { return (hdvideo_state & (uint)hdvideo_states.NAVDATA_HDVIDEO_USBKEY_IS_PRESENT) > 0; } }
         public bool StorageFifoIsFull { get { return (hdvideo_state & (uint)hdvideo_states.NAVDATA_HDVIDEO_STORAGE_FIFO_IS_FULL) > 0; } }
         public bool UsbKeyIsFull { get { return (hdvideo_state & (uint)hdvideo_states.NAVDATA_HDVIDEO_USBKEY_IS_FULL) > 0; } }
-        public bool CanRecord
+        public virtual bool CanRecord
         {
             get
             {

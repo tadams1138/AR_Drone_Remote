@@ -2,137 +2,86 @@
 {
     using System;
 
-    using System.Threading;
-
-    class NavDataWorker : IDisposable
+    internal class NavDataWorker : IDisposable
     {
-        private const int NavDataPort = 5554;
-        private const int TimeoutValue = 500;
+        public const int Timeout = 100;
 
-        private IUdpSocket _navDataSocket;
-        private bool _run;
-        private Timer _keepAliveTimer;
-        private DateTime _timeSinceLastReception;
+        private readonly object _timeoutSynclock = new object();
 
-        public string RemoteIpAddress { get; set; }
-        public ISocketFactory SocketFactory { get; set; }
+        private IDisposable _timeoutTimer;
+        private bool _dataReceived;
 
-        public event EventHandler<NavDataReceivedEventArgs> NavDataReceived;
-        public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
+        internal NavDataFactory NavDataFactory { get; set; }
+
+        internal TimerFactory TimerFactory { get; set; }
+
+        internal IUdpSocket Socket { get; set; }
+
+        public virtual event EventHandler<NavDataReceivedEventArgs> NavDataReceived;
         
-        internal void Run()
+       public virtual void Run()
         {
-            if (!_run)
+            Socket.DataReceived += SocketOnDataReceived;
+            Socket.Connect();
+            InitiateCommunication();
+            _timeoutTimer = TimerFactory.CreateTimer();
+        }
+
+        public virtual void Dispose()
+        {
+            Socket.Dispose();
+
+            if (_timeoutTimer != null)
             {
-                NavData.ResetSequence();
-                CreateSocket();
-                _keepAliveTimer = new Timer(KeepAlive, null, 0, TimeoutValue);
-                _run = true;
+                _timeoutTimer.Dispose();
             }
         }
 
-        internal void Stop()
+        private void InitiateCommunication()
         {
-            if (_keepAliveTimer != null)
-            {
-                _keepAliveTimer.Dispose();
-                _keepAliveTimer = null;
-            }
-            
-            if (_navDataSocket != null)
-            {
-                _navDataSocket.Dispose();
-                _navDataSocket = null;
-            }
-
-            _run = false;
+            Socket.Write(1);
         }
 
-        private void KeepAlive(object state)
+        private void SocketOnDataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (TimeoutExceeded())
+            lock (_timeoutSynclock)
             {
-                try
-                {
-                    InitiateCommunication();
-                }
-                catch (Exception ex)
-                {
-                    if (UnhandledException != null)
-                    {
-                        UnhandledException(this, new UnhandledExceptionEventArgs(ex));
-                    }
-                }
+                _dataReceived = true;
             }
-        }
-
-        private void NavDataSocketOnDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            ResetTimeout();
 
             if (e.Data != null && NavDataReceived != null)
             {
                 try
                 {
-                    var navData = NavData.FromBytes(e.Data);
+                    var navData = NavDataFactory.Create(e.Data);
                     var navDataReceivedEventArgs = new NavDataReceivedEventArgs(navData);
                     NavDataReceived(this, navDataReceivedEventArgs);
                 }
-                catch (NavData.OutOfSequenceException)
+                catch
                 {
-                    // ignore, we'll get the next one
-                }
-                catch (Exception ex)
-                {
-                    if (UnhandledException != null)
-                    {
-                        UnhandledException(this, new UnhandledExceptionEventArgs(ex));
-                    }
+                    // ignore... seriously
                 }
             }
         }
 
-        private void NavDataSocketOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        internal void CheckTimeout(object state)
         {
-            if (UnhandledException != null)
+            bool needToInitiateCommunication;
+
+            lock (_timeoutSynclock)
             {
-                UnhandledException(this, e);
+                needToInitiateCommunication = !_dataReceived;
             }
-        }
 
-        private bool TimeoutExceeded()
-        {
-            return (DateTime.UtcNow - _timeSinceLastReception).TotalMilliseconds > TimeoutValue;
-        }
+            if (needToInitiateCommunication)
+            {
+                InitiateCommunication();
+            }
 
-        private void ResetTimeout()
-        {
-            _timeSinceLastReception = DateTime.UtcNow;
-        }
-
-        private void CreateSocket()
-        {
-            var getUdpSocketParams = new GetUdpSocketParams
-                {
-                    LocalPort = NavDataPort,
-                    RemoteIp = RemoteIpAddress,
-                    RemotePort = NavDataPort,
-                    Timeout = TimeoutValue
-                };
-            _navDataSocket = SocketFactory.GetUdpSocket(getUdpSocketParams);
-            _navDataSocket.DataReceived += NavDataSocketOnDataReceived;
-            _navDataSocket.UnhandledException += NavDataSocketOnUnhandledException;
-            _navDataSocket.Connect();
-        }
-
-        private void InitiateCommunication()
-        {
-            _navDataSocket.Write(1);
-        }
-
-        public virtual void Dispose()
-        {
-            throw new NotImplementedException();
+            lock (_timeoutSynclock)
+            {
+                _dataReceived = false;
+            }
         }
     }
 }

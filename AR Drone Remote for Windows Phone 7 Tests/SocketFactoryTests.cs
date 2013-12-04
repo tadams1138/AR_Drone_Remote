@@ -19,10 +19,11 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         public void GetUdpSocket_ReturnsIUdpSocket()
         {
             // Arrange
-            var getUdpSocketParams = new GetUdpSocketParams();
+            const string address = "address test value";
+            const int port = 5;
 
             // Act
-            var result = _target.GetUdpSocket(getUdpSocketParams);
+            var result = _target.GetUdpSocket(address, port);
 
             // Assert
             result.Should().BeAssignableTo<IUdpSocket>();
@@ -32,10 +33,11 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         public void GetTcpSocket_ReturnsITcpSocket()
         {
             // Arrange
-            var tcpSocketParams = new GetTcpSocketParams();
+            const string address = "address test value";
+            const int port = 5;
 
             // Act
-            var result = _target.GetTcpSocket(tcpSocketParams);
+            var result = _target.GetTcpSocket(address, port);
 
             // Assert
             result.Should().BeAssignableTo<ITcpSocket>();

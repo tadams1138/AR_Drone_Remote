@@ -11,10 +11,15 @@
     <RootNamespace>AR_Drone_Controller</RootNamespace>
     <AssemblyName>ARDroneController</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile4</TargetFrameworkProfile>
+    <TargetFrameworkProfile>Profile158</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <FodyPath>..\packages\Fody.1.17.4.0</FodyPath>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>4.0</OldToolsVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -34,6 +39,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CommandFormatter.cs" />
+    <Compile Include="CommandQueue.cs" />
     <Compile Include="CommandWorker.cs" />
     <Compile Include="Common\Matrix33.cs" />
     <Compile Include="Common\Vector.cs" />
@@ -42,16 +49,23 @@
     <Compile Include="DataReceivedEventArgs.cs" />
     <Compile Include="DroneController.cs" />
     <Compile Include="FlightAnimation.cs" />
-    <Compile Include="GetTcpSocketParams.cs" />
-    <Compile Include="GetUdpSocketParams.cs" />
+    <Compile Include="FlightAnimations.cs" />
+    <Compile Include="FloatToInt32Converter.cs" />
     <Compile Include="IDispatcher.cs" />
+    <Compile Include="IFlightAnimation.cs" />
+    <Compile Include="ILedAnimation.cs" />
+    <Compile Include="IProgressiveCommand.cs" />
     <Compile Include="ITcpSocket.cs" />
     <Compile Include="ISocketFactory.cs" />
     <Compile Include="IUdpSocket.cs" />
     <Compile Include="LedAnimation.cs" />
+    <Compile Include="LedAnimations.cs" />
     <Compile Include="NavData\CheckSumOption.cs" />
     <Compile Include="NavData\HdVideoStreamOption.cs" />
+    <Compile Include="NavData\NavDataFactory.cs" />
+    <Compile Include="NavData\TimerFactory.cs" />
     <Compile Include="NavData\WifiOption.cs" />
+    <Compile Include="ProgressiveCommandFormatter.cs" />
     <Compile Include="System.Runtime.CompilerServices\CallerMemberNameAttribute.cs" />
     <Compile Include="System.Runtime.CompilerServices\CallerLineNumberAttribute.cs" />
     <Compile Include="System.Runtime.CompilerServices\CallerFilePathAttribute.cs" />

@@ -13,13 +13,12 @@ namespace AR_Drone_Remote_for_Windows_8
         private DataWriter _writer;
         private readonly string _remoteIp;
         private readonly int _remotePort;
-        private readonly int _timeout;
+        private const int Timeout = 500;
 
-        public UdpSocket(string remoteIp, int remotePort, int timeout)
+        public UdpSocket(string remoteIp, int remotePort)
         {
             _remoteIp = remoteIp;
             _remotePort = remotePort;
-            _timeout = timeout;
         }
 
         public void Connect()
@@ -27,7 +26,7 @@ namespace AR_Drone_Remote_for_Windows_8
             _socket = new DatagramSocket();
             _socket.MessageReceived += socket_MessageReceived;
             var result = _socket.ConnectAsync(new HostName(_remoteIp), _remotePort.ToString());
-            result.AsTask().Wait(_timeout);
+            result.AsTask().Wait(Timeout);
             if (result.ErrorCode != null)
             {
                 throw result.ErrorCode;
@@ -41,8 +40,15 @@ namespace AR_Drone_Remote_for_Windows_8
 
         public void Dispose()
         {
-            _writer.Dispose();
-            _socket.Dispose();
+            if (_writer != null)
+            {
+                _writer.Dispose();
+            }
+
+            if (_socket != null)
+            {
+                _socket.Dispose();
+            }
         }
 
         public void Write(string s)

@@ -1,15 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace AR_Drone_Controller
 {
-    class ControlWorker : IDisposable
+    internal class ControlWorker : IDisposable
     {
+        public virtual event EventHandler Disconnected;
+
+        internal ITcpSocket Socket { get; set; }
+
         public virtual void Dispose()
         {
-            throw new NotImplementedException();
+            Socket.Dispose();
+        }
+
+        public virtual void Run()
+        {
+            Socket.Disconnected += (sender, eventArgs) => Disconnected(this, eventArgs);
+            Socket.Connect();
         }
     }
 }

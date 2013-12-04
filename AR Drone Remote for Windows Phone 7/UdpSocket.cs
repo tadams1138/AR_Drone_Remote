@@ -14,7 +14,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         private readonly ManualResetEvent _clientDone = new ManualResetEvent(false);
         private Socket _socket;
-        private readonly int _timeoutMilliseconds;
+        private const int TimeoutMilliseconds = 500;
         private readonly byte[] _buffer = new byte[MaxBufferSize];
         private SocketAsyncEventArgs _receiveSocketEventArg;
         private SocketAsyncEventArgs _sendSocketEventArg;
@@ -24,12 +24,11 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         private readonly string _remoteIp;
         private readonly int _remotePort;
 
-        public UdpSocket(int localPort, string remoteIp, int remotePort, int timeout)
+        public UdpSocket(int localPort, string remoteIp, int remotePort)
         {
             _localPort = localPort;
             _remoteIp = remoteIp;
             _remotePort = remotePort;
-            _timeoutMilliseconds = timeout;
         }
 
         public void Connect()
@@ -100,7 +99,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
                 _sendSocketEventArg.SetBuffer(payload, 0, payload.Length);
                 _clientDone.Reset();
                 _socket.SendToAsync(_sendSocketEventArg);
-                _clientDone.WaitOne(_timeoutMilliseconds);
+                _clientDone.WaitOne(TimeoutMilliseconds);
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Deployment xmlns="http://schemas.microsoft.com/windowsphone/2009/deployment" AppPlatformVersion="7.1">
-  <App xmlns="" ProductID="{efc64ada-fb91-4665-81ce-944a506eca5b}" Title="AR Drone Remote" RuntimeType="Silverlight" Version="1.0.1.0" Genre="apps.normal" Author="Thomas Adams" Description="Remote Control for Parrot Brand AR Drone 2.0" Publisher="Thomas Adams" BitsPerPixel="32">
+<Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
+  <DefaultLanguage xmlns="" code="" />
+  <App xmlns="" ProductID="{6ef8a8e9-0b60-43d1-9aa9-3837cf8c4423}" Title="AR Drone Remote" RuntimeType="Silverlight" Version="1.0.1.0" Genre="apps.normal" Author="Thomas Adams" Description="Remote Control for Parrot Brand AR Drone 2.0" Publisher="Thomas Adams" BitsPerPixel="32" PublisherID="{f4bac5db-54ea-45e4-ba9f-ac79a5011e29}">
     <IconPath IsRelative="true" IsResource="false">Assets\AppIcon.png</IconPath>
     <Capabilities>
       <Capability Name="ID_CAP_NETWORKING" />
@@ -12,12 +13,23 @@
     </Tasks>
     <Tokens>
       <PrimaryToken TokenID="AR_Drone_Remote_for_Windows_Phone_7Token" TaskName="_default">
-        <TemplateType5>
-          <BackgroundImageURI IsRelative="true" IsResource="false">Assets\AppTileMedium.png</BackgroundImageURI>
+        <TemplateFlip>
+          <SmallImageURI IsResource="false" IsRelative="true">Assets\AppTileMedium.png</SmallImageURI>
           <Count>0</Count>
+          <BackgroundImageURI IsResource="false" IsRelative="true">Assets\AppTileMedium.png</BackgroundImageURI>
           <Title>AR Drone Remote</Title>
-        </TemplateType5>
+          <BackContent></BackContent>
+          <BackBackgroundImageURI></BackBackgroundImageURI>
+          <BackTitle></BackTitle>
+          <DeviceLockImageURI></DeviceLockImageURI>
+          <HasLarge>false</HasLarge>
+        </TemplateFlip>
       </PrimaryToken>
     </Tokens>
+    <ScreenResolutions>
+      <ScreenResolution Name="ID_RESOLUTION_WVGA" />
+      <ScreenResolution Name="ID_RESOLUTION_WXGA" />
+      <ScreenResolution Name="ID_RESOLUTION_HD720P" />
+    </ScreenResolutions>
   </App>
 </Deployment>

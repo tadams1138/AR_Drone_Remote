@@ -4,146 +4,124 @@ using System.Collections.Generic;
 
 namespace AR_Drone_Controller
 {
-    public class LedAnimation
+    public class LedAnimation : ILedAnimation
     {
         private const float DefaultFrequencyInHz = 2f;
         private const int DefautlDurationInSeconds = 5;
 
         private string Title { get; set; }
-        private CommandWorker.LedAnimation Animation { get; set; }
-        private float FrequencyInHz { get; set; }
-        private int DurationInSeconds { get; set; }
-        private DroneController DroneController { get; set; }
+        public LedAnimations Animation { get; set; }
+        public float FrequencyInHz { get; set; }
+        public int DurationInSeconds { get; set; }
 
-        internal static List<LedAnimation> GenerateLedAnimationList(DroneController droneController)
+        internal static List<LedAnimation> GenerateLedAnimationList()
         {
             return new List<LedAnimation>
                 {
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.Blank,
-                            Title = "Blank",
-                            DroneController = droneController
+                            Animation = LedAnimations.Blank,
+                            Title = "Blank"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.BlinkGreen,
-                            Title = "Blink Green",
-                            DroneController = droneController
+                            Animation = LedAnimations.BlinkGreen,
+                            Title = "Blink Green"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.BlinkGreenRed,
-                            Title = "Blink Green Red",
-                            DroneController = droneController
+                            Animation = LedAnimations.BlinkGreenRed,
+                            Title = "Blink Green Red"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.BlinkOrange,
-                            Title = "Blink Orange",
-                            DroneController = droneController
+                            Animation = LedAnimations.BlinkOrange,
+                            Title = "Blink Orange"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.BlinkRed,
-                            Title = "Blink Red",
-                            DroneController = droneController
+                            Animation = LedAnimations.BlinkRed,
+                            Title = "Blink Red"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.BlinkStandard,
-                            Title = "Blink Standard",
-                            DroneController = droneController
+                            Animation = LedAnimations.BlinkStandard,
+                            Title = "Blink Standard"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.DoubleMissile,
-                            Title = "Double Missile",
-                            DroneController = droneController
+                            Animation = LedAnimations.DoubleMissile,
+                            Title = "Double Missile"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.Fire,
-                            Title = "Fire",
-                            DroneController = droneController
+                            Animation = LedAnimations.Fire,
+                            Title = "Fire"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.FrontLeftGreenOthersRed,
-                            Title = "Front Left Green Others Red",
-                            DroneController = droneController
+                            Animation = LedAnimations.FrontLeftGreenOthersRed,
+                            Title = "Front Left Green Others Red"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.FrontRightGreenOthersRed,
-                            Title = "Front Right Green Others Red",
-                            DroneController = droneController
+                            Animation = LedAnimations.FrontRightGreenOthersRed,
+                            Title = "Front Right Green Others Red"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.Green,
-                            Title = "Green",
-                            DroneController = droneController
+                            Animation = LedAnimations.Green,
+                            Title = "Green"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.LeftGreenRightRed,
-                            Title = "Left Green Right Red",
-                            DroneController = droneController
+                            Animation = LedAnimations.LeftGreenRightRed,
+                            Title = "Left Green Right Red"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.LeftMissile,
-                            Title = "Left Missile",
-                            DroneController = droneController
+                            Animation = LedAnimations.LeftMissile,
+                            Title = "Left Missile"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.LeftRedRightGreen,
-                            Title = "Left Red Right Green",
-                            DroneController = droneController
+                            Animation = LedAnimations.LeftRedRightGreen,
+                            Title = "Left Red Right Green"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.RearLeftGreenOthersRed,
-                            Title = "Rear Left Green Others Red",
-                            DroneController = droneController
+                            Animation = LedAnimations.RearLeftGreenOthersRed,
+                            Title = "Rear Left Green Others Red"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.RearRightGreenOthersRed,
-                            Title = "Rear Right Green Others Red",
-                            DroneController = droneController
+                            Animation = LedAnimations.RearRightGreenOthersRed,
+                            Title = "Rear Right Green Others Red"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.Red,
-                            Title = "Red",
-                            DroneController = droneController
+                            Animation = LedAnimations.Red,
+                            Title = "Red"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.RedSnake,
-                            Title = "Red Snake",
-                            DroneController = droneController
+                            Animation = LedAnimations.RedSnake,
+                            Title = "Red Snake"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.RightMissile,
-                            Title = "Right Missile",
-                            DroneController = droneController
+                            Animation = LedAnimations.RightMissile,
+                            Title = "Right Missile"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.SnakeGreenRed,
-                            Title = "Snake Green Red",
-                            DroneController = droneController
+                            Animation = LedAnimations.SnakeGreenRed,
+                            Title = "Snake Green Red"
                         },
                     new LedAnimation
                         {
-                            Animation = CommandWorker.LedAnimation.Standard,
-                            Title = "Standard",
-                            DroneController = droneController
+                            Animation = LedAnimations.Standard,
+                            Title = "Standard"
                         }
                 };
         }
@@ -152,11 +130,6 @@ namespace AR_Drone_Controller
         {
             FrequencyInHz = DefaultFrequencyInHz;
             DurationInSeconds = DefautlDurationInSeconds;
-        }
-
-        public void Execute()
-        {
-            DroneController.SendLedAnimationCommand(Animation, FrequencyInHz, DurationInSeconds);
         }
 
         public override string ToString()

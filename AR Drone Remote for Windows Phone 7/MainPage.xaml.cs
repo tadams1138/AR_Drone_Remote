@@ -25,6 +25,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             _droneController = new DroneController
             {
                 SocketFactory = new SocketFactory(),
+                ConnectParams = new ConnectParams(),
                 Dispatcher = new DispatcherWrapper(Dispatcher)
             };
 
@@ -157,7 +158,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         private void LaunchLand_Click(object sender, RoutedEventArgs e)
         {
-            if (!_droneController.NavData.Flying)
+            if (!_droneController.Flying)
             {
                 _droneController.TakeOff();
             }
@@ -206,7 +207,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             {
                 try
                 {
-                    _droneController.Connect(new ConnectParams());
+                    _droneController.Connect();
                 }
                 catch
                 {
@@ -255,8 +256,8 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             try
             {
                 var button = (Button)sender;
-                var ledAnimation = (LedAnimation)button.Content;
-                ledAnimation.Execute();
+                var ledAnimation = (ILedAnimation)button.Content;
+                DroneController.SendLedAnimationCommand(ledAnimation);
             }
             catch (Exception ex)
             {
@@ -275,8 +276,8 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             try
             {
                 var button = (Button)sender;
-                var flightAnimation = (FlightAnimation)button.Content;
-                flightAnimation.Execute();
+                var flightAnimation = (IFlightAnimation)button.Content;
+                DroneController.SendFlightAnimationCommand(flightAnimation);
             }
             catch (Exception ex)
             {
@@ -292,12 +293,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         private void Record_Click(object sender, RoutedEventArgs e)
         {
-            if (DroneController == null || DroneController.NavData == null ||
-    DroneController.NavData.HdVideoStream == null)
-                return; // TODO: actually resolve this so the button is not enabled when NavData is Null or HdVideoStream is null as I
-            //  suspect is the case
-
-            if (DroneController.NavData.HdVideoStream.UsbKeyIsRecording)
+            if (DroneController.UsbKeyIsRecording)
             {
                 DroneController.StopRecording();
             }

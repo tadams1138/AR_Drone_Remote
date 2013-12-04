@@ -111,7 +111,7 @@ namespace AR_Drone_Controller.NavData
 
         public bool CommLost { get { return IsStateBitOne(ArdroneStateMask.CommLost); } }
 
-        public bool CommWatchDog { get { return IsStateBitOne(ArdroneStateMask.CommWatchdog); } }
+        public virtual bool CommWatchDog { get { return IsStateBitOne(ArdroneStateMask.CommWatchdog); } }
 
         public bool CommandState { get { return IsStateBitOne(ArdroneStateMask.CommandMask); } }
 
@@ -123,7 +123,7 @@ namespace AR_Drone_Controller.NavData
 
         public bool Emergency { get { return IsStateBitOne(ArdroneStateMask.Emergency); } }
 
-        public bool Flying { get { return IsStateBitOne(ArdroneStateMask.Flying); } }
+        public virtual bool Flying { get { return IsStateBitOne(ArdroneStateMask.Flying); } }
 
         public bool MotorsProblem { get { return IsStateBitOne(ArdroneStateMask.MotorProblem); } }
 
@@ -163,7 +163,7 @@ namespace AR_Drone_Controller.NavData
 
         public bool SoftwareFault { get { return IsStateBitOne(ArdroneStateMask.SoftwareFault); } }
 
-        public DemoOption Demo { get; set; }
+        public virtual DemoOption Demo { get; set; }
 
         internal uint CheckSum { get; set; }
 
@@ -171,7 +171,7 @@ namespace AR_Drone_Controller.NavData
 
         public WifiOption Wifi { get; internal set; }
 
-        public HdVideoStreamOption HdVideoStream { get; set; }
+        public virtual HdVideoStreamOption HdVideoStream { get; set; }
 
         public static NavData FromBytes(byte[] buffer)
         {

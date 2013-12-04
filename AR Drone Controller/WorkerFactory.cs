@@ -1,25 +1,57 @@
-﻿namespace AR_Drone_Controller
+﻿using AR_Drone_Controller.NavData;
+
+namespace AR_Drone_Controller
 {
     internal class WorkerFactory
     {
-        public virtual CommandWorker CreateCommandWorker(ISocketFactory socketFactory, ConnectParams connectArgs)
+        public ConnectParams ConnectParams { get; set; }
+
+        public ISocketFactory SocketFactory { get; set; }
+
+
+        public virtual CommandWorker CreateCommandWorker()
         {
-            return null;
+            var socket = SocketFactory.GetUdpSocket(ConnectParams.NetworkAddress, ConnectParams.CommandPort);
+
+            var worker = new CommandWorker
+            {
+                Socket = socket,
+                CommandFormatter = new CommandFormatter(),
+                CommandQueue = new CommandQueue(),
+                FloatToInt32Converter = new FloatToInt32Converter(),
+                ProgressiveCommandFormatter = new ProgressiveCommandFormatter()
+            };
+
+            return worker;
         }
 
-        public virtual VideoWorker CreateVideoWorker(ISocketFactory socketFactory, ConnectParams connectArgs)
+        public virtual VideoWorker CreateVideoWorker()
         {
-            return null;
+            var socket = SocketFactory.GetTcpSocket(ConnectParams.NetworkAddress, ConnectParams.VideoPort);
+            var worker = new VideoWorker { Socket = socket };
+            return worker;
         }
 
-        public virtual NavData.NavDataWorker CreateNavDataWorker(ISocketFactory socketFactory, ConnectParams connectArgs)
+        public virtual NavDataWorker CreateNavDataWorker()
         {
-            return null;
+            var socket = SocketFactory.GetUdpSocket(ConnectParams.NetworkAddress, ConnectParams.NavDataPort);
+            var timerFactory = new TimerFactory();
+            var worker = new NavDataWorker
+            {
+                Socket = socket,
+                NavDataFactory = new NavDataFactory(),
+                TimerFactory = timerFactory
+            };
+            timerFactory.TimerCallback = worker.CheckTimeout;
+            timerFactory.Period = NavDataWorker.Timeout;
+            return worker;
         }
 
-        public virtual ControlWorker CreateControlWorker(ISocketFactory socketFactory, ConnectParams connectArgs)
+        public virtual ControlWorker CreateControlWorker()
         {
-            return null;
+            var socket = SocketFactory.GetTcpSocket(ConnectParams.NetworkAddress, ConnectParams.ControlPort);
+            var worker = new ControlWorker { Socket = socket };
+            return worker;
         }
     }
 }

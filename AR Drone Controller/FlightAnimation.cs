@@ -2,166 +2,140 @@
 
 namespace AR_Drone_Controller
 {
-    public class FlightAnimation
+    public class FlightAnimation : IFlightAnimation
     {
         private string Title { get; set; }
-        private CommandWorker.FlightAnimation Animation { get; set; }
-        private int MaydayTimeoutInMilliseconds { get; set; }
-        private DroneController DroneController { get; set; }
+        public FlightAnimations Animation { get; set; }
+        public int MaydayTimeoutInMilliseconds { get; set; }
 
-        internal static List<FlightAnimation> GenerateFlightAnimationList(DroneController droneController)
+        internal static List<FlightAnimation> GenerateFlightAnimationList()
         {
             return new List<FlightAnimation>
                 {
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.DoublePhiThetaMixed,
+                            Animation = FlightAnimations.DoublePhiThetaMixed,
                             Title = "Double Phi Theta Mixed",
-                            MaydayTimeoutInMilliseconds = 5000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 5000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.FlipAhead,
+                            Animation = FlightAnimations.FlipAhead,
                             Title = "Flip Ahead",
-                            MaydayTimeoutInMilliseconds = 15,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 15
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.FlipBehind,
+                            Animation = FlightAnimations.FlipBehind,
                             Title = "Flip Behind",
-                            MaydayTimeoutInMilliseconds = 15,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 15
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.FlipLeft,
+                            Animation = FlightAnimations.FlipLeft,
                             Title = "Flip Left",
-                            MaydayTimeoutInMilliseconds = 15,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 15
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.FlipRight,
+                            Animation = FlightAnimations.FlipRight,
                             Title = "Flip Right",
-                            MaydayTimeoutInMilliseconds = 15,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 15
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.PhiDance,
+                            Animation = FlightAnimations.PhiDance,
                             Title = "Phi Dance",
-                            MaydayTimeoutInMilliseconds = 5000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 5000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.PhiMinus30Degrees,
+                            Animation = FlightAnimations.PhiMinus30Degrees,
                             Title = "Phi Minus 30 Degrees",
-                            MaydayTimeoutInMilliseconds = 1000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 1000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.PhiPlus30Degrees,
+                            Animation = FlightAnimations.PhiPlus30Degrees,
                             Title = "Phi Plus 30 Degrees",
-                            MaydayTimeoutInMilliseconds = 1000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 1000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.PhiThetaMixed,
+                            Animation = FlightAnimations.PhiThetaMixed,
                             Title = "Phi Theta Mixed",
-                            MaydayTimeoutInMilliseconds = 5000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 5000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.Theta20DegYaw200Degrees,
+                            Animation = FlightAnimations.Theta20DegYaw200Degrees,
                             Title = "Theta 20 Degrees, Yaw 200 Degrees",
-                            MaydayTimeoutInMilliseconds = 1000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 1000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.Theta20DegYawM200Degrees,
+                            Animation = FlightAnimations.Theta20DegYawM200Degrees,
                             Title = "Theta 20 Degrees, Yaw Minus 200 Degrees",
-                            MaydayTimeoutInMilliseconds = 1000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 1000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.ThetaDance,
+                            Animation = FlightAnimations.ThetaDance,
                             Title = "Theta Dance",
-                            MaydayTimeoutInMilliseconds = 5000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 5000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.ThetaMinus30Degrees,
+                            Animation = FlightAnimations.ThetaMinus30Degrees,
                             Title = "Theta Minus 30 Degrees",
-                            MaydayTimeoutInMilliseconds = 1000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 1000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.ThetaPlus30Degrees,
+                            Animation = FlightAnimations.ThetaPlus30Degrees,
                             Title = "Theta Plus 30 Degrees",
-                            MaydayTimeoutInMilliseconds = 1000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 1000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.Turnaround,
+                            Animation = FlightAnimations.Turnaround,
                             Title = "Turn Around",
-                            MaydayTimeoutInMilliseconds = 5000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 5000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.TurnaroundAndGoDown,
+                            Animation = FlightAnimations.TurnaroundAndGoDown,
                             Title = "Turn Around and Go Down",
                             MaydayTimeoutInMilliseconds = 5000,
-                            DroneController = droneController
+                            
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.VzDance,
+                            Animation = FlightAnimations.VzDance,
                             Title = "Vertical Dance",
-                            MaydayTimeoutInMilliseconds = 5000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 5000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.Wave,
+                            Animation = FlightAnimations.Wave,
                             Title = "Wave",
-                            MaydayTimeoutInMilliseconds = 5000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 5000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.YawDance,
+                            Animation = FlightAnimations.YawDance,
                             Title = "Yaw Dance",
-                            MaydayTimeoutInMilliseconds = 5000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 5000
                         },
                     new FlightAnimation
                         {
-                            Animation = CommandWorker.FlightAnimation.YawShake,
+                            Animation = FlightAnimations.YawShake,
                             Title = "Yaw Shake",
-                            MaydayTimeoutInMilliseconds = 2000,
-                            DroneController = droneController
+                            MaydayTimeoutInMilliseconds = 2000
                         }
                 };
         }
-
-
-        public void Execute()
-        {
-            DroneController.SendFlightAnimationCommand(Animation, MaydayTimeoutInMilliseconds);
-        }
-
+        
         public override string ToString()
         {
             return Title;

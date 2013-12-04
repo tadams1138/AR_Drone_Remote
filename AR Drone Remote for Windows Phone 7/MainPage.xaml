@@ -162,10 +162,10 @@
             <Button Click="Emergency_Click" Content="Emergency" IsEnabled="{Binding DroneController.Connected}" Grid.Column="1"/>
             <StackPanel Grid.Column="3" Orientation="Horizontal">
                 <local:BatteryIndicator Height="30" 
-                                        BatteryPercentage="{Binding ElementName=This, Path=DroneController.NavData.Demo.BatteryPercentage}" 
+                                        BatteryPercentage="{Binding ElementName=This, Path=DroneController.BatteryPercentage}" 
                                         Margin="0,21,0,0" 
                                         VerticalAlignment="Top" />
-                <TextBlock VerticalAlignment="Center" Text="{Binding DroneController.NavData.Demo.BatteryPercentage}"/>
+                <TextBlock VerticalAlignment="Center" Text="{Binding DroneController.BatteryPercentage}"/>
                 <TextBlock VerticalAlignment="Center" Text="%"/>
             </StackPanel>
         </Grid>
@@ -198,11 +198,11 @@
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="1*"/>
                     </Grid.RowDefinitions>
-                    <local:AttitudeIndicator Phi="{Binding ElementName=This, Path=DroneController.NavData.Demo.Phi}"
-						Theta="{Binding ElementName=This, Path=DroneController.NavData.Demo.Theta}"
+                    <local:AttitudeIndicator Phi="{Binding ElementName=This, Path=DroneController.Phi}"
+						Theta="{Binding ElementName=This, Path=DroneController.Theta}"
 						Grid.Row="0"/>
                     <local:CompassControl x:Name="CompassIndicator"
-						DroneHeading="{Binding ElementName=This, Path=DroneController.NavData.Demo.Psi}"
+						DroneHeading="{Binding ElementName=This, Path=DroneController.Psi}"
 						Grid.Row="1"/>
                 </Grid>
 
@@ -227,7 +227,7 @@
                             <RowDefinition Height="1*"/>
                             <RowDefinition Height="1*"/>
                         </Grid.RowDefinitions>
-                        <Button Grid.Row="0" IsEnabled="{Binding DroneController.NavData.Flying}" Click="CalibrateCompass_Click" Content="Calibrate Compass"/>
+                        <Button Grid.Row="0" IsEnabled="{Binding DroneController.Flying}" Click="CalibrateCompass_Click" Content="Calibrate Compass"/>
                         <Button Grid.Row="1" IsEnabled="{Binding DroneController.CanSendFlatTrimCommand}" Click="FlatTrim_Click" Content="Flat Trim"/>
 
                     </Grid>
@@ -253,7 +253,7 @@
                         <TextBlock Style="{StaticResource PhoneTextNormalStyle}" Text="Flight Animations"/>
                     </phone:PivotItem.Header>
                     <ListBox 
-                            IsEnabled="{Binding DroneController.NavData.Flying}"
+                            IsEnabled="{Binding DroneController.Flying}"
                             ItemsSource="{Binding DroneController.FlightAnimations}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -281,7 +281,7 @@
             <StackPanel Background="Transparent" HorizontalAlignment="Center" Orientation="Horizontal">
                 <TextBlock FontSize="{StaticResource PhoneFontSizeMediumLarge}" 
                            VerticalAlignment="Center" 
-                           Text="{Binding DroneController.NavData.Demo.KilometersPerHour, 
+                           Text="{Binding DroneController.KilometersPerHour, 
                                         Converter={StaticResource VelocityConverter}, 
                                         ConverterParameter={StaticResource VelocityFormat}}"/>
                 <TextBlock FontSize="{StaticResource PhoneFontSizeMediumLarge}" 
@@ -292,7 +292,7 @@
                 </Button>
                 <TextBlock FontSize="{StaticResource PhoneFontSizeMediumLarge}" 
                            VerticalAlignment="Center" 
-                           Text="{Binding DroneController.NavData.Demo.Altitude}"/>
+                           Text="{Binding DroneController.Altitude}"/>
                 <Button Width="40" MaxHeight="76" BorderThickness="0" Style="{StaticResource IconButton}" >
                     <ImageBrush Stretch="UniformToFill" ImageSource="/Assets/appbar.measure.meter.png"/>
                 </Button>
@@ -302,13 +302,13 @@
                     Click="LaunchLand_Click" 
                     IsEnabled="{Binding DroneController.Connected}" />
             <StackPanel Background="Transparent" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Column="2">
-                <Ellipse Fill="{Binding DroneController.NavData.HdVideoStream.UsbKeyIsRecording, Converter={StaticResource RecordingColorConverter}}" 
+                <Ellipse Fill="{Binding DroneController.UsbKeyIsRecording, Converter={StaticResource RecordingColorConverter}}" 
                          Stroke="White" 
                          Width="40" 
                          Height="40"/>
                 <Button Grid.Column="1" 
                         Grid.Row="1" 
-                        IsEnabled="{Binding DroneController.NavData.HdVideoStream.CanRecord}" 
+                        IsEnabled="{Binding DroneController.CanRecord}" 
                         Click="Record_Click" 
                         Content="Record"/>
             </StackPanel>

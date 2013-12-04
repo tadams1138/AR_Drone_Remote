@@ -4,14 +4,14 @@ namespace AR_Drone_Remote_for_Windows_8
 {
     class SocketFactory : ISocketFactory
     {
-        ITcpSocket ISocketFactory.GetTcpSocket(GetTcpSocketParams getTcpSocketParams)
+        ITcpSocket ISocketFactory.GetTcpSocket(string address, int port)
         {
-            return new TcpSocket(getTcpSocketParams.IpAddress, getTcpSocketParams.Port);
+            return new TcpSocket(address, port);
         }
 
-        public IUdpSocket GetUdpSocket(GetUdpSocketParams getUdpSocketParams)
+        public IUdpSocket GetUdpSocket(string address, int port)
         {
-            return new UdpSocket(getUdpSocketParams.RemoteIp, getUdpSocketParams.RemotePort, getUdpSocketParams.Timeout);
+            return new UdpSocket(address, port);
         }
     }
 }
