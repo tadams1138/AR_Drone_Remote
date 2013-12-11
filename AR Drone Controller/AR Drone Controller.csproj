@@ -47,6 +47,8 @@
     <Compile Include="ConnectParams.cs" />
     <Compile Include="ControlWorker.cs" />
     <Compile Include="DataReceivedEventArgs.cs" />
+    <Compile Include="DateTimeFactory.cs" />
+    <Compile Include="DoubleToInt64Converter.cs" />
     <Compile Include="DroneController.cs" />
     <Compile Include="FlightAnimation.cs" />
     <Compile Include="FlightAnimations.cs" />

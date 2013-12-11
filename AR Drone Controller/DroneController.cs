@@ -8,9 +8,9 @@ namespace AR_Drone_Controller
     [ImplementPropertyChanged]
     public class DroneController : IProgressiveCommand
     {
-        internal const uint NavDataOptions = (1 << (ushort) NavData.NavData.NavDataTag.Demo) +
+        internal const uint NavDataOptions = (1 << (ushort)NavData.NavData.NavDataTag.Demo) +
                                              (1 <<
-                                              (ushort) NavData.NavData.NavDataTag.HdVideoStream);
+                                              (ushort)NavData.NavData.NavDataTag.HdVideoStream);
 
         internal const string VideoOnUsbConfigKey = "video:video_on_usb";
         internal const string FalseConfigValue = "FALSE";
@@ -21,22 +21,39 @@ namespace AR_Drone_Controller
         internal const string VideoVideoChannelConfigKey = "video:video_channel";
         internal const string GeneralNavdataDemo = "general:navdata_demo";
         internal const string GeneralNavdataOptionsConfigKey = "general:navdata_options";
-
+        internal const string GpsLatitudeConfigKey = "gps:latitude";
+        internal const string GpsLongitudeConfigCommand = "gps:longitude";
+        internal const string GpsAltitudeConfigCommand = "gps:altitude";
+        internal const int OptimalDelayBetweenCommandsInMilliseconds = 30;
+        internal const string UserboxConfigKey = "userbox:userbox_cmd";
+        internal const string UserBoxCommandDateFormat = "yyyyMMdd_HHmmss";
         internal static readonly string H264Codec720PConfigValue = String.Format("{0}", 0x82);
+
+        public enum UserBoxCommands
+        {
+            Stop = 0,
+            Start = 1,
+            ScreenShot = 2,
+            Cancel = 3
+        }
 
         internal WorkerFactory WorkerFactory;
         internal TimerFactory TimerFactory;
+        internal DoubleToInt64Converter DoubleToInt64Converter;
         internal CommandWorker CommandWorker;
         internal VideoWorker VideoWorker;
         internal NavDataWorker NavDataWorker;
         internal ControlWorker ControlWorker;
         internal IDisposable CommandTimer;
+        internal DateTimeFactory DateTimeFactory;
 
         private readonly object _threadLock = new object();
 
         public DroneController()
         {
+            DoubleToInt64Converter = new DoubleToInt64Converter();
             WorkerFactory = new WorkerFactory();
+            DateTimeFactory = new DateTimeFactory();
             TimerFactory = new TimerFactory
             {
                 TimerCallback = DoWork,
@@ -107,9 +124,9 @@ namespace AR_Drone_Controller
 
         public float KilometersPerHour { get; internal set; }
 
-        public bool Flying { get; internal set; }
+        public virtual bool Flying { get; internal set; }
 
-        public bool Connected { get; internal set; }
+        public virtual bool Connected { get; internal set; }
 
         public bool CanRecord { get; internal set; }
 
@@ -174,7 +191,7 @@ namespace AR_Drone_Controller
             }
         }
 
-        public void TakeOff()
+        public virtual void TakeOff()
         {
             CommandWorker.SendRefCommand(CommandWorker.RefCommands.TakeOff);
         }
@@ -189,12 +206,12 @@ namespace AR_Drone_Controller
             CommandWorker.SendFlatTrimCommand();
         }
 
-        public void Land()
+        public virtual void Land()
         {
             CommandWorker.SendRefCommand(CommandWorker.RefCommands.LandOrReset);
         }
 
-        public void Emergency()
+        public virtual void Emergency()
         {
             CommandWorker.SendRefCommand(CommandWorker.RefCommands.Emergency);
         }
@@ -349,7 +366,7 @@ namespace AR_Drone_Controller
         // videoSocket udp for AR Drone 1 and tcp for AR Drone 2
         //private const int defaultDronePort = 23;
         //private const String droneConfigurationCommand = "cat /data/config.ini";
-       
+
         //private void NavDataWorkerOnNavDataReceived(object sender, NavDataReceivedEventArgs e)
         //{
         //    NavData = e.NavData;
@@ -366,6 +383,42 @@ namespace AR_Drone_Controller
         //{
         //    CommandWorker.SendCtrlCommand(CommandWorker.ControlMode.CfgGetControlMode);
         //}
-        public const int OptimalDelayBetweenCommandsInMilliseconds = 30;
+
+        internal void SetLocation(double latitude, double longitude, double altitude)
+        {
+            Int64 convertedLatitude = DoubleToInt64Converter.Convert(latitude);
+            Int64 convertedLongitude = DoubleToInt64Converter.Convert(longitude);
+            Int64 convertedAltitude = DoubleToInt64Converter.Convert(altitude);
+
+            CommandWorker.SendConfigCommand(GpsLatitudeConfigKey, convertedLatitude.ToString());
+            CommandWorker.SendConfigCommand(GpsLongitudeConfigCommand, convertedLongitude.ToString());
+
+            CommandWorker.SendConfigCommand(GpsAltitudeConfigCommand, convertedAltitude.ToString());
+        }
+
+        internal void UserBoxStart()
+        {
+            string now = DateTimeFactory.Now.ToString(UserBoxCommandDateFormat);
+            var value = string.Format("{0},{1}", (int)UserBoxCommands.Start, now);
+            CommandWorker.SendConfigCommand(UserboxConfigKey, value);
+        }
+
+        internal void UserBoxStop()
+        {
+            CommandWorker.SendConfigCommand(UserboxConfigKey, ((int)UserBoxCommands.Stop).ToString());
+        }
+
+        internal void UserBoxCancel()
+        {
+            CommandWorker.SendConfigCommand(UserboxConfigKey, ((int)UserBoxCommands.Cancel).ToString());
+        }
+
+        internal void UserBoxScreenShot(uint delayInSecondsBetweenScreenshots, uint numberOfScreenshotsToTake)
+        {
+            string now = DateTimeFactory.Now.ToString(UserBoxCommandDateFormat);
+            var value = string.Format("{0},{1},{2},{3}", (int)UserBoxCommands.ScreenShot, delayInSecondsBetweenScreenshots,
+                numberOfScreenshotsToTake, now);
+            CommandWorker.SendConfigCommand(UserboxConfigKey, value);
+        }
     }
 }

@@ -38,7 +38,9 @@ namespace AR_Drone_Remote_for_Windows_8
                     {KeyboardInput.Keys.RollLeft, unusedKey},
                     {KeyboardInput.Keys.RollRight, unusedKey},
                     {KeyboardInput.Keys.TurnLeft, unusedKey},
-                    {KeyboardInput.Keys.TurnRight, unusedKey}
+                    {KeyboardInput.Keys.TurnRight, unusedKey},
+                    {KeyboardInput.Keys.TakeOffLand, unusedKey},
+                    {KeyboardInput.Keys.Emergency, unusedKey}
                 };
         }
 
@@ -233,6 +235,49 @@ namespace AR_Drone_Remote_for_Windows_8
         }
 
         #endregion
+
+        [TestMethod]
+        public void WhenLandedAndConnected_TakeOffLandKeyPressed_TakeOffCalled()
+        {
+            // Arrange
+            _mockDroneController.Setup(x => x.Flying).Returns(false);
+            _mockDroneController.Setup(x => x.Connected).Returns(true);
+            SetKeyStateToDown(KeyboardInput.Keys.TakeOffLand, VirtualKey.Space);
+
+            // Act
+            _target.UpdateDroneController();
+
+            // Assert
+            _mockDroneController.Verify(x => x.TakeOff());
+        }
+
+        [TestMethod]
+        public void WhenFlying_TakeOffKeyPressed_LandCalled()
+        {
+            // Arrange
+            _mockDroneController.Setup(x => x.Flying).Returns(true);
+            SetKeyStateToDown(KeyboardInput.Keys.TakeOffLand, VirtualKey.Space);
+
+            // Act
+            _target.UpdateDroneController();
+
+            // Assert
+            _mockDroneController.Verify(x => x.Land());
+        }
+
+        [TestMethod]
+        public void WhenConnected_EmergencyKeyPressed_EmergencyCalled()
+        {
+            // Arrange
+            _mockDroneController.Setup(x => x.Connected).Returns(true);
+            SetKeyStateToDown(KeyboardInput.Keys.Emergency, VirtualKey.Escape);
+
+            // Act
+            _target.UpdateDroneController();
+
+            // Assert
+            _mockDroneController.Verify(x => x.Emergency());
+        }
 
         private void SetKeyStateToDown(KeyboardInput.Keys keyMap, VirtualKey key)
         {

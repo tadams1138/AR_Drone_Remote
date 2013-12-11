@@ -309,7 +309,7 @@ namespace AR_Drone_Controller
             const int yaw = 505;
             SetupModeRollPitchGazAndYaw(mode, roll, pitch, gaz, yaw);
 
-            string message = string.Format("{0},{1},{2},{3},{4}", mode, roll, pitch, gaz, yaw);
+            string message = string.Format("{0},{1},{2},{3},{4}", (int)mode, roll, pitch, gaz, yaw);
             _mockCommandFormatter.Setup(x => x.CreateCommand(CommandWorker.PcmdCommand, message))
                 .Returns(testFormattedCommand);
 
@@ -339,7 +339,7 @@ namespace AR_Drone_Controller
             SetupModeRollPitchGazAndYaw(mode, roll, pitch, gaz, yaw);
             SetupMagnetoPsiAndMagnetoPsiAccuracy(magnetoPsi, magnetoPsiAccuracy);
 
-            string message = string.Format("{0},{1},{2},{3},{4},{5},{6}", mode, roll, pitch, gaz, yaw, magnetoPsi,
+            string message = string.Format("{0},{1},{2},{3},{4},{5},{6}", (int)mode, roll, pitch, gaz, yaw, magnetoPsi,
                 magnetoPsiAccuracy);
             _mockCommandFormatter.Setup(x => x.CreateCommand(CommandWorker.PcmdMagCommand, message))
                 .Returns(testFormattedCommand);

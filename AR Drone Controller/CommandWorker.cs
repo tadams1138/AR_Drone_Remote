@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text;
 
 namespace AR_Drone_Controller
@@ -141,7 +142,7 @@ namespace AR_Drone_Controller
 
             if (args.AbsoluteControlMode)
             {
-                string message = string.Format("{0},{1},{2},{3},{4},{5},{6}", ProgressiveCommandFormatter.Mode,
+                string message = string.Format("{0},{1},{2},{3},{4},{5},{6}", (int)ProgressiveCommandFormatter.Mode,
                     ProgressiveCommandFormatter.Roll, ProgressiveCommandFormatter.Pitch, ProgressiveCommandFormatter.Gaz,
                     ProgressiveCommandFormatter.Yaw, ProgressiveCommandFormatter.MagnetoPsi,
                     ProgressiveCommandFormatter.MagnetoPsiAccuracy);
@@ -149,7 +150,7 @@ namespace AR_Drone_Controller
             }
             else
             {
-                string message = string.Format("{0},{1},{2},{3},{4}", ProgressiveCommandFormatter.Mode,
+                string message = string.Format("{0},{1},{2},{3},{4}", (int)ProgressiveCommandFormatter.Mode,
                     ProgressiveCommandFormatter.Roll, ProgressiveCommandFormatter.Pitch, ProgressiveCommandFormatter.Gaz,
                     ProgressiveCommandFormatter.Yaw);
                  command = CommandFormatter.CreateCommand(PcmdCommand, message);
@@ -192,6 +193,7 @@ namespace AR_Drone_Controller
         private void TransmitCommand(string message)
         {
             Socket.Write(message);
+            Debug.WriteLine(message);
             TimeOfLastTransmission = DateTime.UtcNow;
         }
 

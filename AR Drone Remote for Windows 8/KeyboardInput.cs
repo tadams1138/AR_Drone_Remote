@@ -15,7 +15,9 @@ namespace AR_Drone_Remote_for_Windows_8
             TurnLeft,
             TurnRight,
             Rise,
-            Drop
+            Drop,
+            TakeOffLand,
+            Emergency
         }
 
         private Dictionary<Keys, VirtualKey> _keyMap;
@@ -31,10 +33,12 @@ namespace AR_Drone_Remote_for_Windows_8
                 {Keys.TurnLeft, VirtualKey.Left},
                 {Keys.TurnRight, VirtualKey.Right},
                 {Keys.Rise, VirtualKey.Up},
-                {Keys.Drop, VirtualKey.Down}
+                {Keys.Drop, VirtualKey.Down},
+                {Keys.TakeOffLand, VirtualKey.Space},
+                {Keys.Emergency, VirtualKey.Escape}
             };
         }
-        
+
         public Dictionary<Keys, VirtualKey> KeyMaps
         {
             get { return _keyMap; }
@@ -50,6 +54,23 @@ namespace AR_Drone_Remote_for_Windows_8
             DroneController.Roll = GetRollFromKeyboard();
             DroneController.Gaz = GetGazFromKeyboard();
             DroneController.Yaw = GetTurnFromKeyboard();
+
+            if (IsKeyPressed(Keys.TakeOffLand))
+            {
+                if (DroneController.Flying)
+                {
+                    DroneController.Land();
+                }
+                else if (DroneController.Connected)
+                {
+                    DroneController.TakeOff();
+                }
+            }
+
+            if (IsKeyPressed(Keys.Emergency) && DroneController.Connected)
+            {
+                DroneController.Emergency();
+            }
         }
 
         private float GetRollFromKeyboard()

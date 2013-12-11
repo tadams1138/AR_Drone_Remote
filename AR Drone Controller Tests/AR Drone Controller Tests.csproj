@@ -67,6 +67,8 @@
     <Compile Include="NavDataWorkerTests.cs" />
     <Compile Include="NavDataFactoryTests.cs" />
     <Compile Include="TimerFactoryTests.cs" />
+    <Compile Include="DoubleToInt64ConverterTests.cs" />
+    <Compile Include="DateTimeFactoryTests.cs" />
     <Compile Include="VideoWorkerTests.cs" />
     <Compile Include="DroneControllerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

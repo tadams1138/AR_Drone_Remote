@@ -25,6 +25,8 @@ namespace AR_Drone_Controller
         private Mock<IDisposable> _mockCommandTimer;
         private Mock<IDispatcher> _mockDispatcher;
         private Mock<TimerFactory> _mockTimerFactory;
+        private Mock<DoubleToInt64Converter> _mockDoubleToInt64Converter;
+        private Mock<DateTimeFactory> _mockDateTimeFactory;
 
         [TestInitialize]
         public void InitializeTests()
@@ -81,6 +83,8 @@ namespace AR_Drone_Controller
             _target.TimerFactory.Should().BeOfType<TimerFactory>();
             _target.TimerFactory.TimerCallback.Should().Be((TimerCallback)_target.DoWork);
             _target.TimerFactory.Period.Should().Be(DroneController.OptimalDelayBetweenCommandsInMilliseconds);
+            _target.DoubleToInt64Converter.Should().BeOfType<DoubleToInt64Converter>();
+            _target.DateTimeFactory.Should().BeOfType<DateTimeFactory>();
         }
 
         #endregion
@@ -524,7 +528,7 @@ namespace AR_Drone_Controller
             // Assert
             VerifyRecordCommandSentAndVideoWorkerStarted();
         }
-        
+
         [TestMethod]
         public void WhenRecording_StartRecording_DisposesExistingVideoWorkerStartsVideoWorkerAndSendsStartRecordCommand()
         {
@@ -559,6 +563,92 @@ namespace AR_Drone_Controller
             _mockVideoWorker.Verify(x => x.Dispose());
         }
 
+        [TestMethod]
+        public void SetGps_SetsGpsConfigValues()
+        {
+            // Arrange
+            const double latitude = 123.456;
+            const double longitude = 234.567;
+            const double altitude = 345.678;
+            const long convertedLatitude = 123456;
+            const long convertedLongitude = 234567;
+            const long convertedAltitude = 345678;
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _mockDoubleToInt64Converter.Setup(x => x.Convert(latitude)).Returns(convertedLatitude);
+            _mockDoubleToInt64Converter.Setup(x => x.Convert(longitude)).Returns(convertedLongitude);
+            _mockDoubleToInt64Converter.Setup(x => x.Convert(altitude)).Returns(convertedAltitude);
+
+            // Act
+            _target.SetLocation(latitude, longitude, altitude);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.GpsLatitudeConfigKey, convertedLatitude.ToString()));
+            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.GpsLongitudeConfigCommand, convertedLongitude.ToString()));
+            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.GpsAltitudeConfigCommand, convertedAltitude.ToString()));
+        }
+
+        [TestMethod]
+        public void UserBoxStart_SendsStartUserBoxConfigCommand()
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            var dateTime = new DateTime(1999, 05, 09, 13, 14, 15);
+            _mockDateTimeFactory.Setup(x => x.Now).Returns(dateTime);
+            string expectedValue = string.Format("{0},{1}", (int)DroneController.UserBoxCommands.Start, dateTime.ToString(DroneController.UserBoxCommandDateFormat));
+
+            // Act
+            _target.UserBoxStart();
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.UserboxConfigKey, expectedValue));
+        }
+
+        [TestMethod]
+        public void UserBoxStop_SendsStopUserBoxConfigCommand()
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+
+            // Act
+            _target.UserBoxStop();
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.UserboxConfigKey, ((int)DroneController.UserBoxCommands.Stop).ToString()));
+        }
+
+        [TestMethod]
+        public void UserBoxCancel_SendsCancelUserBoxConfigCommand()
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+
+            // Act
+            _target.UserBoxCancel();
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.UserboxConfigKey, ((int)DroneController.UserBoxCommands.Cancel).ToString()));
+        }
+
+        [TestMethod]
+        public void UserBoxScreenShot_SendsScreenshotUserBoxConfigCommand()
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            const uint delayInSecondsTestValue = 337;
+            const uint numberOfBurstTestValue = 789;
+            var dateTime = new DateTime(1999, 05, 09, 13, 14, 15);
+            _mockDateTimeFactory.Setup(x => x.Now).Returns(dateTime);
+            string expectedValue = string.Format("{0},{1},{2},{3}", (int)DroneController.UserBoxCommands.ScreenShot,
+                delayInSecondsTestValue, numberOfBurstTestValue, dateTime.ToString(DroneController.UserBoxCommandDateFormat));
+
+            // Act
+            _target.UserBoxScreenShot(delayInSecondsTestValue, numberOfBurstTestValue);
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.UserboxConfigKey, expectedValue));
+        }
+
         #endregion
 
         #region CommandTimer Tick tests
@@ -574,7 +664,7 @@ namespace AR_Drone_Controller
             _target.DoWork(null);
 
             // Assert
-            _mockCommandWorker.Verify( x => x.SendProgressiveCommand(_target));
+            _mockCommandWorker.Verify(x => x.SendProgressiveCommand(_target));
             _mockCommandWorker.Verify(x => x.Flush());
         }
 
@@ -594,7 +684,7 @@ namespace AR_Drone_Controller
             _mockCommandWorker.Verify(x => x.SendResetWatchDogCommand());
             _mockCommandWorker.Verify(x => x.Flush());
         }
-        
+
         #endregion
 
         private void VerifyRecordCommandSentAndVideoWorkerStarted()
@@ -675,9 +765,13 @@ namespace AR_Drone_Controller
             _mockDispatcher = new Mock<IDispatcher>();
             _mockWorkerFactory = new Mock<WorkerFactory>();
             _mockTimerFactory = new Mock<TimerFactory>();
+            _mockDoubleToInt64Converter = new Mock<DoubleToInt64Converter>();
+            _mockDateTimeFactory = new Mock<DateTimeFactory>();
             _target.TimerFactory = _mockTimerFactory.Object;
             _target.WorkerFactory = _mockWorkerFactory.Object;
             _target.Dispatcher = _mockDispatcher.Object;
+            _target.DoubleToInt64Converter = _mockDoubleToInt64Converter.Object;
+            _target.DateTimeFactory = _mockDateTimeFactory.Object;
             _mockControlWorker = new Mock<ControlWorker>();
             _mockCommandWorker = new Mock<CommandWorker>();
             _mockNavDataWorker = new Mock<NavDataWorker>();
