@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:AR_Drone_Remote_for_Windows_Phone_7"
-    xmlns:telerikPrimitives="clr-namespace:Telerik.Windows.Controls;assembly=Telerik.Windows.Controls.Primitives"
+    xmlns:telerik="clr-namespace:Telerik.Windows.Controls;assembly=Telerik.Windows.Controls.Primitives"
     xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls"
     xmlns:controls="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
     xmlns:controlsPrimitives="clr-namespace:Microsoft.Phone.Controls.Primitives;assembly=Microsoft.Phone.Controls"
@@ -86,7 +86,7 @@
                                 </Grid.RowDefinitions>
                                 <Grid Background="{TemplateBinding Background}" CacheMode="BitmapCache" Grid.RowSpan="3"/>
                                 <!--<ContentPresenter ContentTemplate="{TemplateBinding TitleTemplate}" Content="{TemplateBinding Title}" Margin="24,17,0,-7"/>-->
-                                <ContentPresenter ContentTemplate="{TemplateBinding TitleTemplate}" Content="{TemplateBinding Title}" Margin="0"/>
+                                <ContentPresenter ContentTemplate="{TemplateBinding TitleTemplate}" Content="{TemplateBinding Title}" Margin="0" Grid.Row="0" />
                                 <controlsPrimitives:PivotHeadersControl x:Name="HeadersListElement" Grid.Row="1"/>
                                 <ItemsPresenter x:Name="PivotItemPresenter" Margin="{TemplateBinding Padding}" Grid.Row="2"/>
                             </Grid>
@@ -184,16 +184,21 @@
 
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="Use phone tilt"/>
-                    <telerikPrimitives:RadToggleSwitch x:Name="UseAccelerometer" HorizontalAlignment="Center" CheckedChanged="UseAccelerometer_OnCheckedChanged" />
+                    <telerik:RadToggleSwitch 
+                        x:Name="UseAccelerometer" 
+                        HorizontalAlignment="Center" 
+                        CheckedChanged="UseAccelerometer_OnCheckedChanged" />
                 </StackPanel>
                 <local:Joystick x:Name="LeftJoystick" 
 					    Grid.Row="1" 
+                        Grid.Column="0"
 					    XValueChanged="LeftJoystickOnXValueChanged" 
 					    YValueChanged="LeftJoystickOnYValueChanged"/>
                 <Button x:Name="SteerButton"
+                        Grid.Column="0"
                         Grid.Row="1" 
                         Visibility="Collapsed">Press to steer</Button>
-                <Grid Grid.Column="1" Grid.RowSpan="2">
+                <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="1*"/>
@@ -206,9 +211,9 @@
 						Grid.Row="1"/>
                 </Grid>
 
-                <StackPanel x:Name="AbsoluteControl" Grid.Column="2" HorizontalAlignment="Center">
+                <StackPanel x:Name="AbsoluteControl" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center">
                     <TextBlock Text="Steer relative to controller" TextWrapping="Wrap"/>
-                    <telerikPrimitives:RadToggleSwitch HorizontalAlignment="Center" CheckedChanged="AbsoluteConstrol_OnCheckedChanged" />
+                    <telerik:RadToggleSwitch HorizontalAlignment="Center" CheckedChanged="AbsoluteConstrol_OnCheckedChanged" />
                 </StackPanel>
                 <local:Joystick x:Name="RightJoystick" 
                     Grid.Column="2"
@@ -226,10 +231,35 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="1*"/>
                             <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
                         </Grid.RowDefinitions>
+                        <Grid.Resources>
+                            <local:GeoPositionPermissionConverter x:Key="GeoPositionPermission" />
+                            <local:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibility" />
+                            <local:GeoPositionToStringConverter x:Key="GeoPositionToString" />
+                            <local:BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+                        </Grid.Resources>
                         <Button Grid.Row="0" IsEnabled="{Binding DroneController.Flying}" Click="CalibrateCompass_Click" Content="Calibrate Compass"/>
                         <Button Grid.Row="1" IsEnabled="{Binding DroneController.CanSendFlatTrimCommand}" Click="FlatTrim_Click" Content="Flat Trim"/>
-
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource PhoneTextNormalStyle}">Send Location Data:</TextBlock>
+                                <TextBlock Text="Location Services are disabled." 
+                                           Visibility="{Binding ElementName=SendLocationInformation, Path=IsEnabled, Converter={StaticResource InverseBooleanToVisibility}}"/>
+                                <TextBlock Text="{Binding ElementName=This, Path=GeoCoordinateWatcher.Position.Location, Converter={StaticResource GeoPositionToString}}" 
+                                           Visibility="{Binding ElementName=SendLocationInformation, Path=IsChecked, Converter={StaticResource BooleanToVisibility}}" />
+                            </StackPanel>
+                            <telerik:RadToggleSwitch 
+                                x:Name="SendLocationInformation"
+                                Grid.Column="1"
+                                HorizontalAlignment="Center" 
+                                CheckedChanged="SendLocationInformation_OnCheckedChanged" 
+                                IsEnabled="{Binding ElementName=This, Path=GeoCoordinateWatcher.Permission, Converter={StaticResource GeoPositionPermission}}" />
+                        </Grid>
                     </Grid>
                 </phone:PivotItem>
                 <phone:PivotItem x:Name="LedLightControls">
@@ -301,16 +331,20 @@
                     Content="Take Off/Land" 
                     Click="LaunchLand_Click" 
                     IsEnabled="{Binding DroneController.Connected}" />
-            <StackPanel Background="Transparent" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Column="2">
-                <Ellipse Fill="{Binding DroneController.UsbKeyIsRecording, Converter={StaticResource RecordingColorConverter}}" 
-                         Stroke="White" 
-                         Width="40" 
-                         Height="40"/>
-                <Button Grid.Column="1" 
-                        Grid.Row="1" 
-                        IsEnabled="{Binding DroneController.CanRecord}" 
-                        Click="Record_Click" 
-                        Content="Record"/>
+            <StackPanel 
+                Background="Transparent" 
+                HorizontalAlignment="Center" 
+                Orientation="Horizontal" 
+                Grid.Column="2">
+                <Ellipse 
+                    Fill="{Binding DroneController.UsbKeyIsRecording, Converter={StaticResource RecordingColorConverter}}" 
+                    Stroke="White" 
+                    Width="40" 
+                    Height="40"/>
+                <Button
+                    IsEnabled="{Binding DroneController.CanRecord}" 
+                    Click="Record_Click" 
+                    Content="Record"/>
             </StackPanel>
         </Grid>
 

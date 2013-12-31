@@ -16,7 +16,7 @@
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="AR_Drone_Remote_for_Windows_8.App">
       <VisualElements DisplayName="AR Drone Remote" Logo="Assets\Logo.png" SmallLogo="Assets\SmallLogo.png" Description="AR Drone Remote" ForegroundText="light" BackgroundColor="#464646">
-        <DefaultTile ShowName="allLogos" />
+        <DefaultTile ShowName="logoOnly" />
         <SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#2A2A30" />
         <InitialRotationPreference>
           <Rotation Preference="landscape" />
@@ -26,5 +26,6 @@
   </Applications>
   <Capabilities>
     <Capability Name="internetClient" />
+    <DeviceCapability Name="location" />
   </Capabilities>
 </Package>

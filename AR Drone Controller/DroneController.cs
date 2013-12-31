@@ -134,7 +134,9 @@ namespace AR_Drone_Controller
 
         public bool CanSendFlatTrimCommand { get; internal set; }
 
-        internal bool CommWatchDog { get; set; }
+        public bool UserBoxIsRecording { get; internal set; }
+        
+        internal bool CommWatchDog { get; set; }        
 
         #endregion
 
@@ -361,6 +363,7 @@ namespace AR_Drone_Controller
             CanRecord = false;
             UsbKeyIsRecording = false;
             CommWatchDog = false;
+            UserBoxIsRecording = false;
         }
 
         // videoSocket udp for AR Drone 1 and tcp for AR Drone 2
@@ -384,7 +387,7 @@ namespace AR_Drone_Controller
         //    CommandWorker.SendCtrlCommand(CommandWorker.ControlMode.CfgGetControlMode);
         //}
 
-        internal void SetLocation(double latitude, double longitude, double altitude)
+        public void SetLocation(double latitude, double longitude, double altitude)
         {
             Int64 convertedLatitude = DoubleToInt64Converter.Convert(latitude);
             Int64 convertedLongitude = DoubleToInt64Converter.Convert(longitude);
@@ -392,33 +395,35 @@ namespace AR_Drone_Controller
 
             CommandWorker.SendConfigCommand(GpsLatitudeConfigKey, convertedLatitude.ToString());
             CommandWorker.SendConfigCommand(GpsLongitudeConfigCommand, convertedLongitude.ToString());
-
             CommandWorker.SendConfigCommand(GpsAltitudeConfigCommand, convertedAltitude.ToString());
         }
 
-        internal void UserBoxStart()
+        public void UserBoxStart()
         {
             string now = DateTimeFactory.Now.ToString(UserBoxCommandDateFormat);
             var value = string.Format("{0},{1}", (int)UserBoxCommands.Start, now);
             CommandWorker.SendConfigCommand(UserboxConfigKey, value);
+            UserBoxIsRecording = true;
         }
 
-        internal void UserBoxStop()
-        {
+        public void UserBoxStop()
+        {   
             CommandWorker.SendConfigCommand(UserboxConfigKey, ((int)UserBoxCommands.Stop).ToString());
+            UserBoxIsRecording = false;
         }
 
-        internal void UserBoxCancel()
+        public void UserBoxCancel()
         {
             CommandWorker.SendConfigCommand(UserboxConfigKey, ((int)UserBoxCommands.Cancel).ToString());
+            UserBoxIsRecording = false;
         }
 
-        internal void UserBoxScreenShot(uint delayInSecondsBetweenScreenshots, uint numberOfScreenshotsToTake)
+        public void UserBoxScreenShot(uint delayInSecondsBetweenScreenshots, uint numberOfScreenshotsToTake)
         {
             string now = DateTimeFactory.Now.ToString(UserBoxCommandDateFormat);
             var value = string.Format("{0},{1},{2},{3}", (int)UserBoxCommands.ScreenShot, delayInSecondsBetweenScreenshots,
                 numberOfScreenshotsToTake, now);
             CommandWorker.SendConfigCommand(UserboxConfigKey, value);
-        }
+        }        
     }
 }

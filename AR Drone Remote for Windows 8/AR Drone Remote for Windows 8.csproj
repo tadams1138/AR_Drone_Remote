@@ -117,6 +117,8 @@
     <Compile Include="BatteryPercentageToColorConverter.cs" />
     <Compile Include="AngleInverter.cs" />
     <Compile Include="BatteryPercentageToVisibilityConverter.cs" />
+    <Compile Include="BooleanToVisibilityConverter.cs" />
+    <Compile Include="InverseBooleanToVisibilityConverter.cs" />
     <Compile Include="PitchTranslator.cs" />
     <Compile Include="AttitudeIndicator.xaml.cs">
       <DependentUpon>AttitudeIndicator.xaml</DependentUpon>

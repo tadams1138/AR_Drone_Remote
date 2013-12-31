@@ -588,7 +588,7 @@ namespace AR_Drone_Controller
         }
 
         [TestMethod]
-        public void UserBoxStart_SendsStartUserBoxConfigCommand()
+        public void UserBoxStart_SendsStartUserBoxConfigCommandAndSetsUserBoxRecording()
         {
             // Arrange
             InitializeFactoryAndWorkerMocksAndConnect();
@@ -600,6 +600,7 @@ namespace AR_Drone_Controller
             _target.UserBoxStart();
 
             // Assert
+            _target.UserBoxIsRecording.Should().BeTrue();
             _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.UserboxConfigKey, expectedValue));
         }
 
@@ -608,11 +609,13 @@ namespace AR_Drone_Controller
         {
             // Arrange
             InitializeFactoryAndWorkerMocksAndConnect();
+            _target.UserBoxIsRecording = true;
 
             // Act
             _target.UserBoxStop();
 
             // Assert
+            _target.UserBoxIsRecording.Should().BeFalse();
             _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.UserboxConfigKey, ((int)DroneController.UserBoxCommands.Stop).ToString()));
         }
 
@@ -621,11 +624,13 @@ namespace AR_Drone_Controller
         {
             // Arrange
             InitializeFactoryAndWorkerMocksAndConnect();
+            _target.UserBoxIsRecording = true;
 
             // Act
             _target.UserBoxCancel();
 
             // Assert
+            _target.UserBoxIsRecording.Should().BeFalse();
             _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.UserboxConfigKey, ((int)DroneController.UserBoxCommands.Cancel).ToString()));
         }
 
@@ -802,6 +807,7 @@ namespace AR_Drone_Controller
             _target.CanRecord = true;
             _target.UsbKeyIsRecording = true;
             _target.CommWatchDog = true;
+            _target.UserBoxIsRecording = true;
         }
 
         private void AssertPropertiesAreSetToDefaults()
@@ -818,6 +824,7 @@ namespace AR_Drone_Controller
             _target.CanRecord.Should().BeFalse();
             _target.UsbKeyIsRecording.Should().BeFalse();
             _target.CommWatchDog.Should().BeFalse();
+            _target.UserBoxIsRecording.Should().BeFalse();
         }
     }
 }

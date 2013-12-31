@@ -45,7 +45,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid x:Name="HeaderPanel" Grid.Row="0">
+        <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
@@ -63,7 +63,7 @@
             </StackPanel>
         </Grid>
 
-        <Grid x:Name="MainPanel" Grid.Row="1">
+        <Grid Grid.Row="1">
             <Grid x:Name="FlightControls">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1*"/>
@@ -80,13 +80,15 @@
                     <ToggleSwitch  HorizontalAlignment="Center" Toggled="UseAccelerometer_OnCheckedChanged" />
                 </StackPanel>
                 <local:Joystick x:Name="LeftJoystick" 
+                        Grid.Column="0"
 					    Grid.Row="1" 
 					    XValueChanged="LeftJoystickOnXValueChanged" 
 					    YValueChanged="LeftJoystickOnYValueChanged"/>
                 <Button x:Name="SteerButton"
+                        Grid.Column="0"
                         Grid.Row="1"
                         Visibility="Collapsed">Press to steer</Button>
-                <Grid Grid.Column="1" Grid.RowSpan="2">
+                <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="1*"/>
@@ -101,11 +103,11 @@
                 </Grid>
 
 
-                <StackPanel x:Name="AbsoluteControl" Grid.Column="2" HorizontalAlignment="Center">
+                <StackPanel x:Name="AbsoluteControl" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center">
                     <TextBlock Text="Steer relative to controller" TextWrapping="Wrap"/>
                     <ToggleSwitch HorizontalAlignment="Center" Toggled="AbsoluteControl_OnCheckedChanged" />
                 </StackPanel>
-                <local:Joystick x:Name="RightJoystick" 
+                <local:Joystick
                     Grid.Column="2"
                     Grid.Row="1" 
                     XValueChanged="RightJoystickOnXValueChanged" 
@@ -116,17 +118,44 @@
                 <Grid Margin="50">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="1*"/>
+                        <RowDefinition Height="1*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Style="{StaticResource PageSubheaderTextStyle}" Text="Calibrates"/>
+                    <Grid.Resources>
+                        <local:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibility" />
+                        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+                    </Grid.Resources>
+                    <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Style="{StaticResource PageSubheaderTextStyle}" Text="Calibrate"/>
                     <Button Grid.Column="1" Grid.Row="1" IsEnabled="{Binding DroneController.Flying}" Click="CalibrateCompass_Click" Content="Calibrate Compass"/>
                     <Button Grid.Column="1" Grid.Row="2" IsEnabled="{Binding DroneController.CanSendFlatTrimCommand}" Click="FlatTrim_Click" Content="Flat Trim"/>
+                    <Grid Grid.Column="1" Grid.Row="3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource SubheaderTextStyle}">Send Location Data:</TextBlock>
+                            <TextBlock 
+                                Style="{StaticResource BodyTextStyle}"
+                                Visibility="{Binding ElementName=SendLocationInformation, Path=IsEnabled, Converter={StaticResource InverseBooleanToVisibility}}">
+                                Location Services are disabled.
+                            </TextBlock>
+                            <TextBlock x:Name="GeoLocationTextBlock" 
+                                       Style="{StaticResource BodyTextStyle}" 
+                                       Visibility="{Binding ElementName=SendLocationInformation, Path=IsOn, Converter={StaticResource BooleanToVisibility}}" />
+                        </StackPanel>
+                        <ToggleSwitch 
+                                x:Name="SendLocationInformation"
+                                Grid.Column="1"
+                                HorizontalAlignment="Center" 
+                                Toggled="SendLocationInformation_Toggled" />
+                    </Grid>
                 </Grid>
 
                 <Grid>
@@ -189,7 +218,7 @@
             </FlipView>
         </Grid>
 
-        <Grid Background="Transparent" x:Name="Footer" Grid.Row="2">
+        <Grid Background="Transparent" Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
@@ -223,11 +252,27 @@
                          Stroke="White" 
                          Width="40" 
                          Height="40"/>
-                <Button Grid.Column="1" 
-                        Grid.Row="1" 
+                <Button
                         IsEnabled="{Binding DroneController.CanRecord}" 
                         Click="Record_Click" 
                         Content="Record"/>
+
+                <Button
+                        Click="UserBox_Start_Click" 
+                        Content="UserBox Start"/>
+
+                <Button
+                        Click="UserBox_Stop_Click" 
+                        Content="UserBox Stop"/>
+
+                <Button
+                        Click="UserBox_Cancel_Click" 
+                        Content="UserBox Cancel"/>
+
+                <Button
+                        Click="UserBox_Screenshot_Click" 
+                        Content="UserBox ScreenShot"/>
+
             </StackPanel>
         </Grid>
 

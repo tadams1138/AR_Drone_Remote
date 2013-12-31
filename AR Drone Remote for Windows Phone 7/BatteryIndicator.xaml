@@ -15,7 +15,7 @@
                                                  GoodStrengthColor="{StaticResource PhoneForegroundBrush}"/>
         <SolidColorBrush x:Key="BatteryColor" 
                          Color="{Binding Path=BatteryPercentage, Converter={StaticResource BatteryPercentageToColorConverter}}"/>
-        <local:BatteryPercentageToVisibilityConvert x:Key="BatteryPercentageToVisibilityConvert" />
+        <local:BatteryPercentageToVisibilityConverter x:Key="BatteryPercentageToVisibilityConvert" />
     </UserControl.Resources>
     <Viewbox Stretch="Uniform">
         <Grid Width="20" Height="10" Background="Transparent">

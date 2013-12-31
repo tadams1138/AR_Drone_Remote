@@ -1,4 +1,4 @@
-﻿using System.Windows.Input;
+﻿using System.Device.Location;
 
 namespace AR_Drone_Remote_for_Windows_Phone_7
 {
@@ -19,6 +19,9 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         private static Compass _compass;
         private static Accelerometer _accelerometer;
         private static bool _useAccelerometer;
+        private bool _useLocationService;
+
+        public GeoCoordinateWatcher GeoCoordinateWatcher { get; set; }
 
         public MainPage()
         {
@@ -32,6 +35,13 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             InitializeComponent();
             InitializeCompass();
             InitializeAccelerometer();
+            InitializeGeoCoordinateWatcher();
+        }
+
+        private void InitializeGeoCoordinateWatcher()
+        {
+            GeoCoordinateWatcher = new GeoCoordinateWatcher {MovementThreshold = 100};
+            GeoCoordinateWatcher.PositionChanged += LocationPositionChanged;
         }
 
         protected override void OnNavigatedFrom(System.Windows.Navigation.NavigationEventArgs e)
@@ -49,6 +59,11 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             {
                 _accelerometer.Stop();
             }
+
+            if (_useLocationService)
+            {
+                GeoCoordinateWatcher.Stop();
+            }
         }
 
         protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
@@ -65,6 +80,11 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             if (_accelerometer != null && _useAccelerometer)
             {
                 _accelerometer.Start();
+            }
+
+            if (_useLocationService)
+            {
+                GeoCoordinateWatcher.Start();
             }
         }
 
@@ -219,7 +239,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         private void ShowOptions_OnClick(object sender, EventArgs e)
         {
-            LeftJoystick.Visibility =  Visibility.Collapsed;
+            LeftJoystick.Visibility = Visibility.Collapsed;
             RightJoystick.Visibility = Visibility.Collapsed;
             FlightControls.Visibility = Visibility.Collapsed;
             Tools.Visibility = Visibility.Visible;
@@ -310,6 +330,31 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             {
                 var connectButton = (ApplicationBarIconButton)ApplicationBar.Buttons[2];
                 connectButton.IsEnabled = !App.TrialReminder.IsTrialExpired;
+            }
+        }
+
+        void LocationPositionChanged(object sender, GeoPositionChangedEventArgs<GeoCoordinate> e)
+        {
+            Dispatcher.BeginInvoke(delegate
+            {
+                if (DroneController.Connected)
+                {
+                    var l = e.Position.Location;
+                    DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude);
+                }
+            });
+        }
+
+        private void SendLocationInformation_OnCheckedChanged(object sender, CheckedChangedEventArgs e)
+        {
+            _useLocationService = e.NewState;
+            if (e.NewState)
+            {
+                GeoCoordinateWatcher.Start();
+            }
+            else
+            {
+                GeoCoordinateWatcher.Stop();
             }
         }
     }

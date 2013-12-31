@@ -1,4 +1,5 @@
 ﻿using System;
+using Windows.Devices.Geolocation;
 using AR_Drone_Controller;
 using Windows.Devices.Sensors;
 using Windows.Graphics.Display;
@@ -19,7 +20,10 @@ namespace AR_Drone_Remote_for_Windows_8
         private static Accelerometer _accelerometer;
         private bool _useAccelerometer;
         private KeyboardInput _keyboardInput;
-        private float gain = 1f;
+        private const float Gain = 1f;
+        private bool _useLocationService;
+
+        public Geolocator Geolocator { get; set; }
 
         public MainPage()
         {
@@ -35,6 +39,7 @@ namespace AR_Drone_Remote_for_Windows_8
             InitializeKeyboardInput();
             InitializeCompass();
             InitializeAccelerometer();
+            InitializeGeolocator();
         }
 
         public DroneController DroneController
@@ -79,7 +84,7 @@ namespace AR_Drone_Remote_for_Windows_8
 
         private void InitializeKeyboardInput()
         {
-            var keyStateIndicator = new KeyStateIndicator {CoreWindow = Window.Current.CoreWindow};
+            var keyStateIndicator = new KeyStateIndicator { CoreWindow = Window.Current.CoreWindow };
             _keyboardInput = new KeyboardInput
                 {
                     DroneController = DroneController,
@@ -88,6 +93,12 @@ namespace AR_Drone_Remote_for_Windows_8
                 };
             Window.Current.CoreWindow.KeyDown += KeyboardStateChanged;
             Window.Current.CoreWindow.KeyUp += KeyboardStateChanged;
+        }
+        private void InitializeGeolocator()
+        {
+            Geolocator = new Geolocator { MovementThreshold = 100 };
+            Geolocator.StatusChanged += Geolocator_StatusChanged;
+            Geolocator.PositionChanged += Geolocator_PositionChanged;
         }
 
         private void AccelerometerOnCurrentValueChanged(Accelerometer accelerometer, AccelerometerReadingChangedEventArgs args)
@@ -117,6 +128,34 @@ namespace AR_Drone_Remote_for_Windows_8
             DroneController.ControllerHeading = heading;
         }
 
+        private void Geolocator_PositionChanged(Geolocator sender, PositionChangedEventArgs args)
+        {
+            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                var l = args.Position.Coordinate;
+                GeoLocationTextBlock.Text = string.Format("Lat: {0:0.0000}, Lon: {1:0.0000}, Alt: {2:0.0}", l.Latitude,
+                    l.Longitude, l.Altitude);
+                if (DroneController.Connected && _useLocationService)
+                {
+                    DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude ?? double.NaN);
+                }
+            });
+        }
+
+        void Geolocator_StatusChanged(Geolocator sender, StatusChangedEventArgs args)
+        {
+            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                bool enabled = args.Status != PositionStatus.Disabled && args.Status != PositionStatus.NotAvailable;
+                if (!enabled)
+                {
+                    SendLocationInformation.IsOn = false;
+                }
+
+                SendLocationInformation.IsEnabled = enabled;
+            });
+        }
+
         private void KeyboardStateChanged(CoreWindow sender, KeyEventArgs args)
         {
             args.Handled = false;
@@ -125,22 +164,22 @@ namespace AR_Drone_Remote_for_Windows_8
 
         private void LeftJoystickOnXValueChanged(object sender, double e)
         {
-            DroneController.Roll = (float)e * gain;
+            DroneController.Roll = (float)e * Gain;
         }
 
         private void LeftJoystickOnYValueChanged(object sender, double e)
         {
-            DroneController.Pitch = (float)e * gain;
+            DroneController.Pitch = (float)e * Gain;
         }
 
         private void RightJoystickOnXValueChanged(object sender, double e)
         {
-            DroneController.Yaw = (float)e * gain;
+            DroneController.Yaw = (float)e * Gain;
         }
 
         private void RightJoystickOnYValueChanged(object sender, double e)
         {
-            DroneController.Gaz = -(float)e * gain;
+            DroneController.Gaz = -(float)e * Gain;
         }
 
         private void LaunchLand_Click(object sender, RoutedEventArgs e)
@@ -271,6 +310,32 @@ namespace AR_Drone_Remote_for_Windows_8
             {
                 DroneController.StartRecording();
             }
+        }
+
+        private void SendLocationInformation_Toggled(object sender, RoutedEventArgs e)
+        {
+            _useLocationService = ((ToggleSwitch)sender).IsOn;
+        }
+
+        private void UserBox_Start_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: test out these Userbox features
+            DroneController.UserBoxStart();
+        }
+
+        private void UserBox_Stop_Click(object sender, RoutedEventArgs e)
+        {
+            DroneController.UserBoxStop();
+        }
+
+        private void UserBox_Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            DroneController.UserBoxCancel();
+        }
+
+        private void UserBox_Screenshot_Click(object sender, RoutedEventArgs e)
+        {
+            DroneController.UserBoxScreenShot(1,30);
         }
     }
 }
