@@ -1,4 +1,7 @@
-﻿using System.Device.Location;
+﻿using System.ComponentModel;
+using System.Device.Location;
+using System.IO.IsolatedStorage;
+using System.Runtime.CompilerServices;
 
 namespace AR_Drone_Remote_for_Windows_Phone_7
 {
@@ -11,17 +14,17 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
     using System.Diagnostics;
     using System.Windows;
     using System.Windows.Controls;
-    using Telerik.Windows.Controls;
 
-    public partial class MainPage
+    public partial class MainPage : INotifyPropertyChanged
     {
         private static DroneController _droneController;
         private static Compass _compass;
         private static Accelerometer _accelerometer;
-        private static bool _useAccelerometer;
+        private bool _useAccelerometer;
         private bool _useLocationService;
-
-        public GeoCoordinateWatcher GeoCoordinateWatcher { get; set; }
+        private bool _showControls = true;
+        
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public MainPage()
         {
@@ -40,7 +43,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         private void InitializeGeoCoordinateWatcher()
         {
-            GeoCoordinateWatcher = new GeoCoordinateWatcher {MovementThreshold = 100};
+            GeoCoordinateWatcher = new GeoCoordinateWatcher { MovementThreshold = 100 };
             GeoCoordinateWatcher.PositionChanged += LocationPositionChanged;
         }
 
@@ -55,12 +58,12 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
                 _compass.Stop();
             }
 
-            if (_accelerometer != null && _useAccelerometer)
+            if (_accelerometer != null && UseAccelerometer)
             {
                 _accelerometer.Stop();
             }
 
-            if (_useLocationService)
+            if (UseLocationService)
             {
                 GeoCoordinateWatcher.Stop();
             }
@@ -72,17 +75,19 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
             VerifyLicense();
 
+            LoadSettings();
+
             if (_compass != null)
             {
                 _compass.Start();
             }
 
-            if (_accelerometer != null && _useAccelerometer)
+            if (_accelerometer != null && UseAccelerometer)
             {
                 _accelerometer.Start();
             }
 
-            if (_useLocationService)
+            if (UseLocationService)
             {
                 GeoCoordinateWatcher.Start();
             }
@@ -90,32 +95,145 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         public DroneController DroneController { get { return _droneController; } }
 
+        public GeoCoordinateWatcher GeoCoordinateWatcher { get; set; }
+
+        public bool CompassIsSupported
+        {
+            get { return Compass.IsSupported; }
+        }
+
+        public bool AccelerometerIsSupported
+        {
+            get { return Accelerometer.IsSupported; }
+        }
+
+        public bool UseAccelerometer
+        {
+            get { return _useAccelerometer; }
+
+            set
+            {
+                IsolatedStorageSettings.ApplicationSettings["UseAccelerometer"] = value;
+
+                if (_useAccelerometer != value && Accelerometer.IsSupported)
+                {
+                    _useAccelerometer = value;
+                    OnPropertyChanged("ShowLeftJoyStick");
+
+                    if (value)
+                    {
+                        _accelerometer.Start();
+                    }
+                    else
+                    {
+                        _accelerometer.Stop();
+                        _droneController.Pitch = 0;
+                        _droneController.Roll = 0;
+                    }
+                }
+            }
+        }
+
+        public bool AbsoluteControl
+        {
+            get
+            {
+                return _droneController.AbsoluteControlMode;
+            }
+
+            set
+            {
+                _droneController.AbsoluteControlMode = value;
+                IsolatedStorageSettings.ApplicationSettings["AbsoluteControl"] = value;
+            }
+        }
+
+        public bool UseLocationService
+        {
+            get { return _useLocationService; }
+            set
+            {
+                IsolatedStorageSettings.ApplicationSettings["UseLocationService"] = value;
+
+                if (_useLocationService != value)
+                {
+                    _useLocationService = value;
+
+                    if (value)
+                    {
+                        GeoCoordinateWatcher.Start();
+                    }
+                    else
+                    {
+                        GeoCoordinateWatcher.Stop();
+                    }
+                }
+            }
+        }
+
+        public bool ShowControls
+        {
+            get
+            {
+                return _showControls;
+            }
+
+            set
+            {
+                if (_showControls != value)
+                {
+                    _showControls = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged("ShowLeftJoyStick");
+                }
+            }
+        }
+
+        public bool ShowLeftJoyStick
+        {
+            get { return ShowControls && !UseAccelerometer; }
+        }
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
+        }
+
         private void InitializeAccelerometer()
         {
-            if (Accelerometer.IsSupported)
+            if (AccelerometerIsSupported)
             {
                 _accelerometer = new Accelerometer();
                 _accelerometer.CurrentValueChanged += AccelerometerOnCurrentValueChanged;
-                UseAccelerometer.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                UseAccelerometer.Visibility = Visibility.Collapsed;
             }
         }
 
         private void InitializeCompass()
         {
-            if (Compass.IsSupported)
+            if (CompassIsSupported)
             {
                 _compass = new Compass();
                 _compass.CurrentValueChanged += CompassOnCurrentValueChanged;
-                AbsoluteControl.Visibility = Visibility.Visible;
                 _compass.Start();
             }
-            else
+        }
+
+        private void LoadSettings()
+        {
+            if (IsolatedStorageSettings.ApplicationSettings.Contains("UseAccelerometer"))
             {
-                AbsoluteControl.Visibility = Visibility.Collapsed;
+                UseAccelerometer = (bool)IsolatedStorageSettings.ApplicationSettings["UseAccelerometer"];
+            }
+
+            if (IsolatedStorageSettings.ApplicationSettings.Contains("AbsoluteControl"))
+            {
+                AbsoluteControl = (bool)IsolatedStorageSettings.ApplicationSettings["AbsoluteControl"];
+            }
+
+            if (IsolatedStorageSettings.ApplicationSettings.Contains("UseLocationService"))
+            {
+                UseLocationService = (bool)IsolatedStorageSettings.ApplicationSettings["UseLocationService"];
             }
         }
 
@@ -193,30 +311,6 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             _droneController.Emergency();
         }
 
-        private void AbsoluteConstrol_OnCheckedChanged(object sender, CheckedChangedEventArgs e)
-        {
-            _droneController.AbsoluteControlMode = e.NewState;
-        }
-
-        private void UseAccelerometer_OnCheckedChanged(object sender, CheckedChangedEventArgs e)
-        {
-            _useAccelerometer = e.NewState;
-            if (_useAccelerometer)
-            {
-                LeftJoystick.Visibility = Visibility.Collapsed;
-                SteerButton.Visibility = Visibility.Visible;
-                _accelerometer.Start();
-            }
-            else
-            {
-                _accelerometer.Stop();
-                LeftJoystick.Visibility = Visibility.Visible;
-                SteerButton.Visibility = Visibility.Collapsed;
-                _droneController.Pitch = 0;
-                _droneController.Roll = 0;
-            }
-        }
-
         private void Connect_OnClick(object sender, EventArgs e)
         {
             if (_droneController.Connected)
@@ -239,18 +333,12 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         private void ShowOptions_OnClick(object sender, EventArgs e)
         {
-            LeftJoystick.Visibility = Visibility.Collapsed;
-            RightJoystick.Visibility = Visibility.Collapsed;
-            FlightControls.Visibility = Visibility.Collapsed;
-            Tools.Visibility = Visibility.Visible;
+            ShowControls = false;
         }
 
         private void ShowControls_OnClick(object sender, EventArgs e)
         {
-            LeftJoystick.Visibility = UseAccelerometer.IsChecked ? Visibility.Collapsed : Visibility.Visible;
-            RightJoystick.Visibility = Visibility.Visible;
-            FlightControls.Visibility = Visibility.Visible;
-            Tools.Visibility = Visibility.Collapsed;
+            ShowControls = true;
         }
 
         private void HelpClick(object sender, EventArgs e)
@@ -333,7 +421,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             }
         }
 
-        void LocationPositionChanged(object sender, GeoPositionChangedEventArgs<GeoCoordinate> e)
+        private void LocationPositionChanged(object sender, GeoPositionChangedEventArgs<GeoCoordinate> e)
         {
             Dispatcher.BeginInvoke(delegate
             {
@@ -343,19 +431,6 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
                     DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude);
                 }
             });
-        }
-
-        private void SendLocationInformation_OnCheckedChanged(object sender, CheckedChangedEventArgs e)
-        {
-            _useLocationService = e.NewState;
-            if (e.NewState)
-            {
-                GeoCoordinateWatcher.Start();
-            }
-            else
-            {
-                GeoCoordinateWatcher.Stop();
-            }
         }
     }
 }
