@@ -1,0 +1,76 @@
+﻿<SettingsFlyout
+    x:Class="AR_Drone_Remote_for_Windows_8.Settings"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:AR_Drone_Remote_for_Windows_8"
+    Title="Options" 
+    HeaderForeground="White" 
+    HeaderBackground="#FCA921"
+    Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
+    mc:Ignorable="d" 
+    RequestedTheme="Default"
+    Width="600">
+    <SettingsFlyout.Resources>
+        <Style TargetType="TextBlock" BasedOn="{StaticResource BodyTextStyle}" x:Key="WarningTextStyle">
+            <Setter Property="Foreground" Value="Red" />
+        </Style>
+        <local:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibility" />
+        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+    </SettingsFlyout.Resources>
+    <ScrollViewer Width="500">
+        <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SubheaderTextStyle}">Use tilt</TextBlock>
+                    <TextBlock Style="{StaticResource WarningTextStyle}"
+                                Visibility="{Binding AccelerometerIsSupported, Converter={StaticResource InverseBooleanToVisibility}}">Accelerometer is not supported</TextBlock>
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1"
+                                HorizontalAlignment="Center"
+                                IsOn="{Binding UseAccelerometer, Mode=TwoWay}"
+                                IsEnabled="{Binding AccelerometerIsSupported}"/>
+            </Grid>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SubheaderTextStyle}">Steer relative to controller</TextBlock>
+                    <TextBlock Style="{StaticResource WarningTextStyle}"
+                                Visibility="{Binding CompassIsSupported, Converter={StaticResource InverseBooleanToVisibility}}">Compass is not supported</TextBlock>
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1"
+                                HorizontalAlignment="Center" 
+                                IsOn="{Binding AbsoluteControl, Mode=TwoWay}" 
+                                IsEnabled="{Binding CompassIsSupported}" />
+            </Grid>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource SubheaderTextStyle}">Send Location Data:</TextBlock>
+                    <TextBlock Style="{StaticResource WarningTextStyle}"
+                               Visibility="{Binding LocationServicesSupported, Converter={StaticResource InverseBooleanToVisibility}}">Location Services are disabled.</TextBlock>
+                    <TextBlock Style="{StaticResource BodyTextStyle}"
+                               Visibility="{Binding ElementName=SendLocationInformation, Path=IsOn, Converter={StaticResource BooleanToVisibility}}" 
+                               Text="{Binding Location}"/>
+                </StackPanel>
+                <ToggleSwitch 
+                            x:Name="SendLocationInformation"
+                            Grid.Column="1"
+                            HorizontalAlignment="Center" 
+                            IsEnabled="{Binding ElementName=This, Path=LocationServicesSupported, Converter={StaticResource BooleanToVisibility}}"
+                            IsOn="{Binding UseLocationService, Mode=TwoWay}" />
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</SettingsFlyout>

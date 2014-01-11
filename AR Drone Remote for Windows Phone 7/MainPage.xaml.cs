@@ -17,6 +17,10 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
     public partial class MainPage : INotifyPropertyChanged
     {
+        private const string ShowLeftJoyStickPropertyName = "ShowLeftJoyStick";
+        private const string UseAccelerometerPropertyName = "UseAccelerometer";
+        private const string AbsoluteControlPropertyName = "AbsoluteControl";
+        private const string UseLocationServicePropertyName = "UseLocationService";
         private static DroneController _droneController;
         private static Compass _compass;
         private static Accelerometer _accelerometer;
@@ -106,6 +110,13 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         {
             get { return Accelerometer.IsSupported; }
         }
+        public bool LocationServicesSupported
+        {
+            get
+            {
+                return GeoCoordinateWatcher.Permission == GeoPositionPermission.Granted;
+            }
+        }
 
         public bool UseAccelerometer
         {
@@ -113,12 +124,12 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
             set
             {
-                IsolatedStorageSettings.ApplicationSettings["UseAccelerometer"] = value;
+                IsolatedStorageSettings.ApplicationSettings[UseAccelerometerPropertyName] = value;
 
                 if (_useAccelerometer != value && Accelerometer.IsSupported)
                 {
                     _useAccelerometer = value;
-                    OnPropertyChanged("ShowLeftJoyStick");
+                    OnPropertyChanged(ShowLeftJoyStickPropertyName);
 
                     if (value)
                     {
@@ -144,16 +155,16 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             set
             {
                 _droneController.AbsoluteControlMode = value;
-                IsolatedStorageSettings.ApplicationSettings["AbsoluteControl"] = value;
+                IsolatedStorageSettings.ApplicationSettings[AbsoluteControlPropertyName] = value;
             }
         }
-
+        
         public bool UseLocationService
         {
             get { return _useLocationService; }
             set
             {
-                IsolatedStorageSettings.ApplicationSettings["UseLocationService"] = value;
+                IsolatedStorageSettings.ApplicationSettings[UseLocationServicePropertyName] = value;
 
                 if (_useLocationService != value)
                 {
@@ -184,7 +195,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
                 {
                     _showControls = value;
                     OnPropertyChanged();
-                    OnPropertyChanged("ShowLeftJoyStick");
+                    OnPropertyChanged(ShowLeftJoyStickPropertyName);
                 }
             }
         }
@@ -221,19 +232,32 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         private void LoadSettings()
         {
-            if (IsolatedStorageSettings.ApplicationSettings.Contains("UseAccelerometer"))
-            {
-                UseAccelerometer = (bool)IsolatedStorageSettings.ApplicationSettings["UseAccelerometer"];
-            }
+            SetUseAccelerometer();
+            SetAbsoluteControl();
+            SetUseLocationService();
+        }
 
-            if (IsolatedStorageSettings.ApplicationSettings.Contains("AbsoluteControl"))
+        private void SetUseLocationService()
+        {
+            if (IsolatedStorageSettings.ApplicationSettings.Contains(UseLocationServicePropertyName))
             {
-                AbsoluteControl = (bool)IsolatedStorageSettings.ApplicationSettings["AbsoluteControl"];
+                UseLocationService = (bool) IsolatedStorageSettings.ApplicationSettings[UseLocationServicePropertyName];
             }
+        }
 
-            if (IsolatedStorageSettings.ApplicationSettings.Contains("UseLocationService"))
+        private void SetAbsoluteControl()
+        {
+            if (IsolatedStorageSettings.ApplicationSettings.Contains(AbsoluteControlPropertyName))
             {
-                UseLocationService = (bool)IsolatedStorageSettings.ApplicationSettings["UseLocationService"];
+                AbsoluteControl = (bool) IsolatedStorageSettings.ApplicationSettings[AbsoluteControlPropertyName];
+            }
+        }
+
+        private void SetUseAccelerometer()
+        {
+            if (IsolatedStorageSettings.ApplicationSettings.Contains(UseAccelerometerPropertyName))
+            {
+                UseAccelerometer = (bool) IsolatedStorageSettings.ApplicationSettings[UseAccelerometerPropertyName];
             }
         }
 

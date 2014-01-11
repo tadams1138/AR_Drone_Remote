@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using AR_Drone_Controller.NavData;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

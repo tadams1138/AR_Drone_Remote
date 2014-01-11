@@ -15,7 +15,6 @@
  */
 
 using System;
-using System.ComponentModel;
 
 namespace AR_Drone_Remote_for_Windows_8.Annotations
 {

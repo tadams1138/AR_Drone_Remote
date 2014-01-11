@@ -1,5 +1,9 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Windows.Devices.Geolocation;
+using Windows.Storage;
+using Windows.UI.ApplicationSettings;
 using AR_Drone_Controller;
 using Windows.Devices.Sensors;
 using Windows.Graphics.Display;
@@ -7,14 +11,19 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using AR_Drone_Remote_for_Windows_8.Annotations;
 
 namespace AR_Drone_Remote_for_Windows_8
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainPage
+    public sealed partial class MainPage : INotifyPropertyChanged
     {
+        private const string ShowLeftJoyStickPropertyName = "ShowLeftJoyStick";
+        private const string UseAccelerometerPropertyName = "UseAccelerometer";
+        private const string AbsoluteControlPropertyName = "AbsoluteControl";
+        private const string UseLocationServicePropertyName = "UseLocationService";
         public static DroneController StaticDroneController;
         private static Compass _compass;
         private static Accelerometer _accelerometer;
@@ -22,8 +31,11 @@ namespace AR_Drone_Remote_for_Windows_8
         private KeyboardInput _keyboardInput;
         private const float Gain = 1f;
         private bool _useLocationService;
+        private string _location;
+        private bool _locationServicesSupported;
+        private bool _showControls = true;
 
-        public Geolocator Geolocator { get; set; }
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public MainPage()
         {
@@ -48,10 +60,160 @@ namespace AR_Drone_Remote_for_Windows_8
             set { StaticDroneController = value; }
         }
 
+        public Geolocator Geolocator { get; set; }
+
+        public bool CompassIsSupported
+        {
+            get
+            {
+                return _compass != null;
+            }
+        }
+
+        public bool AccelerometerIsSupported
+        {
+            get { return _accelerometer != null; }
+        }
+
+        public bool LocationServicesSupported
+        {
+            get { return _locationServicesSupported; }
+            private set
+            {
+                _locationServicesSupported = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Location
+        {
+            get { return _location; }
+            private set
+            {
+                _location = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool UseAccelerometer
+        {
+            get { return _useAccelerometer; }
+
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[UseAccelerometerPropertyName] = value;
+
+                if (_useAccelerometer != value && AccelerometerIsSupported)
+                {
+                    _useAccelerometer = value;
+                    OnPropertyChanged(ShowLeftJoyStickPropertyName);
+
+                    if (!value)
+                    {
+                        DroneController.Pitch = 0;
+                        DroneController.Roll = 0;
+                    }
+                }
+            }
+        }
+
+        public bool AbsoluteControl
+        {
+            get
+            {
+                return DroneController.AbsoluteControlMode;
+            }
+
+            set
+            {
+                DroneController.AbsoluteControlMode = value;
+                ApplicationData.Current.LocalSettings.Values[AbsoluteControlPropertyName] = value;
+            }
+        }
+
+        public bool UseLocationService
+        {
+            get { return _useLocationService; }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[UseLocationServicePropertyName] = value;
+                _useLocationService = value;
+            }
+        }
+
+        public bool ShowControls
+        {
+            get
+            {
+                return _showControls;
+            }
+
+            set
+            {
+                if (_showControls != value)
+                {
+                    _showControls = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(ShowLeftJoyStickPropertyName);
+                }
+            }
+        }
+
+        public bool ShowLeftJoyStick
+        {
+            get { return ShowControls && !UseAccelerometer; }
+        }
+
         protected override void OnNavigatedTo(Windows.UI.Xaml.Navigation.NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             DisplayProperties.AutoRotationPreferences = DisplayOrientations.Landscape;
+            SettingsPane.GetForCurrentView().CommandsRequested += OnCommandsRequested;
+            LoadSettings();
+        }
+
+        protected override void OnNavigatedFrom(Windows.UI.Xaml.Navigation.NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+
+            SettingsPane.GetForCurrentView().CommandsRequested -= OnCommandsRequested;
+        }
+
+        private void LoadSettings()
+        {
+            SetUseAccelerometer();
+            SetAbsoluteControl();
+            SetUseLocationService();
+        }
+
+        private void SetUseLocationService()
+        {
+            var value = ApplicationData.Current.LocalSettings.Values[UseLocationServicePropertyName];
+
+            if (value != null)
+            {
+                UseLocationService = (bool)value;
+            }
+        }
+
+        private void SetAbsoluteControl()
+        {
+            var value = ApplicationData.Current.LocalSettings.Values[AbsoluteControlPropertyName];
+
+            if (value != null)
+            {
+                AbsoluteControl = (bool)value;
+            }
+        }
+
+        private void SetUseAccelerometer()
+        {
+            var value = ApplicationData.Current.LocalSettings.Values[UseAccelerometerPropertyName];
+
+            if (value != null)
+            {
+                UseAccelerometer = (bool)value;
+            }
         }
 
         private void InitializeAccelerometer()
@@ -60,11 +222,6 @@ namespace AR_Drone_Remote_for_Windows_8
             if (_accelerometer != null)
             {
                 _accelerometer.ReadingChanged += AccelerometerOnCurrentValueChanged;
-                UseAccelerometer.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                UseAccelerometer.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -74,11 +231,6 @@ namespace AR_Drone_Remote_for_Windows_8
             if (_compass != null)
             {
                 _compass.ReadingChanged += CompassOnCurrentValueChanged;
-                AbsoluteControl.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                AbsoluteControl.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -94,11 +246,23 @@ namespace AR_Drone_Remote_for_Windows_8
             Window.Current.CoreWindow.KeyDown += KeyboardStateChanged;
             Window.Current.CoreWindow.KeyUp += KeyboardStateChanged;
         }
+
         private void InitializeGeolocator()
         {
             Geolocator = new Geolocator { MovementThreshold = 100 };
             Geolocator.StatusChanged += Geolocator_StatusChanged;
             Geolocator.PositionChanged += Geolocator_PositionChanged;
+        }
+
+        private void OnCommandsRequested(SettingsPane settingsPane, SettingsPaneCommandsRequestedEventArgs e)
+        {
+            var defaultsCommand = new SettingsCommand("settings", "Settings",
+                handler =>
+                {
+                    var sf = new Settings(this);
+                    sf.Show();
+                });
+            e.Request.ApplicationCommands.Add(defaultsCommand);
         }
 
         private void AccelerometerOnCurrentValueChanged(Accelerometer accelerometer, AccelerometerReadingChangedEventArgs args)
@@ -133,26 +297,24 @@ namespace AR_Drone_Remote_for_Windows_8
             Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 var l = args.Position.Coordinate;
-                GeoLocationTextBlock.Text = string.Format("Lat: {0:0.0000}, Lon: {1:0.0000}, Alt: {2:0.0}", l.Latitude,
+                Location = string.Format("Lat: {0:0.0000}, Lon: {1:0.0000}, Alt: {2:0.0}", l.Latitude,
                     l.Longitude, l.Altitude);
-                if (DroneController.Connected && _useLocationService)
+                if (DroneController.Connected && UseLocationService)
                 {
                     DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude ?? double.NaN);
                 }
             });
         }
 
-        void Geolocator_StatusChanged(Geolocator sender, StatusChangedEventArgs args)
+        private void Geolocator_StatusChanged(Geolocator sender, StatusChangedEventArgs args)
         {
             Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                bool enabled = args.Status != PositionStatus.Disabled && args.Status != PositionStatus.NotAvailable;
-                if (!enabled)
+                LocationServicesSupported = args.Status != PositionStatus.Disabled && args.Status != PositionStatus.NotAvailable;
+                if (!LocationServicesSupported)
                 {
-                    SendLocationInformation.IsOn = false;
+                    UseLocationService = false;
                 }
-
-                SendLocationInformation.IsEnabled = enabled;
             });
         }
 
@@ -199,26 +361,6 @@ namespace AR_Drone_Remote_for_Windows_8
             DroneController.Emergency();
         }
 
-        private void AbsoluteControl_OnCheckedChanged(object sender, RoutedEventArgs e)
-        {
-            DroneController.AbsoluteControlMode = ((ToggleSwitch)sender).IsOn;
-        }
-
-        private void UseAccelerometer_OnCheckedChanged(object sender, RoutedEventArgs e)
-        {
-            _useAccelerometer = ((ToggleSwitch)sender).IsOn;
-            if (_useAccelerometer)
-            {
-                LeftJoystick.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                LeftJoystick.Visibility = Visibility.Visible;
-                DroneController.Pitch = 0;
-                DroneController.Roll = 0;
-            }
-        }
-
         private void Connect_OnClick(object sender, RoutedEventArgs routedEventArgs)
         {
             if (DroneController.Connected)
@@ -244,14 +386,12 @@ namespace AR_Drone_Remote_for_Windows_8
 
         private void ShowOptions_OnClick(object sender, RoutedEventArgs e)
         {
-            FlightControls.Visibility = Visibility.Collapsed;
-            Tools.Visibility = Visibility.Visible;
+            ShowControls = false;
         }
 
         private void ShowControls_OnClick(object sender, RoutedEventArgs e)
         {
-            FlightControls.Visibility = Visibility.Visible;
-            Tools.Visibility = Visibility.Collapsed;
+            ShowControls = true;
         }
 
         private void LedCommands_OnItemClick(object sender, RoutedEventArgs routedEventArgs)
@@ -312,11 +452,6 @@ namespace AR_Drone_Remote_for_Windows_8
             }
         }
 
-        private void SendLocationInformation_Toggled(object sender, RoutedEventArgs e)
-        {
-            _useLocationService = ((ToggleSwitch)sender).IsOn;
-        }
-
         private void UserBox_Start_Click(object sender, RoutedEventArgs e)
         {
             // TODO: test out these Userbox features
@@ -335,7 +470,14 @@ namespace AR_Drone_Remote_for_Windows_8
 
         private void UserBox_Screenshot_Click(object sender, RoutedEventArgs e)
         {
-            DroneController.UserBoxScreenShot(1,30);
+            DroneController.UserBoxScreenShot(1, 30);
+        }
+
+        [NotifyPropertyChangedInvocator]
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

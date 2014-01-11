@@ -39,6 +39,10 @@
     </Page.BottomAppBar>
 
     <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}" Margin="20">
+        <Grid.Resources>
+            <local:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibility" />
+            <local:BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -64,57 +68,43 @@
         </Grid>
 
         <Grid Grid.Row="1">
-            <Grid x:Name="FlightControls">
+            <Grid Visibility="{Binding ShowControls, Converter={StaticResource BooleanToVisibility}}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1*"/>
                     <ColumnDefinition Width="1*"/>
                     <ColumnDefinition Width="1*"/>
                 </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
 
-                <StackPanel x:Name="UseAccelerometer" HorizontalAlignment="Center">
-                    <TextBlock Text="Use tilt"/>
-                    <ToggleSwitch  HorizontalAlignment="Center" Toggled="UseAccelerometer_OnCheckedChanged" />
-                </StackPanel>
-                <local:Joystick x:Name="LeftJoystick" 
+                <local:Joystick 
                         Grid.Column="0"
-					    Grid.Row="1" 
 					    XValueChanged="LeftJoystickOnXValueChanged" 
-					    YValueChanged="LeftJoystickOnYValueChanged"/>
+					    YValueChanged="LeftJoystickOnYValueChanged"
+                        Visibility="{Binding ShowLeftJoyStick, Converter={StaticResource BooleanToVisibility}}"/>
                 <Button x:Name="SteerButton"
                         Grid.Column="0"
-                        Grid.Row="1"
-                        Visibility="Collapsed">Press to steer</Button>
-                <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
+                        Visibility="{Binding ShowLeftJoyStick, Converter={StaticResource InverseBooleanToVisibility}}">Press to steer</Button>
+                <Grid Grid.Column="1">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="1*"/>
                     </Grid.RowDefinitions>
                     <local:AttitudeIndicator Phi="{Binding ElementName=This, Path=DroneController.Phi}"
                                              Theta="{Binding ElementName=This, Path=DroneController.Theta}"
-						Grid.Row="0"/>
+                                             Grid.Row="0" />
                     <local:CompassControl 
                         x:Name="CompassIndicator"
                         Grid.Row="1"
                         DroneHeading="{Binding ElementName=This, Path=DroneController.Psi}"/>
                 </Grid>
 
-
-                <StackPanel x:Name="AbsoluteControl" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center">
-                    <TextBlock Text="Steer relative to controller" TextWrapping="Wrap"/>
-                    <ToggleSwitch HorizontalAlignment="Center" Toggled="AbsoluteControl_OnCheckedChanged" />
-                </StackPanel>
                 <local:Joystick
                     Grid.Column="2"
-                    Grid.Row="1" 
                     XValueChanged="RightJoystickOnXValueChanged" 
-                    YValueChanged="RightJoystickOnYValueChanged"/>
+                    YValueChanged="RightJoystickOnYValueChanged"
+                    Visibility="{Binding ShowControls, Converter={StaticResource BooleanToVisibility}}"/>
             </Grid>
 
-            <FlipView x:Name="Tools" Visibility="Collapsed">
+            <FlipView Visibility="{Binding ShowControls, Converter={StaticResource InverseBooleanToVisibility}}">
                 <Grid Margin="50">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1*"/>
@@ -125,37 +115,10 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="1*"/>
-                        <RowDefinition Height="1*"/>
                     </Grid.RowDefinitions>
-                    <Grid.Resources>
-                        <local:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibility" />
-                        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
-                    </Grid.Resources>
                     <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Style="{StaticResource PageSubheaderTextStyle}" Text="Calibrate"/>
                     <Button Grid.Column="1" Grid.Row="1" IsEnabled="{Binding DroneController.Flying}" Click="CalibrateCompass_Click" Content="Calibrate Compass"/>
                     <Button Grid.Column="1" Grid.Row="2" IsEnabled="{Binding DroneController.CanSendFlatTrimCommand}" Click="FlatTrim_Click" Content="Flat Trim"/>
-                    <Grid Grid.Column="1" Grid.Row="3">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1*" />
-                            <ColumnDefinition Width="1*"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Style="{StaticResource SubheaderTextStyle}">Send Location Data:</TextBlock>
-                            <TextBlock 
-                                Style="{StaticResource BodyTextStyle}"
-                                Visibility="{Binding ElementName=SendLocationInformation, Path=IsEnabled, Converter={StaticResource InverseBooleanToVisibility}}">
-                                Location Services are disabled.
-                            </TextBlock>
-                            <TextBlock x:Name="GeoLocationTextBlock" 
-                                       Style="{StaticResource BodyTextStyle}" 
-                                       Visibility="{Binding ElementName=SendLocationInformation, Path=IsOn, Converter={StaticResource BooleanToVisibility}}" />
-                        </StackPanel>
-                        <ToggleSwitch 
-                                x:Name="SendLocationInformation"
-                                Grid.Column="1"
-                                HorizontalAlignment="Center" 
-                                Toggled="SendLocationInformation_Toggled" />
-                    </Grid>
                 </Grid>
 
                 <Grid>

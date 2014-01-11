@@ -1,9 +1,5 @@
-﻿using Windows.UI.Input;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
+﻿using Windows.UI.Xaml;
 using Windows.UI.Xaml.Markup;
-using Windows.UI.Xaml.Media;
 
 
 namespace AR_Drone_Remote_for_Windows_8

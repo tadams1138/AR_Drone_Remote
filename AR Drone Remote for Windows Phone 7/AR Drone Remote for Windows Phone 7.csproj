@@ -126,7 +126,6 @@
       <DependentUpon>CompassControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="DispatcherWrapper.cs" />
-    <Compile Include="GeoPositionPermissionConverter.cs" />
     <Compile Include="GeoPositionToStringConverter.cs" />
     <Compile Include="InverseBooleanToVisibilityConverter.cs" />
     <Compile Include="Joystick.xaml.cs">
