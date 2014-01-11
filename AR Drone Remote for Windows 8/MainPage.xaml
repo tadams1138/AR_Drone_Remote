@@ -193,7 +193,22 @@
                 <x:String x:Key="VelocityFormat">{0:0.0}</x:String>
             </Grid.Resources>
             <StackPanel Background="Transparent" HorizontalAlignment="Center" Orientation="Horizontal">
-                <TextBlock VerticalAlignment="Center" 
+                <Button
+                        Click="UserBox_Start_Click" 
+                        Content="Start"/>
+
+                <Button
+                        Click="UserBox_Stop_Click" 
+                        Content="Stop"/>
+
+                <Button
+                        Click="UserBox_Cancel_Click" 
+                        Content="Cancel"/>
+
+                <Button
+                        Click="UserBox_Screenshot_Click" 
+                        Content="ScreenShot"/>
+                <!--<TextBlock VerticalAlignment="Center" 
                            Text="{Binding DroneController.KilometersPerHour, 
                                         Converter={StaticResource VelocityConverter}, 
                                         ConverterParameter={StaticResource VelocityFormat}}"/>
@@ -201,7 +216,7 @@
                            Text="km/h   "/>
                 <Image Stretch="UniformToFill" Source="../Assets/appbar.dimension.line.height.png"/>
                 <TextBlock VerticalAlignment="Center" Text="{Binding DroneController.Altitude}"/>
-                <Image Source="../Assets/appbar.measure.meter.png"/>
+                <Image Source="../Assets/appbar.measure.meter.png"/>-->
             </StackPanel>
             <Button HorizontalAlignment="Center" 
                     Click="LaunchLand_Click" 
@@ -219,23 +234,6 @@
                         IsEnabled="{Binding DroneController.CanRecord}" 
                         Click="Record_Click" 
                         Content="Record"/>
-
-                <Button
-                        Click="UserBox_Start_Click" 
-                        Content="UserBox Start"/>
-
-                <Button
-                        Click="UserBox_Stop_Click" 
-                        Content="UserBox Stop"/>
-
-                <Button
-                        Click="UserBox_Cancel_Click" 
-                        Content="UserBox Cancel"/>
-
-                <Button
-                        Click="UserBox_Screenshot_Click" 
-                        Content="UserBox ScreenShot"/>
-
             </StackPanel>
         </Grid>
 

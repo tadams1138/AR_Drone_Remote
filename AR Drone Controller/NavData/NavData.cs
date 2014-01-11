@@ -78,19 +78,14 @@ namespace AR_Drone_Controller.NavData
         }
 
         private const uint Header = 1432778632;
-
-        private static uint _previousSequence;
-
+        
         private uint _header;
         private int _state;
-        private uint _sequence;
+
+        public uint Sequence { get; internal set; }
+        
         private uint _vision;
-
-        public static void ResetSequence()
-        {
-            _previousSequence = 0;
-        }
-
+        
         private bool IsStateBitOne(ArdroneStateMask bitmask)
         {
             return (_state & (int)bitmask) > 0;
@@ -173,6 +168,10 @@ namespace AR_Drone_Controller.NavData
 
         public virtual HdVideoStreamOption HdVideoStream { get; set; }
 
+        public bool ReceivedHdVideoStreamOption { get; set; }
+
+        public bool ReceivedDemoOption { get; set; }
+
         public static NavData FromBytes(byte[] buffer)
         {
             var result = new NavData();
@@ -199,21 +198,10 @@ namespace AR_Drone_Controller.NavData
         {
             result._header = reader.ReadUInt32();
             result._state = reader.ReadInt32();
-            result._sequence = reader.ReadUInt32();
+            result.Sequence = reader.ReadUInt32();
             result._vision = reader.ReadUInt32();
 
             result.ValidateHeader();
-            result.ValidateSequence();
-        }
-
-        private void ValidateSequence()
-        {
-            if (_sequence <= _previousSequence)
-            {
-                throw new OutOfSequenceException(_sequence);
-            }
-
-            _previousSequence = _sequence;
         }
 
         private void ValidateHeader()
@@ -289,16 +277,7 @@ namespace AR_Drone_Controller.NavData
             {
             }
         }
-
-        public class OutOfSequenceException : InvalidNavDataException
-        {
-            internal OutOfSequenceException(uint sequence)
-                : base(string.Format("Expected sequence greater than {0}. Instead received {1}.",
-                                     _previousSequence, sequence))
-            {
-            }
-        }
-
+        
         public class InvalidCheckSumException : InvalidNavDataException
         {
             public InvalidCheckSumException(uint receivedCheckSum, uint calculatedCheckSum) :

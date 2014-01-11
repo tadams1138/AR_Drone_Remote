@@ -10,6 +10,7 @@
 
         private IDisposable _timeoutTimer;
         private bool _dataReceived;
+        private uint _previousSequence;
 
         internal NavDataFactory NavDataFactory { get; set; }
 
@@ -17,9 +18,11 @@
 
         internal IUdpSocket Socket { get; set; }
 
-        public virtual event EventHandler<NavDataReceivedEventArgs> NavDataReceived;
+        internal virtual bool ReceivedHdVideoOption { get; set; }
         
-       public virtual void Run()
+        public virtual event EventHandler<NavDataReceivedEventArgs> NavDataReceived;
+
+        public virtual void Run()
         {
             Socket.DataReceived += SocketOnDataReceived;
             Socket.Connect();
@@ -54,8 +57,18 @@
                 try
                 {
                     var navData = NavDataFactory.Create(e.Data);
-                    var navDataReceivedEventArgs = new NavDataReceivedEventArgs(navData);
-                    NavDataReceived(this, navDataReceivedEventArgs);
+
+                    if (!ReceivedHdVideoOption && navData.ReceivedHdVideoStreamOption)
+                    {
+                        ReceivedHdVideoOption = true;
+                    }
+                    
+                    if (_previousSequence < navData.Sequence)
+                    {
+                        _previousSequence = navData.Sequence;
+                        var navDataReceivedEventArgs = new NavDataReceivedEventArgs(navData);
+                        NavDataReceived(this, navDataReceivedEventArgs);
+                    }
                 }
                 catch
                 {

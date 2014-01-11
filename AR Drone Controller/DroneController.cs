@@ -179,9 +179,14 @@ namespace AR_Drone_Controller
             CommandWorker.SendConfigCommand(GeneralVideoEnableConfigKey, TrueConfigValue);
             CommandWorker.SendConfigCommand(VideoBitrateCtrlModeConfigKey, "0");
             CommandWorker.SendConfigCommand(VideoVideoChannelConfigKey, "0");
+            RequestNavData();
+            CommandWorker.ExitBootStrapMode();
+        }
+
+        private void RequestNavData()
+        {
             CommandWorker.SendConfigCommand(GeneralNavdataDemo, TrueConfigValue);
             CommandWorker.SendConfigCommand(GeneralNavdataOptionsConfigKey, NavDataOptions.ToString());
-            CommandWorker.ExitBootStrapMode();
         }
 
         public void Disconnect()
@@ -288,6 +293,11 @@ namespace AR_Drone_Controller
             Theta = e.NavData.Demo.Theta;
             KilometersPerHour = e.NavData.Demo.KilometersPerHour;
             CommWatchDog = e.NavData.CommWatchDog;
+
+            if (!NavDataWorker.ReceivedHdVideoOption)
+            {
+                RequestNavData();
+            }
         }
 
         private void DisposeWorkersAndTimer()

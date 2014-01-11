@@ -4,8 +4,10 @@
     {
         internal virtual NavData Create(byte[] bytes)
         {
-            NavData.ResetSequence();
             var result = NavData.FromBytes(bytes);
+
+            result.ReceivedDemoOption = result.Demo != null;
+            result.ReceivedHdVideoStreamOption = result.HdVideoStream != null;
 
             if (result.Demo == null)
             {

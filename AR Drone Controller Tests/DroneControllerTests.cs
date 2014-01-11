@@ -408,6 +408,7 @@ namespace AR_Drone_Controller
         [TestMethod]
         public void NavDataWorkerReceivesComWatchdog_SetsComWatchdog()
         {
+            // Arrange
             InitializeWorkersAndNavDataEventArgsAndConnect();
             _navDataArgs.Setup(x => x.CommWatchDog).Returns(true);
 
@@ -416,6 +417,20 @@ namespace AR_Drone_Controller
 
             // Assert
             _target.CommWatchDog.Should().BeTrue();
+        }
+
+        [TestMethod]
+        public void NavDataWorkerHasYetToReceiveAnyHdVideoInfo_RequestNavDataAgain()
+        {
+            // Arrange
+            InitializeWorkersAndNavDataEventArgsAndConnect();
+            _mockNavDataWorker.Setup(x => x.ReceivedHdVideoOption).Returns(false);
+
+            // Act
+            RaiseNavDataReceivedEvent();
+
+            // Assert
+            VerifyNavDataRequestQueued(2);
         }
 
         #endregion
@@ -755,14 +770,20 @@ namespace AR_Drone_Controller
                 x => x.SendConfigCommand(DroneController.VideoBitrateCtrlModeConfigKey, "0"));
             _mockCommandWorker.Verify(
                 x => x.SendConfigCommand(DroneController.VideoVideoChannelConfigKey, "0"));
+            VerifyNavDataRequestQueued(1);
             _mockCommandWorker.Verify(
-                x => x.SendConfigCommand(DroneController.GeneralNavdataDemo, DroneController.TrueConfigValue));
+                x => x.ExitBootStrapMode());
+        }
+
+        private void VerifyNavDataRequestQueued(int numberOfTimes)
+        {
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.GeneralNavdataDemo, DroneController.TrueConfigValue),
+                Times.Exactly(numberOfTimes));
             _mockCommandWorker.Verify(
                 x =>
                     x.SendConfigCommand(DroneController.GeneralNavdataOptionsConfigKey,
-                        DroneController.NavDataOptions.ToString()));
-            _mockCommandWorker.Verify(
-                x => x.ExitBootStrapMode());
+                        DroneController.NavDataOptions.ToString()), Times.Exactly(numberOfTimes));
         }
 
         private void InitializeFactoryAndWorkerMocks()

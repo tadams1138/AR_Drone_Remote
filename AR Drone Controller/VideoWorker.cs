@@ -9,19 +9,19 @@
         internal virtual void Run()
         {
             // TODO: debug these events to determine if we need to react to them
-            Socket.Disconnected += SocketOnDisconnected;
-            Socket.DataReceived += SocketOnDataReceived;
+            //Socket.Disconnected += SocketOnDisconnected;
+            //Socket.DataReceived += SocketOnDataReceived;
             Socket.Connect();
         }
 
         private void SocketOnDisconnected(object sender, EventArgs eventArgs)
         {
-            throw new NotImplementedException();
+           // throw new NotImplementedException();
         }
 
         private void SocketOnDataReceived(object sender, DataReceivedEventArgs dataReceivedEventArgs)
         {
-            throw new NotImplementedException();
+          //  throw new NotImplementedException();
         }
 
         public virtual void Dispose()
