@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libs", "Libs", "{3722BA4E-1356-4AA1-AA3C-1BF72B84649D}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AR Drone Remote for Windows 8", "AR Drone Remote for Windows 8\AR Drone Remote for Windows 8.csproj", "{B239797A-94F3-43D3-B01A-1C6144C6378D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AR Drone Controller", "AR Drone Controller\AR Drone Controller.csproj", "{63EEE599-6923-4D22-8008-BF3984F98F68}"

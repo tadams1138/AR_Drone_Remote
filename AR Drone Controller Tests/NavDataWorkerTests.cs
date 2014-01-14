@@ -105,7 +105,7 @@ namespace AR_Drone_Controller
         {
             // Arrange
             _target.Run();
-            
+
             // Act
             _target.CheckTimeout(null);
 
@@ -134,7 +134,7 @@ namespace AR_Drone_Controller
             NavData.NavData navDataReceived = null;
             _target.NavDataReceived += (sender, args) => navDataReceived = args.NavData;
 
-            var firstData = new NavData.NavData {Sequence = 6};
+            var firstData = new NavData.NavData { Sequence = 6 };
             var firstBytes = new byte[] { 1 };
             var firstDataReceivedEventArgs = new DataReceivedEventArgs(firstBytes);
             _mockNavDataFactory.Setup(x => x.Create(firstBytes)).Returns(firstData);
@@ -143,7 +143,7 @@ namespace AR_Drone_Controller
             var secondBytes = new byte[] { 2 };
             var secondDataReceivedEventArgs = new DataReceivedEventArgs(secondBytes);
             _mockNavDataFactory.Setup(x => x.Create(secondBytes)).Returns(secondData);
-            
+
             _target.Run();
 
             // Act
@@ -189,69 +189,6 @@ namespace AR_Drone_Controller
 
             // Assert
             navDataReceived.Should().Be(secondData);
-        }
-
-        [TestMethod]
-        public void OnSocketReceivedEvent_ReturnsInCompleteData_ReceivedCompleteNavDataRemainsFalse()
-        {
-            // Assert
-            _target.ReceivedHdVideoOption.Should().BeFalse();
-
-            // Arrange
-            NavData.NavData navDataReceived = null;
-            _target.NavDataReceived += (sender, args) => navDataReceived = args.NavData;
-
-            var firstData = new NavData.NavData { Sequence = 1 };
-            var firstBytes = new byte[] { 1 };
-            var firstDataReceivedEventArgs = new DataReceivedEventArgs(firstBytes);
-            _mockNavDataFactory.Setup(x => x.Create(firstBytes)).Returns(firstData);
-            _target.Run();
-
-            // Act
-            _mockUdpSocket.Raise(x => x.DataReceived += null, firstDataReceivedEventArgs);
-
-            // Assert
-            _target.ReceivedHdVideoOption.Should().BeFalse(); 
-        }
-
-        [TestMethod]
-        public void OnSocketReceivedEvent_ReturnsInCompleteData_ReceivedHdVideoOptionRemainsFalse()
-        {
-            // Arrange
-            NavData.NavData navDataReceived = null;
-            _target.NavDataReceived += (sender, args) => navDataReceived = args.NavData;
-
-            var firstData = new NavData.NavData { Sequence = 1 };
-            var firstBytes = new byte[] { 1 };
-            var firstDataReceivedEventArgs = new DataReceivedEventArgs(firstBytes);
-            _mockNavDataFactory.Setup(x => x.Create(firstBytes)).Returns(firstData);
-            _target.Run();
-
-            // Act
-            _mockUdpSocket.Raise(x => x.DataReceived += null, firstDataReceivedEventArgs);
-
-            // Assert
-            _target.ReceivedHdVideoOption.Should().BeFalse();
-        }
-
-        [TestMethod]
-        public void OnSocketReceivedEvent_ReturnsHdVideoOption_ReceivedReceivedHdVideoOptionIsTrue()
-        {
-            // Arrange
-            NavData.NavData navDataReceived = null;
-            _target.NavDataReceived += (sender, args) => navDataReceived = args.NavData;
-
-            var firstData = new NavData.NavData { Sequence = 1, ReceivedHdVideoStreamOption = true };
-            var firstBytes = new byte[] { 1 };
-            var firstDataReceivedEventArgs = new DataReceivedEventArgs(firstBytes);
-            _mockNavDataFactory.Setup(x => x.Create(firstBytes)).Returns(firstData);
-            _target.Run();
-
-            // Act
-            _mockUdpSocket.Raise(x => x.DataReceived += null, firstDataReceivedEventArgs);
-
-            // Assert
-            _target.ReceivedHdVideoOption.Should().BeTrue();
         }
 
         private void VerifyPacketSent()

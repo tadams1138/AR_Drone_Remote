@@ -1,5 +1,7 @@
 *resharper.user 
 # Visual Studio 
+[Bb]in/ 
+[Oo]bj/ 
 [Dd]ebug/ 
 [Rr]elease/ 
 *.sln.cache 

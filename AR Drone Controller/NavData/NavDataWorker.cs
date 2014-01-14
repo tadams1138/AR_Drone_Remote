@@ -1,4 +1,6 @@
-﻿namespace AR_Drone_Controller.NavData
+﻿using System.Diagnostics;
+
+namespace AR_Drone_Controller.NavData
 {
     using System;
 
@@ -17,8 +19,6 @@
         internal TimerFactory TimerFactory { get; set; }
 
         internal IUdpSocket Socket { get; set; }
-
-        internal virtual bool ReceivedHdVideoOption { get; set; }
         
         public virtual event EventHandler<NavDataReceivedEventArgs> NavDataReceived;
 
@@ -58,11 +58,6 @@
                 {
                     var navData = NavDataFactory.Create(e.Data);
 
-                    if (!ReceivedHdVideoOption && navData.ReceivedHdVideoStreamOption)
-                    {
-                        ReceivedHdVideoOption = true;
-                    }
-                    
                     if (_previousSequence < navData.Sequence)
                     {
                         _previousSequence = navData.Sequence;
@@ -72,6 +67,7 @@
                 }
                 catch
                 {
+                    Debug.WriteLine("NavDataWorker.SocketOnDataReceived exception");
                     // ignore... seriously
                 }
             }

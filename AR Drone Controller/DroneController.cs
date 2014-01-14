@@ -27,7 +27,8 @@ namespace AR_Drone_Controller
         internal const int OptimalDelayBetweenCommandsInMilliseconds = 30;
         internal const string UserboxConfigKey = "userbox:userbox_cmd";
         internal const string UserBoxCommandDateFormat = "yyyyMMdd_HHmmss";
-        internal static readonly string H264Codec720PConfigValue = String.Format("{0}", 0x82);
+        internal static readonly string H264_360P_CodecConfigValue = String.Format("{0}", 0x81);
+        internal static readonly string Mp4_360p_H264_720p_CodecConfigValue = String.Format("{0}", 0x82);
 
         public enum UserBoxCommands
         {
@@ -238,7 +239,7 @@ namespace AR_Drone_Controller
             DisposeVideoWorker();
 
             CommandWorker.SendConfigCommand(VideoOnUsbConfigKey, TrueConfigValue);
-            CommandWorker.SendConfigCommand(VideoCodecConfigKey, H264Codec720PConfigValue);
+            CommandWorker.SendConfigCommand(VideoCodecConfigKey, Mp4_360p_H264_720p_CodecConfigValue);
 
             VideoWorker = WorkerFactory.CreateVideoWorker();
             VideoWorker.Run();
@@ -247,6 +248,7 @@ namespace AR_Drone_Controller
         public void StopRecording()
         {
             CommandWorker.SendConfigCommand(VideoOnUsbConfigKey, FalseConfigValue);
+            CommandWorker.SendConfigCommand(VideoCodecConfigKey, H264_360P_CodecConfigValue);
             DisposeVideoWorker();
         }
 
@@ -282,19 +284,27 @@ namespace AR_Drone_Controller
 
         private void UpdateProperties(NavDataReceivedEventArgs e)
         {
-            Altitude = e.NavData.Demo.Altitude;
-            BatteryPercentage = e.NavData.Demo.BatteryPercentage;
-            CanRecord = e.NavData.HdVideoStream.CanRecord;
             CanSendFlatTrimCommand = !e.NavData.Flying;
             Flying = e.NavData.Flying;
-            UsbKeyIsRecording = e.NavData.HdVideoStream.UsbKeyIsRecording;
-            Psi = e.NavData.Demo.Psi;
-            Phi = e.NavData.Demo.Phi;
-            Theta = e.NavData.Demo.Theta;
-            KilometersPerHour = e.NavData.Demo.KilometersPerHour;
             CommWatchDog = e.NavData.CommWatchDog;
 
-            if (!NavDataWorker.ReceivedHdVideoOption)
+            if (e.NavData.Demo != null)
+            {
+                Altitude = e.NavData.Demo.Altitude;
+                BatteryPercentage = e.NavData.Demo.BatteryPercentage;
+                Psi = e.NavData.Demo.Psi;
+                Phi = e.NavData.Demo.Phi;
+                Theta = e.NavData.Demo.Theta;
+                KilometersPerHour = e.NavData.Demo.KilometersPerHour;
+            }
+
+            if (e.NavData.HdVideoStream != null)
+            {
+                CanRecord = e.NavData.HdVideoStream.CanRecord;
+                UsbKeyIsRecording = e.NavData.HdVideoStream.UsbKeyIsRecording;
+            }
+
+            if (e.NavData.Demo == null || e.NavData.HdVideoStream == null)
             {
                 RequestNavData();
             }

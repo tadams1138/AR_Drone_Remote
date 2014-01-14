@@ -1,27 +1,31 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
-  <Identity Name="9525TISoftware.ARDroneRemote" Publisher="CN=767287B8-2BBF-4473-8D71-AFFB0BF57F6E" Version="1.0.0.2" />
+<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest">
+  <Identity Name="9525TISoftware.ARDroneRemote" Publisher="CN=767287B8-2BBF-4473-8D71-AFFB0BF57F6E" Version="1.1.0.2" />
   <Properties>
     <DisplayName>AR Drone Remote</DisplayName>
     <PublisherDisplayName>T &amp; I Software</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Prerequisites>
-    <OSMinVersion>6.2.1</OSMinVersion>
-    <OSMaxVersionTested>6.2.1</OSMaxVersionTested>
+    <OSMinVersion>6.3.0</OSMinVersion>
+    <OSMaxVersionTested>6.3.0</OSMaxVersionTested>
   </Prerequisites>
   <Resources>
     <Resource Language="x-generate" />
   </Resources>
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="AR_Drone_Remote_for_Windows_8.App">
-      <VisualElements DisplayName="AR Drone Remote" Logo="Assets\Logo.png" SmallLogo="Assets\SmallLogo.png" Description="AR Drone Remote" ForegroundText="light" BackgroundColor="#464646">
-        <DefaultTile ShowName="logoOnly" />
-        <SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#2A2A30" />
-        <InitialRotationPreference>
-          <Rotation Preference="landscape" />
-        </InitialRotationPreference>
-      </VisualElements>
+      <m2:VisualElements DisplayName="AR Drone Remote" Description="AR Drone Remote" BackgroundColor="#464646" ForegroundText="light" Square150x150Logo="Assets\Logo.png" Square30x30Logo="Assets\SmallLogo.png">
+        <m2:DefaultTile>
+          <m2:ShowNameOnTiles>
+            <m2:ShowOn Tile="square150x150Logo" />
+          </m2:ShowNameOnTiles>
+        </m2:DefaultTile>
+        <m2:InitialRotationPreference>
+          <m2:Rotation Preference="landscape" />
+        </m2:InitialRotationPreference>
+        <m2:SplashScreen BackgroundColor="#2A2A30" Image="Assets\SplashScreen.png" />
+      </m2:VisualElements>
     </Application>
   </Applications>
   <Capabilities>

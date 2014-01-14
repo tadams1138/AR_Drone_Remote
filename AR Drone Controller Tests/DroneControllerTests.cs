@@ -420,11 +420,25 @@ namespace AR_Drone_Controller
         }
 
         [TestMethod]
-        public void NavDataWorkerHasYetToReceiveAnyHdVideoInfo_RequestNavDataAgain()
+        public void NavDataWorkerReceivesNoHdVideoStreamOption_RequestNavDataAgain()
         {
             // Arrange
             InitializeWorkersAndNavDataEventArgsAndConnect();
-            _mockNavDataWorker.Setup(x => x.ReceivedHdVideoOption).Returns(false);
+            _navDataArgs.Setup(x => x.HdVideoStream).Returns((HdVideoStreamOption)null);
+
+            // Act
+            RaiseNavDataReceivedEvent();
+
+            // Assert
+            VerifyNavDataRequestQueued(2);
+        }
+
+        [TestMethod]
+        public void NavDataWorkerReceivesDemoOption_RequestNavDataAgain()
+        {
+            // Arrange
+            InitializeWorkersAndNavDataEventArgsAndConnect();
+            _navDataArgs.Setup(x => x.Demo).Returns((DemoOption)null);
 
             // Act
             RaiseNavDataReceivedEvent();
@@ -575,6 +589,8 @@ namespace AR_Drone_Controller
             // Assert
             _mockCommandWorker.Verify(
                 x => x.SendConfigCommand(DroneController.VideoOnUsbConfigKey, DroneController.FalseConfigValue));
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.VideoCodecConfigKey, DroneController.H264_360P_CodecConfigValue));
             _mockVideoWorker.Verify(x => x.Dispose());
         }
 
@@ -713,7 +729,7 @@ namespace AR_Drone_Controller
                 x => x.SendConfigCommand(DroneController.VideoOnUsbConfigKey, DroneController.TrueConfigValue));
             _mockCommandWorker.Verify(
                 x =>
-                x.SendConfigCommand(DroneController.VideoCodecConfigKey, DroneController.H264Codec720PConfigValue));
+                x.SendConfigCommand(DroneController.VideoCodecConfigKey, DroneController.Mp4_360p_H264_720p_CodecConfigValue));
             _mockVideoWorker.Verify(x => x.Run());
         }
 
