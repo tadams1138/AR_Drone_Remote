@@ -1,12 +1,21 @@
 *resharper.user 
 # Visual Studio 
-[Bb]in/ 
-[Oo]bj/ 
-[Dd]ebug/ 
-[Rr]elease/ 
+[Bb]in/**/*
+[Oo]bj/**/*
+packages/**/*
+[Tt]humbs.db
+AppPackages/**/*
+PerfLogs/**/*
 *.sln.cache 
 *.suo 
 *.csproj.user 
 # Resharper 
 *[Rr]e[Ss]harper.user 
 _ReSharper.*/ 
+/AR Drone Remote for Windows 8/AppPackages
+/AR Drone Remote for Windows 8/obj/Debug
+/AR Drone Remote for Windows Phone 7/obj/Debug
+/AR Drone Remote for Windows Phone 7/PerfLogs
+*.user
+*.suo
+*.DotSettings
