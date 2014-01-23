@@ -11,6 +11,14 @@ namespace AR_Drone_Controller
     [TestClass]
     public class DroneControllerTests
     {
+        private const double TestLatitude = 123.456;
+        private const double TestLongitude = 234.567;
+        private const double TestAltitude = 345.678;
+        private const long ConvertedTestLatitude = 123456;
+        private const long ConvertedTestLongitude = 234567;
+        private const long ConvertedTestAltitude = 345678;
+        private const int RecordScreenshotDelayInSecondsTestValue = 337;
+
         private DroneController _target;
         private Mock<WorkerFactory> _mockWorkerFactory;
         private Mock<ISocketFactory> _mockSocketFactory;
@@ -27,6 +35,7 @@ namespace AR_Drone_Controller
         private Mock<TimerFactory> _mockTimerFactory;
         private Mock<DoubleToInt64Converter> _mockDoubleToInt64Converter;
         private Mock<DateTimeFactory> _mockDateTimeFactory;
+        private DateTime _recordScreenshotDateTimeTestValue;
 
         [TestInitialize]
         public void InitializeTests()
@@ -69,6 +78,7 @@ namespace AR_Drone_Controller
 
             // Assert
             AssertPropertiesAreSetToDefaults();
+            _target.RecordScreenshotDelayInSeconds.Should().Be(1);
         }
 
         [TestMethod]
@@ -595,94 +605,181 @@ namespace AR_Drone_Controller
         }
 
         [TestMethod]
-        public void SetGps_SetsGpsConfigValues()
+        public void WhenSendLocationInfoIsTrueAndConnected_SetGps_SetsGpsConfigValues()
         {
             // Arrange
-            const double latitude = 123.456;
-            const double longitude = 234.567;
-            const double altitude = 345.678;
-            const long convertedLatitude = 123456;
-            const long convertedLongitude = 234567;
-            const long convertedAltitude = 345678;
-            InitializeFactoryAndWorkerMocksAndConnect();
-            _mockDoubleToInt64Converter.Setup(x => x.Convert(latitude)).Returns(convertedLatitude);
-            _mockDoubleToInt64Converter.Setup(x => x.Convert(longitude)).Returns(convertedLongitude);
-            _mockDoubleToInt64Converter.Setup(x => x.Convert(altitude)).Returns(convertedAltitude);
+            InitializeFactoryAndWorkerAndConverterMocks();
+            _target.Connect();
+            _target.CanSendLocationInformation = true;
 
             // Act
-            _target.SetLocation(latitude, longitude, altitude);
+            _target.SetLocation(TestLatitude, TestLongitude, TestAltitude);
 
             // Assert
-            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.GpsLatitudeConfigKey, convertedLatitude.ToString()));
-            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.GpsLongitudeConfigCommand, convertedLongitude.ToString()));
-            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.GpsAltitudeConfigCommand, convertedAltitude.ToString()));
+            VerifyGpsConfigValuesSent(Times.Once);
         }
 
         [TestMethod]
-        public void UserBoxStart_SendsStartUserBoxConfigCommandAndSetsUserBoxRecording()
+        public void WhenSendLocationInfoIsFalse_SetGps_DoesNotSendGpsConfigValues()
         {
             // Arrange
-            InitializeFactoryAndWorkerMocksAndConnect();
-            var dateTime = new DateTime(1999, 05, 09, 13, 14, 15);
-            _mockDateTimeFactory.Setup(x => x.Now).Returns(dateTime);
-            string expectedValue = string.Format("{0},{1}", (int)DroneController.UserBoxCommands.Start, dateTime.ToString(DroneController.UserBoxCommandDateFormat));
+            InitializeFactoryAndWorkerAndConverterMocks();
+            _target.Connect();
+            _target.CanSendLocationInformation = false;
 
             // Act
-            _target.UserBoxStart();
+            _target.SetLocation(TestLatitude, TestLongitude, TestAltitude);
 
             // Assert
-            _target.UserBoxIsRecording.Should().BeTrue();
-            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.UserboxConfigKey, expectedValue));
+            VerifyGpsConfigValuesSent(Times.Never);
         }
 
         [TestMethod]
-        public void UserBoxStop_SendsStopUserBoxConfigCommand()
+        public void WhenNotConnected_SetGps_DoesNotSendGpsConfigValues()
         {
             // Arrange
-            InitializeFactoryAndWorkerMocksAndConnect();
-            _target.UserBoxIsRecording = true;
+            InitializeFactoryAndWorkerAndConverterMocks();
+            _target.CanSendLocationInformation = true;
 
             // Act
-            _target.UserBoxStop();
+            _target.SetLocation(TestLatitude, TestLongitude, TestAltitude);
 
             // Assert
-            _target.UserBoxIsRecording.Should().BeFalse();
-            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.UserboxConfigKey, ((int)DroneController.UserBoxCommands.Stop).ToString()));
+            VerifyGpsConfigValuesSent(Times.Never);
         }
 
         [TestMethod]
-        public void UserBoxCancel_SendsCancelUserBoxConfigCommand()
+        public void WhenConnected_SendLocationInfoIsSetToTrue_SendsGpsConfigValues()
         {
             // Arrange
-            InitializeFactoryAndWorkerMocksAndConnect();
-            _target.UserBoxIsRecording = true;
+            InitializeFactoryAndWorkerAndConverterMocks();
+            _target.CanSendLocationInformation = false;
+            _target.SetLocation(TestLatitude, TestLongitude, TestAltitude);
+            _target.Connect();
 
             // Act
-            _target.UserBoxCancel();
+            _target.CanSendLocationInformation = true;
 
             // Assert
-            _target.UserBoxIsRecording.Should().BeFalse();
-            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.UserboxConfigKey, ((int)DroneController.UserBoxCommands.Cancel).ToString()));
+            VerifyGpsConfigValuesSent(Times.Once);
         }
 
         [TestMethod]
-        public void UserBoxScreenShot_SendsScreenshotUserBoxConfigCommand()
+        public void WhenSendLocationInfoIsSetToTrue_Connect_SendsGpsConfigValues()
         {
             // Arrange
-            InitializeFactoryAndWorkerMocksAndConnect();
-            const uint delayInSecondsTestValue = 337;
-            const uint numberOfBurstTestValue = 789;
-            var dateTime = new DateTime(1999, 05, 09, 13, 14, 15);
-            _mockDateTimeFactory.Setup(x => x.Now).Returns(dateTime);
-            string expectedValue = string.Format("{0},{1},{2},{3}", (int)DroneController.UserBoxCommands.ScreenShot,
-                delayInSecondsTestValue, numberOfBurstTestValue, dateTime.ToString(DroneController.UserBoxCommandDateFormat));
+            InitializeFactoryAndWorkerAndConverterMocks();
+            _target.CanSendLocationInformation = true;
+            _target.SetLocation(TestLatitude, TestLongitude, TestAltitude);
 
             // Act
-            _target.UserBoxScreenShot(delayInSecondsTestValue, numberOfBurstTestValue);
+            _target.Connect();
 
             // Assert
-            _mockCommandWorker.Verify(
-                x => x.SendConfigCommand(DroneController.UserboxConfigKey, expectedValue));
+            VerifyGpsConfigValuesSent(Times.Once);
+        }
+
+        [TestMethod]
+        public void WhenRecordFlightDataIsTrue_Connect_SendsStartUserBoxConfigCommand()
+        {
+            // Arrange
+            ArrangeRecordFlightDataTest();
+            _target.RecordFlightData = true;
+
+            // Act
+            _target.Connect();
+
+            // Assert
+            VerifyUserBoxStartAndScreenShotCommandsSent(Times.Once);
+            VerifyUserBoxStopCommandSent(Times.Never);
+        }
+
+        [TestMethod]
+        public void WhenRecordFlightDataIsFalse_Connect_SendsStopUserBoxConfigCommand()
+        {
+            // Arrange
+            ArrangeRecordFlightDataTest();
+            _target.RecordFlightData = false;
+
+            // Act
+            _target.Connect();
+
+            // Assert
+            VerifyUserBoxStartAndScreenShotCommandsSent(Times.Never);
+            VerifyUserBoxStopCommandSent(Times.Once);
+        }
+
+        [TestMethod]
+        public void WhenConnected_RecordFlightDataIsSetToTrue_SendsStartUserBoxConfigCommand()
+        {
+            // Arrange
+            ArrangeRecordFlightDataTest();
+            _target.Connect();
+
+            // Act
+            _target.RecordFlightData = true;
+
+            // Assert
+            VerifyUserBoxStartAndScreenShotCommandsSent(Times.Once);
+        }
+
+        [TestMethod]
+        public void WhenConnected_RecordFlightDataIsSetToFalse_SendsStopUserBoxConfigCommand()
+        {
+            // Arrange
+            ArrangeRecordFlightDataTest();
+            _target.RecordFlightData = true;
+            _target.Connect();
+
+            // Act
+            _target.RecordFlightData = false;
+
+            // Assert
+            VerifyUserBoxStopCommandSent(Times.Once);
+        }
+        
+        [TestMethod]
+        public void WhenRecordFlightDataIsTrue_Disconnect_SendsStopUserBoxConfigCommand()
+        {
+            // Arrange
+            ArrangeRecordFlightDataTest();
+            _target.RecordFlightData = true;
+            _target.Connect();
+
+            // Act
+            _target.Disconnect();
+
+            // Assert
+            VerifyUserBoxStopCommandSent(Times.Once);
+        }
+
+        [TestMethod]
+        public void WhenRecordFlightDataIsTrueAndNotConnected_Disconnect_SendsNoUserBoxStopCommand()
+        {
+            // Arrange
+            ArrangeRecordFlightDataTest();
+            _target.RecordFlightData = true;
+
+            // Act
+            _target.Disconnect();
+
+            // Assert
+            VerifyUserBoxStopCommandSent(Times.Never);
+        }
+
+        [TestMethod]
+        public void WhenRecordFlightDataIsFalse_Disconnect_DoesNotSendStopUserBoxConfigCommand()
+        {
+            // Arrange
+            ArrangeRecordFlightDataTest();
+            _target.RecordFlightData = false;
+            _target.Connect();
+
+            // Act
+            _target.Disconnect();
+
+            // Assert
+            VerifyUserBoxStopCommandSent(Times.Once); // the one time when we connected, and no more
         }
 
         #endregion
@@ -721,7 +818,66 @@ namespace AR_Drone_Controller
             _mockCommandWorker.Verify(x => x.Flush());
         }
 
+        [TestMethod]
+        public void WhenNotFlyingAndNotCommWatchdogSet_CommandTimerTick_FlushCommandQueue()
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.Flying = false;
+            _target.CommWatchDog = false;
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.Flush());
+        }
+
+        [TestMethod]
+        public void WhenNotConnected_CommandTimerTick_NoCommandsSent()
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocks();
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.Flush(), Times.Never);
+        }
+
         #endregion
+
+        private void ArrangeRecordFlightDataTest()
+        {
+            InitializeFactoryAndWorkerMocks();
+            _target.RecordScreenshotDelayInSeconds = RecordScreenshotDelayInSecondsTestValue;
+            _recordScreenshotDateTimeTestValue = new DateTime(1999, 05, 09, 13, 14, 15);
+            _mockDateTimeFactory.Setup(x => x.Now).Returns(_recordScreenshotDateTimeTestValue);
+        }
+
+        private void VerifyUserBoxStopCommandSent(Func<Times> times)
+        {
+            _mockCommandWorker.Verify(
+                x =>
+                    x.SendConfigCommand(DroneController.UserboxConfigKey,
+                        ((int)DroneController.UserBoxCommands.Stop).ToString()), times);
+        }
+
+        private void VerifyUserBoxStartAndScreenShotCommandsSent(Func<Times> times)
+        {
+            const uint maxNumberOfScreenshots = 86400;
+            string userboxStartCommand = string.Format("{0},{1}", (int) DroneController.UserBoxCommands.Start,
+                _recordScreenshotDateTimeTestValue.ToString(DroneController.UserBoxCommandDateFormat));
+            string userboxScreenShotCommand = string.Format("{0},{1},{2},{3}",
+                (int) DroneController.UserBoxCommands.ScreenShot,
+                RecordScreenshotDelayInSecondsTestValue, maxNumberOfScreenshots,
+                _recordScreenshotDateTimeTestValue.ToString(DroneController.UserBoxCommandDateFormat));
+            _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.UserboxConfigKey, userboxStartCommand),
+                times);
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.UserboxConfigKey, userboxScreenShotCommand), times);
+        }
 
         private void VerifyRecordCommandSentAndVideoWorkerStarted()
         {
@@ -844,7 +1000,6 @@ namespace AR_Drone_Controller
             _target.CanRecord = true;
             _target.UsbKeyIsRecording = true;
             _target.CommWatchDog = true;
-            _target.UserBoxIsRecording = true;
         }
 
         private void AssertPropertiesAreSetToDefaults()
@@ -861,7 +1016,24 @@ namespace AR_Drone_Controller
             _target.CanRecord.Should().BeFalse();
             _target.UsbKeyIsRecording.Should().BeFalse();
             _target.CommWatchDog.Should().BeFalse();
-            _target.UserBoxIsRecording.Should().BeFalse();
+        }
+
+        private void InitializeFactoryAndWorkerAndConverterMocks()
+        {
+            InitializeFactoryAndWorkerMocks();
+            _mockDoubleToInt64Converter.Setup(x => x.Convert(TestLatitude)).Returns(ConvertedTestLatitude);
+            _mockDoubleToInt64Converter.Setup(x => x.Convert(TestLongitude)).Returns(ConvertedTestLongitude);
+            _mockDoubleToInt64Converter.Setup(x => x.Convert(TestAltitude)).Returns(ConvertedTestAltitude);
+        }
+
+        private void VerifyGpsConfigValuesSent(Func<Times> times)
+        {
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.GpsLatitudeConfigKey, ConvertedTestLatitude.ToString()), times);
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.GpsLongitudeConfigCommand, ConvertedTestLongitude.ToString()), times);
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.GpsAltitudeConfigCommand, ConvertedTestAltitude.ToString()), times);
         }
     }
 }

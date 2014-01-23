@@ -330,6 +330,32 @@
                                     IsEnabled="{Binding ElementName=This, Path=LocationServicesSupported, Converter={StaticResource BooleanToVisibility}}"
                                     IsChecked="{Binding UseLocationService, Mode=TwoWay}"/>
                             </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock>Record Flight Data:</TextBlock>
+                                </StackPanel>
+                                <telerik:RadToggleSwitch 
+                                    x:Name="RecordFlightDataSwitch"
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Center" 
+                                    IsChecked="{Binding RecordFlightData, Mode=TwoWay}"/>
+                            </Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock>Record Screenshot Delay in Seconds:</TextBlock>
+                                <TextBlock Text="{Binding ElementName=RecordScreenshotDelayInSecondsSlider, Path=Value, StringFormat='N0'}"/>
+                            </StackPanel>
+                            <Slider 
+                                x:Name="RecordScreenshotDelayInSecondsSlider"
+                                IsEnabled="{Binding ElementName=RecordFlightDataSwitch, Path=IsChecked}" 
+                                HorizontalAlignment="Center"
+                                Minimum="1"
+                                Maximum="60"
+                                Width="300"
+                                Value="{Binding RecordScreenshotDelayInSeconds, Mode=TwoWay}" />
                         </StackPanel>
                     </ScrollViewer>
                 </phone:PivotItem>

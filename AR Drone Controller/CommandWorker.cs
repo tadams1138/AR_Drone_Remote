@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Security;
 using System.Text;
 
 namespace AR_Drone_Controller
 {
     internal class CommandWorker : IDisposable
     {
+        public const int MinMillisecondsSinceLastTransmission = 30;
         public const int MaxMillisecondsOfInactivity = 200;
         public const string FtrimCommand = "FTRIM";
         public const string PmodeCommand = "PMODE";
@@ -28,7 +30,7 @@ namespace AR_Drone_Controller
         public const string AnimCommand = "ANIM";
         public const string PcmdMagCommand = "PCMD_MAG";
         public const string PcmdCommand = "PCMD";
-
+        
         public readonly string SessionId =
             ("T&I AR Drone Remote SessionId").GetHashCode().ToString("X").ToLowerInvariant();
 
@@ -59,6 +61,7 @@ namespace AR_Drone_Controller
         public CommandWorker()
         {
             TimeOfLastTransmission = DateTime.UtcNow;
+            ThreadSleeper = new ThreadSleeper();
         }
 
         internal CommandQueue CommandQueue { get; set; }
@@ -66,6 +69,8 @@ namespace AR_Drone_Controller
         internal FloatToInt32Converter FloatToInt32Converter { get; set; }
         public ProgressiveCommandFormatter ProgressiveCommandFormatter { get; set; }
         internal IUdpSocket Socket { get; set; }
+
+        internal ThreadSleeper ThreadSleeper { get; set; }
 
         public DateTime TimeOfLastTransmission { get; set; }
 
@@ -173,7 +178,24 @@ namespace AR_Drone_Controller
 
         public virtual void Dispose()
         {
+            SendRemainingCommands();
+
+            if (MillisecondsSinceLastTransmition() < MinMillisecondsSinceLastTransmission)
+            {
+                ThreadSleeper.Sleep(MinMillisecondsSinceLastTransmission);
+            }
+
             Socket.Dispose();
+        }
+
+        private void SendRemainingCommands()
+        {
+            string message = CommandQueue.Flush();
+            while (!string.IsNullOrWhiteSpace(message))
+            {
+                TransmitCommand(message);
+                message = CommandQueue.Flush();
+            }
         }
 
         internal virtual void Flush()
@@ -183,11 +205,16 @@ namespace AR_Drone_Controller
             {
                 TransmitCommand(message);
             }
-            else if ((DateTime.UtcNow - TimeOfLastTransmission).TotalMilliseconds > MaxMillisecondsOfInactivity)
+            else if (MillisecondsSinceLastTransmition() > MaxMillisecondsOfInactivity)
             {
                 string ack = CreateAck();
                 TransmitCommand(ack);
             }
+        }
+
+        private double MillisecondsSinceLastTransmition()
+        {
+            return (DateTime.UtcNow - TimeOfLastTransmission).TotalMilliseconds;
         }
 
         private void TransmitCommand(string message)

@@ -49,6 +49,11 @@ namespace AR_Drone_Controller
         internal DateTimeFactory DateTimeFactory;
 
         private readonly object _threadLock = new object();
+        private bool _canSendLocationInformation;
+        private long _convertedLatitude;
+        private long _convertedLongitude;
+        private long _convertedAltitude;
+        private bool _recordFlightData;
 
         public DroneController()
         {
@@ -60,6 +65,8 @@ namespace AR_Drone_Controller
                 TimerCallback = DoWork,
                 Period = OptimalDelayBetweenCommandsInMilliseconds
             };
+
+            RecordScreenshotDelayInSeconds = 1;
         }
 
         public ISocketFactory SocketFactory
@@ -109,6 +116,48 @@ namespace AR_Drone_Controller
 
         public bool AbsoluteControlMode { get; set; }
 
+        public bool CanSendLocationInformation
+        {
+            get { return _canSendLocationInformation; }
+            set
+            {
+                if (_canSendLocationInformation != value)
+                {
+                    _canSendLocationInformation = value;
+                    if (value && Connected)
+                    {
+                        SendLocationInformation();
+                    }
+                }
+            }
+        }
+
+        public bool RecordFlightData
+        {
+            get { return _recordFlightData; }
+            set
+            {
+                if (_recordFlightData != value)
+                {
+                    _recordFlightData = value;
+
+                    if (Connected)
+                    {
+                        if (value)
+                        {
+                            SendUserBoxStartAndScreenShotCommands();
+                        }
+                        else
+                        {
+                            SendUserBoxStopCommand();
+                        }
+                    }
+                }
+            }
+        }
+
+        public int RecordScreenshotDelayInSeconds { get; set; }
+
         #endregion
 
         #region Feedback properties
@@ -135,9 +184,7 @@ namespace AR_Drone_Controller
 
         public bool CanSendFlatTrimCommand { get; internal set; }
 
-        public bool UserBoxIsRecording { get; internal set; }
-        
-        internal bool CommWatchDog { get; set; }        
+        internal bool CommWatchDog { get; set; }
 
         #endregion
 
@@ -182,6 +229,25 @@ namespace AR_Drone_Controller
             CommandWorker.SendConfigCommand(VideoVideoChannelConfigKey, "0");
             RequestNavData();
             CommandWorker.ExitBootStrapMode();
+            if (CanSendLocationInformation)
+            {
+                SendLocationInformation();
+            }
+
+            if (RecordFlightData)
+            {
+                SendUserBoxStartAndScreenShotCommands();
+            }
+            else
+            {
+                SendUserBoxStopCommand();
+            }
+        }
+
+        private void SendUserBoxStartAndScreenShotCommands()
+        {
+            UserBoxStart();
+            SendUserBoxScreenShot(RecordScreenshotDelayInSeconds, 86400);
         }
 
         private void RequestNavData()
@@ -194,6 +260,11 @@ namespace AR_Drone_Controller
         {
             lock (_threadLock)
             {
+                if (RecordFlightData && Connected)
+                {
+                    SendUserBoxStopCommand();
+                }
+
                 DisposeWorkersAndTimer();
                 ResetProperties();
             }
@@ -258,16 +329,19 @@ namespace AR_Drone_Controller
         {
             lock (_threadLock)
             {
-                if (CommWatchDog)
+                if (Connected)
                 {
-                    CommandWorker.SendResetWatchDogCommand();
+                    if (CommWatchDog)
+                    {
+                        CommandWorker.SendResetWatchDogCommand();
+                    }
+                    else if (Flying)
+                    {
+                        CommandWorker.SendProgressiveCommand(this);
+                    }
+                    
+                    CommandWorker.Flush();
                 }
-                else if (Flying)
-                {
-                    CommandWorker.SendProgressiveCommand(this);
-                }
-
-                CommandWorker.Flush();
             }
         }
 
@@ -383,67 +457,58 @@ namespace AR_Drone_Controller
             CanRecord = false;
             UsbKeyIsRecording = false;
             CommWatchDog = false;
-            UserBoxIsRecording = false;
         }
-
-        // videoSocket udp for AR Drone 1 and tcp for AR Drone 2
-        //private const int defaultDronePort = 23;
-        //private const String droneConfigurationCommand = "cat /data/config.ini";
-
-        //private void NavDataWorkerOnNavDataReceived(object sender, NavDataReceivedEventArgs e)
-        //{
-        //    NavData = e.NavData;
-        //    if ((e.NavData.HdVideoStream == null || e.NavData.Demo == null) && CommandWorker != null)
-        //    {
-        //        const uint navDataOptions = (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.Demo) +
-        //                                    (1 << (ushort)AR_Drone_Controller.NavData.NavData.NavDataTag.HdVideoStream);
-        //        CommandWorker.CreateConfigCommand("general:navdata_demo", "TRUE");
-        //        CommandWorker.CreateConfigCommand("general:navdata_options", navDataOptions.ToString());
-        //    }
-        //}
-
-        //public void GetConfig()
-        //{
-        //    CommandWorker.SendCtrlCommand(CommandWorker.ControlMode.CfgGetControlMode);
-        //}
 
         public void SetLocation(double latitude, double longitude, double altitude)
         {
-            Int64 convertedLatitude = DoubleToInt64Converter.Convert(latitude);
-            Int64 convertedLongitude = DoubleToInt64Converter.Convert(longitude);
-            Int64 convertedAltitude = DoubleToInt64Converter.Convert(altitude);
-
-            CommandWorker.SendConfigCommand(GpsLatitudeConfigKey, convertedLatitude.ToString());
-            CommandWorker.SendConfigCommand(GpsLongitudeConfigCommand, convertedLongitude.ToString());
-            CommandWorker.SendConfigCommand(GpsAltitudeConfigCommand, convertedAltitude.ToString());
+            _convertedLatitude = DoubleToInt64Converter.Convert(latitude);
+            _convertedLongitude = DoubleToInt64Converter.Convert(longitude);
+            _convertedAltitude = DoubleToInt64Converter.Convert(altitude);
+            if (CanSendLocationInformation && Connected)
+            {
+                SendLocationInformation();
+            }
         }
 
-        public void UserBoxStart()
+        private void SendLocationInformation()
+        {
+            CommandWorker.SendConfigCommand(GpsLatitudeConfigKey, _convertedLatitude.ToString());
+            CommandWorker.SendConfigCommand(GpsLongitudeConfigCommand, _convertedLongitude.ToString());
+            CommandWorker.SendConfigCommand(GpsAltitudeConfigCommand, _convertedAltitude.ToString());
+        }
+
+        private void UserBoxStart()
         {
             string now = DateTimeFactory.Now.ToString(UserBoxCommandDateFormat);
             var value = string.Format("{0},{1}", (int)UserBoxCommands.Start, now);
             CommandWorker.SendConfigCommand(UserboxConfigKey, value);
-            UserBoxIsRecording = true;
         }
 
-        public void UserBoxStop()
-        {   
-            CommandWorker.SendConfigCommand(UserboxConfigKey, ((int)UserBoxCommands.Stop).ToString());
-            UserBoxIsRecording = false;
-        }
-
-        public void UserBoxCancel()
+        private void SendUserBoxStopCommand()
         {
-            CommandWorker.SendConfigCommand(UserboxConfigKey, ((int)UserBoxCommands.Cancel).ToString());
-            UserBoxIsRecording = false;
+            CommandWorker.SendConfigCommand(UserboxConfigKey, ((int)UserBoxCommands.Stop).ToString());
         }
 
-        public void UserBoxScreenShot(uint delayInSecondsBetweenScreenshots, uint numberOfScreenshotsToTake)
+        private void SendUserBoxScreenShot(int delayInSecondsBetweenScreenshots, uint numberOfScreenshotsToTake)
         {
             string now = DateTimeFactory.Now.ToString(UserBoxCommandDateFormat);
             var value = string.Format("{0},{1},{2},{3}", (int)UserBoxCommands.ScreenShot, delayInSecondsBetweenScreenshots,
                 numberOfScreenshotsToTake, now);
             CommandWorker.SendConfigCommand(UserboxConfigKey, value);
-        }        
+        }
+
+
+
+        // Academy FTP "parrot01.nyx.emencia.net", port 21
+        // URL to signup: http://ardrone2.parrot.com/ar-drone-academy/
+
+        // videoSocket udp for AR Drone 1 and tcp for AR Drone 2
+        //private const int defaultDronePort = 23;
+        //private const String droneConfigurationCommand = "cat /data/config.ini";
+
+        //public void GetConfig()
+        //{
+        //    CommandWorker.SendCtrlCommand(CommandWorker.ControlMode.CfgGetControlMode);
+        //}
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -14,6 +16,7 @@ namespace AR_Drone_Controller
         private Mock<CommandFormatter> _mockCommandFormatter;
         private Mock<FloatToInt32Converter> _mockFloatToInt32Converter;
         private Mock<ProgressiveCommandFormatter> _mockProgressiveCommandFormatter;
+        private Mock<ThreadSleeper> _mockThreadSleeper;
         
         [TestInitialize]
         public void InitializeTests()
@@ -23,14 +26,28 @@ namespace AR_Drone_Controller
             _mockUdpSocket = new Mock<IUdpSocket>();
             _mockFloatToInt32Converter = new Mock<FloatToInt32Converter>();
             _mockProgressiveCommandFormatter = new Mock<ProgressiveCommandFormatter>();
+            _mockThreadSleeper = new Mock<ThreadSleeper>();
             _target = new CommandWorker
             {
                 Socket = _mockUdpSocket.Object,
                 CommandQueue = _mockCommandQueue.Object,
                 CommandFormatter = _mockCommandFormatter.Object,
                 FloatToInt32Converter = _mockFloatToInt32Converter.Object,
-                ProgressiveCommandFormatter = _mockProgressiveCommandFormatter.Object
+                ProgressiveCommandFormatter = _mockProgressiveCommandFormatter.Object,
+                ThreadSleeper = _mockThreadSleeper.Object
             };
+        }
+
+        [TestMethod]
+        public void Constructor_AssignsThreadSleeper()
+        {
+            // Arrange
+
+            // Act
+            var cw = new CommandWorker();
+
+            // Assert
+            cw.ThreadSleeper.Should().BeOfType<ThreadSleeper>();
         }
 
         [TestMethod]
@@ -73,17 +90,59 @@ namespace AR_Drone_Controller
         }
 
         [TestMethod]
-        public void Dispose_DisposesSocket()
+        public void WhenCommandsOnQueue_Dispose_SendRemainderOfQueuePauseDisposesSocket()
         {
             // Arrange
+            var commands = new Queue<string>();
+            const string testCommand1 = "testCommand1";
+            commands.Enqueue(testCommand1);
+            const string testCommand2 = "testCommand2";
+            commands.Enqueue(testCommand2);
+            commands.Enqueue(null);
+            _mockCommandQueue.Setup(x => x.Flush()).Returns(commands.Dequeue);
+            
+            // Act 
+            _target.Dispose();
+
+            // Assert
+            _mockUdpSocket.Verify(x => x.Write(testCommand1));
+            _mockUdpSocket.Verify(x => x.Write(testCommand2));
+            _mockThreadSleeper.Verify(x => x.Sleep(It.IsAny<int>()));
+            _mockUdpSocket.Verify(x => x.Dispose());
+        }
+
+        [TestMethod]
+        public void WhenNoCommandsOnQueue_Dispose_DisposesSocket()
+        {
+            // Arrange
+            DateTime timeOfLastTransmission =
+                DateTime.UtcNow.AddMilliseconds(-1 - CommandWorker.MinMillisecondsSinceLastTransmission);
+            _target.TimeOfLastTransmission = timeOfLastTransmission;
 
             // Act 
             _target.Dispose();
 
             // Assert
+            _mockUdpSocket.Verify(x => x.Write(It.IsAny<string>()), Times.Never);
+            _mockThreadSleeper.Verify(x => x.Sleep(It.IsAny<int>()), Times.Never);
             _mockUdpSocket.Verify(x => x.Dispose());
         }
 
+        [TestMethod]
+        public void WhenTimeOfLastTransmissionTooRecent_Dispose_PausesBeforeSocketDisposal()
+        {
+            // Arrange
+            DateTime timeOfLastTransmission = DateTime.UtcNow.AddMilliseconds(-1);
+            _target.TimeOfLastTransmission = timeOfLastTransmission;
+
+            // Act 
+            _target.Dispose();
+
+            // Assert
+            _mockThreadSleeper.Verify(x => x.Sleep(It.IsAny<int>()));
+            _mockUdpSocket.Verify(x => x.Dispose());
+        }
+        
         [TestMethod]
         public void GivenResultFromCommandFlush_Flush_SendsCommandToSocket()
         {

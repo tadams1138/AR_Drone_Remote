@@ -20,6 +20,8 @@ namespace AR_Drone_Remote_for_Windows_8
     /// </summary>
     public sealed partial class MainPage : INotifyPropertyChanged
     {
+        private const string RecordFlightDataPropertyName = "RecordFlightDataPropertyName";
+        private const string RecordScreenshotDelayInSecondsPropertyName = "RecordScreenshotDelayInSeconds"; 
         private const string ShowLeftJoyStickPropertyName = "ShowLeftJoyStick";
         private const string UseAccelerometerPropertyName = "UseAccelerometer";
         private const string AbsoluteControlPropertyName = "AbsoluteControl";
@@ -30,7 +32,6 @@ namespace AR_Drone_Remote_for_Windows_8
         private bool _useAccelerometer;
         private KeyboardInput _keyboardInput;
         private const float Gain = 1f;
-        private bool _useLocationService;
         private string _location;
         private bool _locationServicesSupported;
         private bool _showControls = true;
@@ -133,11 +134,31 @@ namespace AR_Drone_Remote_for_Windows_8
 
         public bool UseLocationService
         {
-            get { return _useLocationService; }
+            get { return DroneController.CanSendLocationInformation; }
             set
             {
                 ApplicationData.Current.LocalSettings.Values[UseLocationServicePropertyName] = value;
-                _useLocationService = value;
+                DroneController.CanSendLocationInformation = value;
+            }
+        }
+
+        public bool RecordFlightData
+        {
+            get { return DroneController.RecordFlightData; }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[RecordFlightDataPropertyName] = value;
+                DroneController.RecordFlightData = value;
+            }
+        }
+
+        public int RecordScreenshotDelayInSeconds
+        {
+            get { return DroneController.RecordScreenshotDelayInSeconds; }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[RecordScreenshotDelayInSecondsPropertyName] = value;
+                DroneController.RecordScreenshotDelayInSeconds = value;
             }
         }
 
@@ -184,6 +205,28 @@ namespace AR_Drone_Remote_for_Windows_8
             SetUseAccelerometer();
             SetAbsoluteControl();
             SetUseLocationService();
+            SetRecordFlightData();
+            SetRecordScreenshotDelayInSeconds();
+        }
+
+        private void SetRecordFlightData()
+        {
+            var value = ApplicationData.Current.LocalSettings.Values[RecordFlightDataPropertyName];
+
+            if (value != null)
+            {
+                RecordFlightData = (bool)value;
+            }
+        }
+
+        private void SetRecordScreenshotDelayInSeconds()
+        {
+            var value = ApplicationData.Current.LocalSettings.Values[RecordScreenshotDelayInSecondsPropertyName];
+
+            if (value != null)
+            {
+                RecordScreenshotDelayInSeconds = (int)value;
+            }
         }
 
         private void SetUseLocationService()
@@ -299,10 +342,7 @@ namespace AR_Drone_Remote_for_Windows_8
                 var l = args.Position.Coordinate;
                 Location = string.Format("Lat: {0:0.0000}, Lon: {1:0.0000}, Alt: {2:0.0}", l.Latitude,
                     l.Longitude, l.Altitude);
-                if (DroneController.Connected && UseLocationService)
-                {
-                    DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude ?? double.NaN);
-                }
+                DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude ?? double.NaN);
             });
         }
 
@@ -450,27 +490,6 @@ namespace AR_Drone_Remote_for_Windows_8
             {
                 DroneController.StartRecording();
             }
-        }
-
-        private void UserBox_Start_Click(object sender, RoutedEventArgs e)
-        {
-            // TODO: test out these Userbox features
-            DroneController.UserBoxStart();
-        }
-
-        private void UserBox_Stop_Click(object sender, RoutedEventArgs e)
-        {
-            DroneController.UserBoxStop();
-        }
-
-        private void UserBox_Cancel_Click(object sender, RoutedEventArgs e)
-        {
-            DroneController.UserBoxCancel();
-        }
-
-        private void UserBox_Screenshot_Click(object sender, RoutedEventArgs e)
-        {
-            DroneController.UserBoxScreenShot(1, 30);
         }
 
         [NotifyPropertyChangedInvocator]

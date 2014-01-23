@@ -69,6 +69,7 @@
     <Compile Include="TimerFactoryTests.cs" />
     <Compile Include="DoubleToInt64ConverterTests.cs" />
     <Compile Include="DateTimeFactoryTests.cs" />
+    <Compile Include="ThreadSleeperTests.cs" />
     <Compile Include="VideoWorkerTests.cs" />
     <Compile Include="DroneControllerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

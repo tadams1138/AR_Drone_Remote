@@ -71,6 +71,7 @@
     <Compile Include="System.Runtime.CompilerServices\CallerMemberNameAttribute.cs" />
     <Compile Include="System.Runtime.CompilerServices\CallerLineNumberAttribute.cs" />
     <Compile Include="System.Runtime.CompilerServices\CallerFilePathAttribute.cs" />
+    <Compile Include="ThreadSleeper.cs" />
     <Compile Include="VideoWorker.cs" />
     <Compile Include="NavData\DemoOption.cs" />
     <Compile Include="NavData\NavDataReceivedEventArgs.cs" />

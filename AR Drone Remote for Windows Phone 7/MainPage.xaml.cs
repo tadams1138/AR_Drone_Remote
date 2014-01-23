@@ -17,6 +17,8 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
     public partial class MainPage : INotifyPropertyChanged
     {
+        private const string RecordFlightDataPropertyName = "RecordFlightDataPropertyName";
+        private const string RecordScreenshotDelayInSecondsPropertyName = "RecordScreenshotDelayInSeconds"; 
         private const string ShowLeftJoyStickPropertyName = "ShowLeftJoyStick";
         private const string UseAccelerometerPropertyName = "UseAccelerometer";
         private const string AbsoluteControlPropertyName = "AbsoluteControl";
@@ -25,9 +27,8 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         private static Compass _compass;
         private static Accelerometer _accelerometer;
         private bool _useAccelerometer;
-        private bool _useLocationService;
         private bool _showControls = true;
-        
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public MainPage()
@@ -158,17 +159,17 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
                 IsolatedStorageSettings.ApplicationSettings[AbsoluteControlPropertyName] = value;
             }
         }
-        
+
         public bool UseLocationService
         {
-            get { return _useLocationService; }
+            get { return _droneController.CanSendLocationInformation; }
             set
             {
                 IsolatedStorageSettings.ApplicationSettings[UseLocationServicePropertyName] = value;
 
-                if (_useLocationService != value)
+                if (_droneController.CanSendLocationInformation != value)
                 {
-                    _useLocationService = value;
+                    _droneController.CanSendLocationInformation = value;
 
                     if (value)
                     {
@@ -179,6 +180,26 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
                         GeoCoordinateWatcher.Stop();
                     }
                 }
+            }
+        }
+
+        public bool RecordFlightData
+        {
+            get { return DroneController.RecordFlightData; }
+            set
+            {
+                IsolatedStorageSettings.ApplicationSettings[RecordFlightDataPropertyName] = value;
+                DroneController.RecordFlightData = value;
+            }
+        }
+
+        public int RecordScreenshotDelayInSeconds
+        {
+            get { return DroneController.RecordScreenshotDelayInSeconds; }
+            set
+            {
+                IsolatedStorageSettings.ApplicationSettings[RecordScreenshotDelayInSecondsPropertyName] = value;
+                DroneController.RecordScreenshotDelayInSeconds = value;
             }
         }
 
@@ -235,13 +256,31 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             SetUseAccelerometer();
             SetAbsoluteControl();
             SetUseLocationService();
+            SetRecordFlightData();
+            SetRecordScreenshotDelayInSeconds();
+        }
+
+        private void SetRecordFlightData()
+        {
+            if (IsolatedStorageSettings.ApplicationSettings.Contains(RecordFlightDataPropertyName))
+            {
+                RecordFlightData = (bool)IsolatedStorageSettings.ApplicationSettings[RecordFlightDataPropertyName];
+            }
+        }
+
+        private void SetRecordScreenshotDelayInSeconds()
+        {
+            if (IsolatedStorageSettings.ApplicationSettings.Contains(RecordScreenshotDelayInSecondsPropertyName))
+            {
+                RecordScreenshotDelayInSeconds = (int)IsolatedStorageSettings.ApplicationSettings[RecordScreenshotDelayInSecondsPropertyName];
+            }
         }
 
         private void SetUseLocationService()
         {
             if (IsolatedStorageSettings.ApplicationSettings.Contains(UseLocationServicePropertyName))
             {
-                UseLocationService = (bool) IsolatedStorageSettings.ApplicationSettings[UseLocationServicePropertyName];
+                UseLocationService = (bool)IsolatedStorageSettings.ApplicationSettings[UseLocationServicePropertyName];
             }
         }
 
@@ -249,7 +288,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         {
             if (IsolatedStorageSettings.ApplicationSettings.Contains(AbsoluteControlPropertyName))
             {
-                AbsoluteControl = (bool) IsolatedStorageSettings.ApplicationSettings[AbsoluteControlPropertyName];
+                AbsoluteControl = (bool)IsolatedStorageSettings.ApplicationSettings[AbsoluteControlPropertyName];
             }
         }
 
@@ -257,7 +296,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         {
             if (IsolatedStorageSettings.ApplicationSettings.Contains(UseAccelerometerPropertyName))
             {
-                UseAccelerometer = (bool) IsolatedStorageSettings.ApplicationSettings[UseAccelerometerPropertyName];
+                UseAccelerometer = (bool)IsolatedStorageSettings.ApplicationSettings[UseAccelerometerPropertyName];
             }
         }
 
@@ -449,11 +488,8 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         {
             Dispatcher.BeginInvoke(delegate
             {
-                if (DroneController.Connected)
-                {
-                    var l = e.Position.Location;
-                    DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude);
-                }
+                var l = e.Position.Location;
+                DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude);
             });
         }
     }
