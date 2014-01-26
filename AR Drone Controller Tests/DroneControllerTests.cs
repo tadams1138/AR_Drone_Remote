@@ -1100,12 +1100,22 @@ namespace AR_Drone_Controller
         }
 
         [TestMethod]
-        public void CanSetRecordScreenshotDelayInSecondsIsTheOppositeOfRecordFlightData()
+        public void CanSetRecordScreenshotDelayInSecondsTrueIfNotConnectedOrNotRecordFlightData()
         {
             _target.RecordFlightData = true;
+            _target.Connected = true;
             _target.CanSetRecordScreenshotDelayInSeconds.Should().BeFalse();
 
             _target.RecordFlightData = false;
+            _target.Connected = false;
+            _target.CanSetRecordScreenshotDelayInSeconds.Should().BeTrue();
+
+            _target.RecordFlightData = true;
+            _target.Connected = false;
+            _target.CanSetRecordScreenshotDelayInSeconds.Should().BeTrue();
+
+            _target.RecordFlightData = false;
+            _target.Connected = true;
             _target.CanSetRecordScreenshotDelayInSeconds.Should().BeTrue();
         }
 
@@ -1237,6 +1247,16 @@ namespace AR_Drone_Controller
 
             _target.Flying = true;
             _target.CanSetMaxOutdoorVerticalCmPerSecond.Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void CanResetSettingsIsTheOppositeOfFlying()
+        {
+            _target.Flying = false;
+            _target.CanResetSettings.Should().BeTrue();
+
+            _target.Flying = true;
+            _target.CanResetSettings.Should().BeFalse();
         }
 
         #endregion

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Device.Location;
 using System.IO.IsolatedStorage;
 using System.Reflection;
@@ -24,6 +25,26 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         private static Accelerometer _accelerometer;
         private bool _useAccelerometer;
         private bool _showControls = true;
+
+        private readonly List<string> _settingsProperties = new List<string>
+        {
+            "UseAccelerometer",
+            "AbsoluteControl",
+            "UseLocationService",
+            "RecordFlightData",
+            "RecordScreenshotDelayInSeconds",
+            "CombineYaw",
+            "MaxAltitudeInMeters",
+            "MaxDeviceTiltInDegrees",
+            "ShellOn",
+            "Outdoor",
+            "MaxIndoorYawDegrees",
+            "MaxOutdoorYawDegrees",
+            "MaxIndoorRollOrPitchDegrees",
+            "MaxOutdoorRollOrPitchDegrees",
+            "MaxIndoorVerticalCmPerSecond",
+            "MaxOutdoorVerticalCmPerSecond"
+        };
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -372,22 +393,10 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         private void LoadSettings()
         {
-            LoadSettings("UseAccelerometer");
-            LoadSettings("AbsoluteControl");
-            LoadSettings("UseLocationService");
-            LoadSettings("RecordFlightData");
-            LoadSettings("RecordScreenshotDelayInSeconds");
-            LoadSettings("CombineYaw");
-            LoadSettings("MaxAltitudeInMeters");
-            LoadSettings("MaxDeviceTiltInDegrees");
-            LoadSettings("ShellOn");
-            LoadSettings("Outdoor");
-            LoadSettings("MaxIndoorYawDegrees");
-            LoadSettings("MaxOutdoorYawDegrees");
-            LoadSettings("MaxIndoorRollOrPitchDegrees");
-            LoadSettings("MaxOutdoorRollOrPitchDegrees");
-            LoadSettings("MaxIndoorVerticalCmPerSecond");
-            LoadSettings("MaxOutdoorVerticalCmPerSecond");
+            foreach (string propertyName in _settingsProperties)
+            {
+                LoadSettings(propertyName);
+            }
         }
 
         private void LoadSettings(string propertyName)
@@ -591,6 +600,37 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
                 var l = e.Position.Location;
                 DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude);
             });
+        }
+
+        private void ResetSettingsButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            ResetSettings();
+        }
+
+        private void ResetSettings()
+        {
+            DroneController.ResetSettings();
+            SaveSettings();
+            RaisePropertyChangedEventForAllSettingsProperties();
+        }
+
+        private void RaisePropertyChangedEventForAllSettingsProperties()
+        {
+            foreach (string propertyName in _settingsProperties)
+            {
+                OnPropertyChanged(propertyName);
+            }
+        }
+
+        private void SaveSettings()
+        {
+            foreach (string propertyName in _settingsProperties)
+            {
+                var type = GetType();
+                PropertyInfo property = type.GetRuntimeProperty(propertyName);
+                var value = property.GetValue(this);
+                SavePropertyValue(value, propertyName);
+            }
         }
     }
 }

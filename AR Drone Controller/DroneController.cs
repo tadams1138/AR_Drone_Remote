@@ -231,7 +231,7 @@ namespace AR_Drone_Controller
 
         public int MaxAltitudeInMetersMin { get { return 1; } }
 
-        public bool CanSetRecordScreenshotDelayInSeconds { get { return !RecordFlightData; } }
+        public bool CanSetRecordScreenshotDelayInSeconds { get { return !RecordFlightData || !Connected; } }
 
         public bool CanSetMaxAltitude { get { return !Flying; } }
 
@@ -252,24 +252,44 @@ namespace AR_Drone_Controller
         public bool CanSetOutdoor { get { return !Flying; } }
 
         public bool CanSetShellOn { get { return !Flying; } }
+        
         public int MaxYawDegreesMax { get { return 350; } }
+        
         public int MaxYawDegreesMin { get { return 40; } }
+        
         public int MaxVeritcalCmPerSecondMax { get { return 200; } }
+        
         public int MaxVeritcalCmPerSecondMin { get { return 20; } }
+        
         public int MaxRollOrPitchDegreesMax { get { return 30; } }
+        
         public int MaxRollOrPitchDegreesMin { get { return 1; } }
+        
         public int MaxIndoorYawDegrees { get; set; }
+        
         public int MaxOutdoorYawDegrees { get; set; }
+        
         public int MaxIndoorRollOrPitchDegrees { get; set; }
+        
         public int MaxOutdoorRollOrPitchDegrees { get; set; }
+        
         public int MaxIndoorVerticalCmPerSecond { get; set; }
+        
         public int MaxOutdoorVerticalCmPerSecond { get; set; }
+        
         public bool CanSetMaxIndoorYawDegrees { get { return !Flying; } }
+        
         public bool CanSetMaxOutdoorYawDegrees { get { return !Flying; } }
+        
         public bool CanSetMaxOutdoorRollOrPitchDegrees { get { return !Flying; } }
+        
         public bool CanSetMaxIndoorRollOrPitchDegrees { get { return !Flying; } }
+        
         public bool CanSetMaxIndoorVerticalCmPerSecond { get { return !Flying; } }
+        
         public bool CanSetMaxOutdoorVerticalCmPerSecond { get { return !Flying; } }
+        
+        public bool CanResetSettings { get { return !Flying; } }
 
         #endregion
 

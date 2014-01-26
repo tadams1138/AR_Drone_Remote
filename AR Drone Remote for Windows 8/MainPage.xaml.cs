@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -31,6 +32,26 @@ namespace AR_Drone_Remote_for_Windows_8
         private string _location;
         private bool _locationServicesSupported;
         private bool _showControls = true;
+
+        private readonly List<string> _settingsProperties = new List<string>
+        {
+            "UseAccelerometer",
+            "AbsoluteControl",
+            "UseLocationService",
+            "RecordFlightData",
+            "RecordScreenshotDelayInSeconds",
+            "CombineYaw",
+            "MaxAltitudeInMeters",
+            "MaxDeviceTiltInDegrees",
+            "ShellOn",
+            "Outdoor",
+            "MaxIndoorYawDegrees",
+            "MaxOutdoorYawDegrees",
+            "MaxIndoorRollOrPitchDegrees",
+            "MaxOutdoorRollOrPitchDegrees",
+            "MaxIndoorVerticalCmPerSecond",
+            "MaxOutdoorVerticalCmPerSecond"
+        };
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -309,26 +330,6 @@ namespace AR_Drone_Remote_for_Windows_8
             SettingsPane.GetForCurrentView().CommandsRequested -= OnCommandsRequested;
         }
 
-        private void LoadSettings()
-        {
-            LoadSettings("UseAccelerometer");
-            LoadSettings("AbsoluteControl");
-            LoadSettings("UseLocationService");
-            LoadSettings("RecordFlightData");
-            LoadSettings("RecordScreenshotDelayInSeconds");
-            LoadSettings("CombineYaw");
-            LoadSettings("MaxAltitudeInMeters");
-            LoadSettings("MaxDeviceTiltInDegrees");
-            LoadSettings("ShellOn");
-            LoadSettings("Outdoor");
-            LoadSettings("MaxIndoorYawDegrees");
-            LoadSettings("MaxOutdoorYawDegrees");
-            LoadSettings("MaxIndoorRollOrPitchDegrees");
-            LoadSettings("MaxOutdoorRollOrPitchDegrees");
-            LoadSettings("MaxIndoorVerticalCmPerSecond");
-            LoadSettings("MaxOutdoorVerticalCmPerSecond");
-        }
-
         private void InitializeAccelerometer()
         {
             _accelerometer = Accelerometer.GetDefault();
@@ -565,8 +566,18 @@ namespace AR_Drone_Remote_for_Windows_8
         [NotifyPropertyChangedInvocator]
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        private void LoadSettings()
+        {
+            foreach (string propertyName in _settingsProperties)
+            {
+                LoadSettings(propertyName);
+            }
         }
 
         private void LoadSettings(string propertyName)
@@ -585,6 +596,32 @@ namespace AR_Drone_Remote_for_Windows_8
             if (propertyName != null)
             {
                 ApplicationData.Current.LocalSettings.Values[propertyName] = value;
+            }
+        }
+
+        public void ResetSettings()
+        {
+            DroneController.ResetSettings();
+            SaveSettings();
+            RaisePropertyChangedEventForAllSettingsProperties();
+        }
+
+        private void RaisePropertyChangedEventForAllSettingsProperties()
+        {
+            foreach (string propertyName in _settingsProperties)
+            {
+                OnPropertyChanged(propertyName);
+            }
+        }
+
+        private void SaveSettings()
+        {
+            foreach (string propertyName in _settingsProperties)
+            {
+                var type = GetType();
+                PropertyInfo property = type.GetRuntimeProperty(propertyName);
+                var value = property.GetValue(this);
+                SavePropertyValue(value, propertyName);
             }
         }
     }

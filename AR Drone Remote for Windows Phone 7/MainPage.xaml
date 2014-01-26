@@ -492,6 +492,7 @@
                                         Width="300"
                                         Value="{Binding MaxIndoorVerticalCmPerSecond, Mode=TwoWay}" />
                             </StackPanel>
+                            <Button IsEnabled="{Binding DroneController.CanResetSettings}" Click="ResetSettingsButton_OnClick">Reset</Button>
                         </StackPanel>
                     </ScrollViewer>
                 </phone:PivotItem>
