@@ -78,6 +78,7 @@ namespace AR_Drone_Controller.NavData
         }
 
         private const uint Header = 1432778632;
+        private const uint Header2 = 1432778633;
         
         private uint _header;
         private int _state;
@@ -206,7 +207,7 @@ namespace AR_Drone_Controller.NavData
 
         private void ValidateHeader()
         {
-            if (_header != Header)
+            if (_header != Header && _header != Header2)
             {
                 throw new InvalidHeaderException(_header);
             }
@@ -272,8 +273,8 @@ namespace AR_Drone_Controller.NavData
         public class InvalidHeaderException : InvalidNavDataException
         {
             internal InvalidHeaderException(uint header)
-                : base(string.Format("Expected NavData to start with {0}. Instead it started with {1}.",
-                                     Header, header))
+                : base(string.Format("Expected NavData to start with {0} or {1}. Instead it started with {2}.",
+                                     Header, Header2, header))
             {
             }
         }
