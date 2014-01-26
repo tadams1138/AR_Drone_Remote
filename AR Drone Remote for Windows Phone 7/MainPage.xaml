@@ -312,6 +312,17 @@
                                     <ColumnDefinition Width="1*"/>
                                     <ColumnDefinition Width="1*"/>
                                 </Grid.ColumnDefinitions>
+                                <TextBlock TextWrapping="Wrap">Combine Yaw</TextBlock>
+                                <telerik:RadToggleSwitch Grid.Column="1"
+                                                        HorizontalAlignment="Center" 
+                                                        IsChecked="{Binding CombineYaw, Mode=TwoWay}"
+                                                        IsEnabled="{Binding DroneController.CanSetCombineYaw}" />
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
                                 <Grid.Resources>
                                     <local:GeoPositionToStringConverter x:Key="GeoPositionToString" />
                                 </Grid.Resources>
@@ -345,17 +356,142 @@
                                     IsChecked="{Binding RecordFlightData, Mode=TwoWay}"/>
                             </Grid>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock>Record Screenshot Delay in Seconds:</TextBlock>
+                                <TextBlock>Record Screenshot Delay:</TextBlock>
                                 <TextBlock Text="{Binding ElementName=RecordScreenshotDelayInSecondsSlider, Path=Value, StringFormat='N0'}"/>
+                                <TextBlock>seconds</TextBlock>
                             </StackPanel>
                             <Slider 
                                 x:Name="RecordScreenshotDelayInSecondsSlider"
-                                IsEnabled="{Binding ElementName=RecordFlightDataSwitch, Path=IsChecked}" 
+                                IsEnabled="{Binding DroneController.CanSetRecordScreenshotDelayInSeconds}" 
                                 HorizontalAlignment="Center"
-                                Minimum="1"
-                                Maximum="60"
+                                Maximum="{Binding DroneController.MaxAltitudeInMetersMax}" 
+                                Minimum="{Binding DroneController.MaxAltitudeInMetersMin}" 
                                 Width="300"
                                 Value="{Binding RecordScreenshotDelayInSeconds, Mode=TwoWay}" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock>Max Altitude:</TextBlock>
+                                <TextBlock Text="{Binding ElementName=MaxAltitudeInMetersSlider, Path=Value}"/>
+                                <TextBlock>m</TextBlock>
+                            </StackPanel>
+                            <Slider x:Name="MaxAltitudeInMetersSlider"
+                                IsEnabled="{Binding DroneController.CanSetMaxAltitude}" 
+                                HorizontalAlignment="Center"
+                                Maximum="{Binding DroneController.MaxAltitudeInMetersMax}" 
+                                Minimum="{Binding DroneController.MaxAltitudeInMetersMin}" 
+                                Width="300"
+                                Value="{Binding MaxAltitudeInMeters, Mode=TwoWay}" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock>Max Device Tilt:</TextBlock>
+                                <TextBlock Text="{Binding ElementName=MaxDeviceTiltSlider, Path=Value}"/>
+                                <TextBlock>°</TextBlock>
+                            </StackPanel>
+                            <Slider x:Name="MaxDeviceTiltSlider"
+                                IsEnabled="{Binding DroneController.CanSetMaxDeviceTiltInDegrees}" 
+                                HorizontalAlignment="Center"
+                                Maximum="{Binding DroneController.MaxDeviceTiltInDegreesMax}" 
+                                Minimum="{Binding DroneController.MaxDeviceTiltInDegreesMin}" 
+                                Width="300"
+                                Value="{Binding MaxDeviceTiltInDegrees, Mode=TwoWay}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock TextWrapping="Wrap">Shell On</TextBlock>
+                                <telerik:RadToggleSwitch Grid.Column="1"
+                                                        HorizontalAlignment="Center" 
+                                                        IsChecked="{Binding ShellOn, Mode=TwoWay}"
+                                                        IsEnabled="{Binding DroneController.CanSetShellOn}" />
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock TextWrapping="Wrap">Outdoor</TextBlock>
+                                <telerik:RadToggleSwitch 
+                                    x:Name="OutdoorToggle"
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Center" 
+                                    IsChecked="{Binding Outdoor, Mode=TwoWay}"
+                                    IsEnabled="{Binding DroneController.CanSetOutdoor}" />
+                            </Grid>
+                            <StackPanel Visibility="{Binding ElementName=OutdoorToggle, Path=IsChecked, Converter={StaticResource BooleanToVisibility}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock>Outdoor Max Yaw:</TextBlock>
+                                    <TextBlock Text="{Binding ElementName=MaxOutdoorYawDegreesSlider, Path=Value}"/>
+                                    <TextBlock>°</TextBlock>
+                                </StackPanel>
+                                <Slider x:Name="MaxOutdoorYawDegreesSlider"
+                                        IsEnabled="{Binding DroneController.CanSetMaxOutdoorYawDegrees}" 
+                                        HorizontalAlignment="Center"
+                                        Maximum="{Binding DroneController.MaxYawDegreesMax}" 
+                                        Minimum="{Binding DroneController.MaxYawDegreesMin}" 
+                                        Width="300"
+                                        Value="{Binding MaxOutdoorYawDegrees, Mode=TwoWay}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock>Outdoor Max Roll or Pitch:</TextBlock>
+                                    <TextBlock Text="{Binding ElementName=MaxOutdoorRollOrPitchDegreesSlider, Path=Value}"/>
+                                    <TextBlock>°</TextBlock>
+                                </StackPanel>
+                                <Slider x:Name="MaxOutdoorRollOrPitchDegreesSlider"
+                                        IsEnabled="{Binding DroneController.CanSetMaxOutdoorRollOrPitchDegrees}" 
+                                        HorizontalAlignment="Center"
+                                        Maximum="{Binding DroneController.MaxRollOrPitchDegreesMax}" 
+                                        Minimum="{Binding DroneController.MaxRollOrPitchDegreesMin}" 
+                                        Width="300"
+                                        Value="{Binding MaxOutdoorRollOrPitchDegrees, Mode=TwoWay}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock>Outdoor Max Vertical Speed:</TextBlock>
+                                    <TextBlock Text="{Binding ElementName=MaxOutdoorVerticalCmPerSecondSlider, Path=Value}"/>
+                                    <TextBlock>cm/s</TextBlock>
+                                </StackPanel>
+                                <Slider x:Name="MaxOutdoorVerticalCmPerSecondSlider"
+                                        IsEnabled="{Binding DroneController.CanSetMaxOutdoorVerticalCmPerSecond}" 
+                                        HorizontalAlignment="Center"
+                                        Maximum="{Binding DroneController.MaxVeritcalCmPerSecondMax}" 
+                                        Minimum="{Binding DroneController.MaxVeritcalCmPerSecondMin}" 
+                                        Width="300"
+                                        Value="{Binding MaxOutdoorVerticalCmPerSecond, Mode=TwoWay}" />
+                            </StackPanel>
+                            <StackPanel Visibility="{Binding ElementName=OutdoorToggle, Path=IsChecked, Converter={StaticResource InverseBooleanToVisibility}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock>Indoor Max Yaw:</TextBlock>
+                                    <TextBlock Text="{Binding ElementName=MaxIndoorYawDegreesSlider, Path=Value}"/>
+                                    <TextBlock>°</TextBlock>
+                                </StackPanel>
+                                <Slider x:Name="MaxIndoorYawDegreesSlider"
+                                        IsEnabled="{Binding DroneController.CanSetMaxIndoorYawDegrees}" 
+                                        HorizontalAlignment="Center"
+                                        Maximum="{Binding DroneController.MaxYawDegreesMax}" 
+                                        Minimum="{Binding DroneController.MaxYawDegreesMin}" 
+                                        Width="300"
+                                        Value="{Binding MaxIndoorYawDegrees, Mode=TwoWay}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock>Indoor Max Roll or Pitch:</TextBlock>
+                                    <TextBlock Text="{Binding ElementName=MaxIndoorRollOrPitchDegreesSlider, Path=Value}"/>
+                                    <TextBlock>°</TextBlock>
+                                </StackPanel>
+                                <Slider x:Name="MaxIndoorRollOrPitchDegreesSlider"
+                                        IsEnabled="{Binding DroneController.CanSetMaxIndoorRollOrPitchDegrees}" 
+                                        HorizontalAlignment="Center"
+                                        Maximum="{Binding DroneController.MaxRollOrPitchDegreesMax}" 
+                                        Minimum="{Binding DroneController.MaxRollOrPitchDegreesMin}" 
+                                        Width="300"
+                                        Value="{Binding MaxIndoorRollOrPitchDegrees, Mode=TwoWay}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock>Indoor Max Vertical Speed:</TextBlock>
+                                    <TextBlock Text="{Binding ElementName=MaxIndoorVerticalCmPerSecondSlider, Path=Value}"/>
+                                    <TextBlock>cm/s</TextBlock>
+                                </StackPanel>
+                                <Slider x:Name="MaxIndoorVerticalCmPerSecondSlider"
+                                        IsEnabled="{Binding DroneController.CanSetMaxIndoorVerticalCmPerSecond}" 
+                                        HorizontalAlignment="Center"
+                                        Maximum="{Binding DroneController.MaxVeritcalCmPerSecondMax}" 
+                                        Minimum="{Binding DroneController.MaxVeritcalCmPerSecondMin}" 
+                                        Width="300"
+                                        Value="{Binding MaxIndoorVerticalCmPerSecond, Mode=TwoWay}" />
+                            </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </phone:PivotItem>

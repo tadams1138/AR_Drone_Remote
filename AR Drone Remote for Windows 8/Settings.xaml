@@ -19,86 +19,217 @@
         <local:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibility" />
         <local:BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
     </SettingsFlyout.Resources>
-    <ScrollViewer Width="500">
-        <StackPanel>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Style="{StaticResource SubheaderTextStyle}">Use tilt</TextBlock>
-                    <TextBlock Style="{StaticResource WarningTextStyle}"
+    <StackPanel Width="500">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">Use tilt</TextBlock>
+                <TextBlock Style="{StaticResource WarningTextStyle}"
                                 Visibility="{Binding AccelerometerIsSupported, Converter={StaticResource InverseBooleanToVisibility}}">Accelerometer is not supported</TextBlock>
-                </StackPanel>
-                <ToggleSwitch Grid.Column="1"
+            </StackPanel>
+            <ToggleSwitch Grid.Column="1"
                                 HorizontalAlignment="Center"
                                 IsOn="{Binding UseAccelerometer, Mode=TwoWay}"
                                 IsEnabled="{Binding AccelerometerIsSupported}"/>
-            </Grid>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Style="{StaticResource SubheaderTextStyle}">Steer relative to controller</TextBlock>
-                    <TextBlock Style="{StaticResource WarningTextStyle}"
+        </Grid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">Steer relative to controller</TextBlock>
+                <TextBlock Style="{StaticResource WarningTextStyle}"
                                 Visibility="{Binding CompassIsSupported, Converter={StaticResource InverseBooleanToVisibility}}">Compass is not supported</TextBlock>
-                </StackPanel>
-                <ToggleSwitch Grid.Column="1"
+            </StackPanel>
+            <ToggleSwitch Grid.Column="1"
                                 HorizontalAlignment="Center" 
                                 IsOn="{Binding AbsoluteControl, Mode=TwoWay}" 
                                 IsEnabled="{Binding CompassIsSupported}" />
-            </Grid>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Style="{StaticResource SubheaderTextStyle}">Send Location Data:</TextBlock>
-                    <TextBlock Style="{StaticResource WarningTextStyle}"
+        </Grid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Style="{StaticResource SubheaderTextStyle}">Combine Yaw</TextBlock>
+            <ToggleSwitch Grid.Column="1"
+                              HorizontalAlignment="Center" 
+                              IsOn="{Binding CombineYaw, Mode=TwoWay}"
+                              IsEnabled="{Binding DroneController.CanSetCombineYaw}"/>
+        </Grid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">Send Location Data:</TextBlock>
+                <TextBlock Style="{StaticResource WarningTextStyle}"
                                Visibility="{Binding LocationServicesSupported, Converter={StaticResource InverseBooleanToVisibility}}">Location Services are disabled.</TextBlock>
-                    <TextBlock Style="{StaticResource BodyTextStyle}"
+                <TextBlock Style="{StaticResource BodyTextStyle}"
                                Visibility="{Binding ElementName=SendLocationInformation, Path=IsOn, Converter={StaticResource BooleanToVisibility}}" 
                                Text="{Binding Location}"/>
-                </StackPanel>
-                <ToggleSwitch 
+            </StackPanel>
+            <ToggleSwitch 
                             x:Name="SendLocationInformation"
                             Grid.Column="1"
                             HorizontalAlignment="Center" 
                             IsEnabled="{Binding ElementName=This, Path=LocationServicesSupported, Converter={StaticResource BooleanToVisibility}}"
                             IsOn="{Binding UseLocationService, Mode=TwoWay}" />
-            </Grid>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Style="{StaticResource SubheaderTextStyle}">Record Flight Data:</TextBlock>
-                </StackPanel>
-                <ToggleSwitch 
-                            x:Name="RecordFlightDataSwitch"
-                            Grid.Column="1"
-                            HorizontalAlignment="Center" 
-                            IsOn="{Binding RecordFlightData, Mode=TwoWay}" />
-            </Grid>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock>Record Screenshot Delay in Seconds:</TextBlock>
-                <TextBlock Text="{Binding ElementName=RecordScreenshotDelayInSecondsSlider, Path=Value}"/>
+        </Grid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">Record Flight Data:</TextBlock>
             </StackPanel>
-            <Slider 
-                    x:Name="RecordScreenshotDelayInSecondsSlider"
-                    IsEnabled="{Binding ElementName=RecordFlightDataSwitch, Path=IsOn}" 
+            <ToggleSwitch
+                    Grid.Column="1"
+                    HorizontalAlignment="Center" 
+                    IsOn="{Binding RecordFlightData, Mode=TwoWay}" />
+        </Grid>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock>Record Screenshot Delay in Seconds:</TextBlock>
+            <TextBlock Text="{Binding ElementName=RecordScreenshotDelayInSecondsSlider, Path=Value}"/>
+        </StackPanel>
+        <Slider x:Name="RecordScreenshotDelayInSecondsSlider"
+                    IsEnabled="{Binding DroneController.CanSetRecordScreenshotDelayInSeconds}" 
                     HorizontalAlignment="Center"
-                    Minimum="1"
-                    Maximum="60"
+                    Maximum="{Binding DroneController.RecordScreenshotDelayInSecondsMax}" 
+                    Minimum="{Binding DroneController.RecordScreenshotDelayInSecondsMin}" 
                     Width="300"
                     SnapsTo="StepValues"
                     StepFrequency="1"
                     Value="{Binding RecordScreenshotDelayInSeconds, Mode=TwoWay}" />
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Style="{StaticResource SubheaderTextStyle}">Max Altitude in Meters:</TextBlock>
+            <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="{Binding ElementName=MaxAltitudeInMetersSlider, Path=Value}"/>
         </StackPanel>
-    </ScrollViewer>
+        <Slider x:Name="MaxAltitudeInMetersSlider"
+                    IsEnabled="{Binding DroneController.CanSetMaxAltitude}" 
+                    HorizontalAlignment="Center"
+                    Maximum="{Binding DroneController.MaxAltitudeInMetersMax}" 
+                    Minimum="{Binding DroneController.MaxAltitudeInMetersMin}" 
+                    Width="300"
+                    SnapsTo="StepValues"
+                    StepFrequency="1"
+                    Value="{Binding MaxAltitudeInMeters, Mode=TwoWay}" />
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Style="{StaticResource SubheaderTextStyle}">Max Device Tilt in Degrees:</TextBlock>
+            <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="{Binding ElementName=MaxDeviceTiltSlider, Path=Value}"/>
+        </StackPanel>
+        <Slider x:Name="MaxDeviceTiltSlider"
+                    IsEnabled="{Binding DroneController.CanSetMaxDeviceTiltInDegrees}" 
+                    HorizontalAlignment="Center"
+                    Maximum="{Binding DroneController.MaxDeviceTiltInDegreesMax}" 
+                    Minimum="{Binding DroneController.MaxDeviceTiltInDegreesMin}" 
+                    Width="300"
+                    Value="{Binding MaxDeviceTiltInDegrees, Mode=TwoWay}" />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Style="{StaticResource SubheaderTextStyle}" TextWrapping="Wrap">Shell On</TextBlock>
+            <ToggleSwitch Grid.Column="1"
+                            HorizontalAlignment="Center" 
+                            IsOn="{Binding ShellOn, Mode=TwoWay}"
+                            IsEnabled="{Binding DroneController.CanSetShellOn}" />
+        </Grid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Style="{StaticResource SubheaderTextStyle}" TextWrapping="Wrap">Outdoor</TextBlock>
+            <ToggleSwitch 
+                x:Name="OutdoorToggle"
+                Grid.Column="1"
+                HorizontalAlignment="Center" 
+                IsOn="{Binding Outdoor, Mode=TwoWay}"
+                IsEnabled="{Binding DroneController.CanSetOutdoor}" />
+        </Grid>
+        <StackPanel Visibility="{Binding ElementName=OutdoorToggle, Path=IsOn, Converter={StaticResource BooleanToVisibility}}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">Outdoor Max Yaw:</TextBlock>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="{Binding ElementName=MaxOutdoorYawDegreesSlider, Path=Value}"/>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">°</TextBlock>
+            </StackPanel>
+            <Slider x:Name="MaxOutdoorYawDegreesSlider"
+                                        IsEnabled="{Binding DroneController.CanSetMaxOutdoorYawDegrees}" 
+                                        HorizontalAlignment="Center"
+                                        Maximum="{Binding DroneController.MaxYawDegreesMax}" 
+                                        Minimum="{Binding DroneController.MaxYawDegreesMin}" 
+                                        Width="300"
+                                        Value="{Binding MaxOutdoorYawDegrees, Mode=TwoWay}" />
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">Outdoor Max Roll or Pitch:</TextBlock>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="{Binding ElementName=MaxOutdoorRollOrPitchDegreesSlider, Path=Value}"/>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">°</TextBlock>
+            </StackPanel>
+            <Slider x:Name="MaxOutdoorRollOrPitchDegreesSlider"
+                                        IsEnabled="{Binding DroneController.CanSetMaxOutdoorRollOrPitchDegrees}" 
+                                        HorizontalAlignment="Center"
+                                        Maximum="{Binding DroneController.MaxRollOrPitchDegreesMax}" 
+                                        Minimum="{Binding DroneController.MaxRollOrPitchDegreesMin}" 
+                                        Width="300"
+                                        Value="{Binding MaxOutdoorRollOrPitchDegrees, Mode=TwoWay}" />
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">Outdoor Max Vertical Speed:</TextBlock>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="{Binding ElementName=MaxOutdoorVerticalCmPerSecondSlider, Path=Value}"/>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">cm/s</TextBlock>
+            </StackPanel>
+            <Slider x:Name="MaxOutdoorVerticalCmPerSecondSlider"
+                                        IsEnabled="{Binding DroneController.CanSetMaxOutdoorVerticalCmPerSecond}" 
+                                        HorizontalAlignment="Center"
+                                        Maximum="{Binding DroneController.MaxVeritcalCmPerSecondMax}" 
+                                        Minimum="{Binding DroneController.MaxVeritcalCmPerSecondMin}" 
+                                        Width="300"
+                                        Value="{Binding MaxOutdoorVerticalCmPerSecond, Mode=TwoWay}" />
+        </StackPanel>
+        <StackPanel Visibility="{Binding ElementName=OutdoorToggle, Path=IsOn, Converter={StaticResource InverseBooleanToVisibility}}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">Indoor Max Yaw:</TextBlock>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="{Binding ElementName=MaxIndoorYawDegreesSlider, Path=Value}"/>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">°</TextBlock>
+            </StackPanel>
+            <Slider x:Name="MaxIndoorYawDegreesSlider"
+                                        IsEnabled="{Binding DroneController.CanSetMaxIndoorYawDegrees}" 
+                                        HorizontalAlignment="Center"
+                                        Maximum="{Binding DroneController.MaxYawDegreesMax}" 
+                                        Minimum="{Binding DroneController.MaxYawDegreesMin}" 
+                                        Width="300"
+                                        Value="{Binding MaxIndoorYawDegrees, Mode=TwoWay}" />
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">Indoor Max Roll or Pitch:</TextBlock>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="{Binding ElementName=MaxIndoorRollOrPitchDegreesSlider, Path=Value}"/>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">°</TextBlock>
+            </StackPanel>
+            <Slider x:Name="MaxIndoorRollOrPitchDegreesSlider"
+                                        IsEnabled="{Binding DroneController.CanSetMaxIndoorRollOrPitchDegrees}" 
+                                        HorizontalAlignment="Center"
+                                        Maximum="{Binding DroneController.MaxRollOrPitchDegreesMax}" 
+                                        Minimum="{Binding DroneController.MaxRollOrPitchDegreesMin}" 
+                                        Width="300"
+                                        Value="{Binding MaxIndoorRollOrPitchDegrees, Mode=TwoWay}" />
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">Indoor Max Vertical Speed:</TextBlock>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="{Binding ElementName=MaxIndoorVerticalCmPerSecondSlider, Path=Value}"/>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}">cm/s</TextBlock>
+            </StackPanel>
+            <Slider x:Name="MaxIndoorVerticalCmPerSecondSlider"
+                                        IsEnabled="{Binding DroneController.CanSetMaxIndoorVerticalCmPerSecond}" 
+                                        HorizontalAlignment="Center"
+                                        Maximum="{Binding DroneController.MaxVeritcalCmPerSecondMax}" 
+                                        Minimum="{Binding DroneController.MaxVeritcalCmPerSecondMin}" 
+                                        Width="300"
+                                        Value="{Binding MaxIndoorVerticalCmPerSecond, Mode=TwoWay}" />
+        </StackPanel>
+    </StackPanel>
 </SettingsFlyout>

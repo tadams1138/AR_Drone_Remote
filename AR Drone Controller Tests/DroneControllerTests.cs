@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using AR_Drone_Controller.NavData;
 using FluentAssertions;
@@ -315,17 +316,23 @@ namespace AR_Drone_Controller
         }
 
         [TestMethod]
-        public void NavDataWorkerReceivesNotFlying_SetsCanSendFlatTrimProperty()
+        public void CanSendFlatTrimCommandIsOnlyTrueWhenNotFlyingAndConnected()
         {
-            // Arrange
-            InitializeWorkersAndNavDataEventArgsAndConnect();
-            _navDataArgs.Setup(x => x.Flying).Returns(false);
-
-            // Act
-            RaiseNavDataReceivedEvent();
-
-            // Assert
+            _target.Connected = true;
+            _target.Flying = false;
             _target.CanSendFlatTrimCommand.Should().BeTrue();
+
+            _target.Connected = true;
+            _target.Flying = true;
+            _target.CanSendFlatTrimCommand.Should().BeFalse();
+
+            _target.Connected = false;
+            _target.Flying = true;
+            _target.CanSendFlatTrimCommand.Should().BeFalse();
+
+            _target.Connected = false;
+            _target.Flying = false;
+            _target.CanSendFlatTrimCommand.Should().BeFalse();
         }
 
         [TestMethod]
@@ -462,7 +469,223 @@ namespace AR_Drone_Controller
         #region Command Tests
 
         [TestMethod]
-        public void TakeOff_SendsTakeOffCommandToCommandWorker()
+        public void WhenOutdoorIsTrue_TakeOff_SendOutdoorConfigCommand()
+        {
+            VerifyTakeOffSendsOutdoorConfigCommand(true, DroneController.TrueConfigValue);
+        }
+
+        [TestMethod]
+        public void WhenOutdoorIsFalse_TakeOff_SendOutdoorConfigCommand()
+        {
+            VerifyTakeOffSendsOutdoorConfigCommand(false, DroneController.FalseConfigValue);
+        }
+
+        [TestMethod]
+        public void WhenShellOnIsTrue_TakeOff_SendFlightWithoutShellConfigCommand()
+        {
+            VerifyTakeOffSendsFlightWithoutShellConfigCommand(true, DroneController.FalseConfigValue);
+        }
+
+        [TestMethod]
+        public void WhenShellOnIsFalse_TakeOff_SendFlightWithoutShellConfigCommand()
+        {
+            VerifyTakeOffSendsFlightWithoutShellConfigCommand(false, DroneController.TrueConfigValue);
+        }
+
+        [TestMethod]
+        public void WhenCombineYawIsTrue_TakeOff_SendControlLevelConfigCommand()
+        {
+            VerifyTakeOffSendsControlLevelConfigCommand(true, 2);
+        }
+
+        [TestMethod]
+        public void WhenCombineYawIsFalse_TakeOff_SendControlLevelConfigCommand()
+        {
+            VerifyTakeOffSendsControlLevelConfigCommand(false, 0);
+        }
+
+        [TestMethod]
+        public void WhenAltitudeMaxIs13_TakeOff_SendsAltitudeMaxConfigCommand()
+        {
+            VerifyTakeOffSendsAltitudeMaxConfigCommand(13, 13000);
+        }
+
+        [TestMethod]
+        public void WhenAltitudeMaxIs19_TakeOff_SendsAltitudeMaxConfigCommand()
+        {
+            VerifyTakeOffSendsAltitudeMaxConfigCommand(19, 19000);
+        }
+
+        [TestMethod]
+        public void WhenMaxDeviceTiltIs30_TakeOff_SendsMaxDeviceTiltConfigCommand()
+        {
+            VerifyTakeOffSendsMaxDeviceTiltConfigCommand(30, 30 * DroneController.DegreesToRadiansCoefficient);
+        }
+
+        [TestMethod]
+        public void WhenMaxDeviceTiltIs17_TakeOff_SendsMaxDeviceTiltConfigCommand()
+        {
+            VerifyTakeOffSendsMaxDeviceTiltConfigCommand(17, 17 * DroneController.DegreesToRadiansCoefficient);
+        }
+
+        [TestMethod]
+        public void WhenMaxIndoorYawDegrees30_TakeOff_SendsMaxIndoorYawDegreesConfigCommand()
+        {
+            VerifyTakeOffSendsMaxIndoorYawDegreesConfigCommand(30, 30 * DroneController.DegreesToRadiansCoefficient);
+        }
+
+        [TestMethod]
+        public void WhenMaxIndoorYawDegrees17_TakeOff_SendsMaxIndoorYawDegreesConfigCommand()
+        {
+            VerifyTakeOffSendsMaxIndoorYawDegreesConfigCommand(17, 17 * DroneController.DegreesToRadiansCoefficient);
+        }
+
+        private void VerifyTakeOffSendsMaxIndoorYawDegreesConfigCommand(int maxIndoorYawDegrees, double maxIndoorYawRadians)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.MaxIndoorYawDegrees = maxIndoorYawDegrees;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.IndoorControlYawConfigKey, maxIndoorYawRadians.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        [TestMethod]
+        public void WhenMaxOutdoorYawDegrees30_TakeOff_SendsMaxOutdoorYawDegreesConfigCommand()
+        {
+            VerifyTakeOffSendsMaxOutdoorYawDegreesConfigCommand(30, 30 * DroneController.DegreesToRadiansCoefficient);
+        }
+
+        [TestMethod]
+        public void WhenMaxOutdoorYawDegrees17_TakeOff_SendsMaxOutdoorYawDegreesConfigCommand()
+        {
+            VerifyTakeOffSendsMaxOutdoorYawDegreesConfigCommand(17, 17 * DroneController.DegreesToRadiansCoefficient);
+        }
+
+        private void VerifyTakeOffSendsMaxOutdoorYawDegreesConfigCommand(int maxOutdoorYawDegrees, double maxOutdoorYawRadians)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.MaxOutdoorYawDegrees = maxOutdoorYawDegrees;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.OutdoorControlYawConfigKey, maxOutdoorYawRadians.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        [TestMethod]
+        public void WhenMaxOutdoorRollOrPitchDegrees30_TakeOff_SendsMaxOutdoorRollOrPitchDegreesConfigCommand()
+        {
+            VerifyTakeOffSendsMaxOutdoorRollOrPitchDegreesConfigCommand(30, 30 * DroneController.DegreesToRadiansCoefficient);
+        }
+
+        [TestMethod]
+        public void WhenMaxOutdoorRollOrPitchDegrees17_TakeOff_SendsMaxOutdoorRollOrPitchDegreesConfigCommand()
+        {
+            VerifyTakeOffSendsMaxOutdoorRollOrPitchDegreesConfigCommand(17, 17 * DroneController.DegreesToRadiansCoefficient);
+        }
+
+        private void VerifyTakeOffSendsMaxOutdoorRollOrPitchDegreesConfigCommand(int maxOutdoorRollOrPitchDegrees, double maxOutdoorRollOrPitchRadians)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.MaxOutdoorRollOrPitchDegrees = maxOutdoorRollOrPitchDegrees;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.OutdoorEulerAngleMaxConfigKey, maxOutdoorRollOrPitchRadians.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        [TestMethod]
+        public void WhenMaxIndoorRollOrPitchDegrees30_TakeOff_SendsMaxIndoorRollOrPitchDegreesConfigCommand()
+        {
+            VerifyTakeOffSendsMaxIndoorRollOrPitchDegreesConfigCommand(30, 30 * DroneController.DegreesToRadiansCoefficient);
+        }
+
+        [TestMethod]
+        public void WhenMaxIndoorRollOrPitchDegrees17_TakeOff_SendsMaxIndoorRollOrPitchDegreesConfigCommand()
+        {
+            VerifyTakeOffSendsMaxIndoorRollOrPitchDegreesConfigCommand(17, 17 * DroneController.DegreesToRadiansCoefficient);
+        }
+
+        private void VerifyTakeOffSendsMaxIndoorRollOrPitchDegreesConfigCommand(int maxIndoorRollOrPitchDegrees, double maxIndoorRollOrPitchRadians)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.MaxIndoorRollOrPitchDegrees = maxIndoorRollOrPitchDegrees;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.IndoorEulerAngleMaxConfigKey, maxIndoorRollOrPitchRadians.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        [TestMethod]
+        public void WhenMaxIndoorVerticalCmPerSecond30_TakeOff_SendsMaxIndoorVerticalCmPerSecondConfigCommand()
+        {
+            VerifyTakeOffSendsMaxIndoorVerticalSpeedConfigCommand(30, 300);
+        }
+
+        [TestMethod]
+        public void WhenMaxIndoorVerticalCmPerSecond17_TakeOff_SendsMaxIndoorVerticalCmPerSecondConfigCommand()
+        {
+            VerifyTakeOffSendsMaxIndoorVerticalSpeedConfigCommand(17, 170);
+        }
+
+        private void VerifyTakeOffSendsMaxIndoorVerticalSpeedConfigCommand(int maxIndoorCmPerSecond, double maxIndoorMmPerSecond)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.MaxIndoorVerticalCmPerSecond = maxIndoorCmPerSecond;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.IndoorMaxVerticalSpeedConfigKey, maxIndoorMmPerSecond.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        [TestMethod]
+        public void WhenMaxOutdoorVerticalCmPerSecond30_TakeOff_SendsMaxOutdoorVerticalCmPerSecondConfigCommand()
+        {
+            VerifyTakeOffSendsMaxOutdoorVerticalSpeedConfigCommand(30, 300);
+        }
+
+        [TestMethod]
+        public void WhenMaxOutdoorVerticalCmPerSecond17_TakeOff_SendsMaxOutdoorVerticalCmPerSecondConfigCommand()
+        {
+            VerifyTakeOffSendsMaxOutdoorVerticalSpeedConfigCommand(17, 170);
+        }
+
+        private void VerifyTakeOffSendsMaxOutdoorVerticalSpeedConfigCommand(int maxOutdoorCmPerSecond, double maxOutdoorMmPerSecond)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.MaxOutdoorVerticalCmPerSecond = maxOutdoorCmPerSecond;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.OutdoorMaxVerticalSpeedConfigKey, maxOutdoorMmPerSecond.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        [TestMethod]
+        public void TakeOff_SendsTakeOffCommand()
         {
             // Arrange
             InitializeFactoryAndWorkerMocksAndConnect();
@@ -604,6 +827,96 @@ namespace AR_Drone_Controller
             _mockVideoWorker.Verify(x => x.Dispose());
         }
 
+        #endregion
+
+        #region CommandTimer Tick tests
+
+        [TestMethod]
+        public void GivenFlying_CommandTimerTick_SendFlightCommands()
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.Flying = true;
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.SendProgressiveCommand(_target));
+            _mockCommandWorker.Verify(x => x.Flush());
+        }
+
+        [TestMethod]
+        public void GivenCommWatchdogSet_CommandTimerTick_SendResetCommandInstead()
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.Flying = true;
+            _target.CommWatchDog = true;
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.SendProgressiveCommand(_target), Times.Never());
+            _mockCommandWorker.Verify(x => x.SendResetWatchDogCommand());
+            _mockCommandWorker.Verify(x => x.Flush());
+        }
+
+        [TestMethod]
+        public void WhenNotFlyingAndNotCommWatchdogSet_CommandTimerTick_FlushCommandQueue()
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.Flying = false;
+            _target.CommWatchDog = false;
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.Flush());
+        }
+
+        [TestMethod]
+        public void WhenNotConnected_CommandTimerTick_NoCommandsSent()
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocks();
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.Flush(), Times.Never);
+        }
+
+        #endregion
+
+        #region Settings Tests
+
+        [TestMethod]
+        public void Constructor_AssignsDefaultsToAllSettings()
+        {
+            // Assert
+            VerifyAllSettingsAreDefault();
+        }
+
+        [TestMethod]
+        public void ResetSettings_ResetsAllSettingsToDefaults()
+        {
+            // Arrange
+            AssignNonDefaultsToAllSettings();
+
+            // Act
+            _target.ResetSettings();
+
+            // Assert
+            VerifyAllSettingsAreDefault();
+        }
+
+        #region SendLocationInfo
+
         [TestMethod]
         public void WhenSendLocationInfoIsTrueAndConnected_SetGps_SetsGpsConfigValues()
         {
@@ -679,6 +992,10 @@ namespace AR_Drone_Controller
             VerifyGpsConfigValuesSent(Times.Once);
         }
 
+        #endregion
+
+        #region RecordFlightData
+
         [TestMethod]
         public void WhenRecordFlightDataIsTrue_Connect_SendsStartUserBoxConfigCommand()
         {
@@ -737,7 +1054,7 @@ namespace AR_Drone_Controller
             // Assert
             VerifyUserBoxStopCommandSent(Times.Once);
         }
-        
+
         [TestMethod]
         public void WhenRecordFlightDataIsTrue_Disconnect_SendsStopUserBoxConfigCommand()
         {
@@ -782,71 +1099,218 @@ namespace AR_Drone_Controller
             VerifyUserBoxStopCommandSent(Times.Once); // the one time when we connected, and no more
         }
 
+        [TestMethod]
+        public void CanSetRecordScreenshotDelayInSecondsIsTheOppositeOfRecordFlightData()
+        {
+            _target.RecordFlightData = true;
+            _target.CanSetRecordScreenshotDelayInSeconds.Should().BeFalse();
+
+            _target.RecordFlightData = false;
+            _target.CanSetRecordScreenshotDelayInSeconds.Should().BeTrue();
+        }
+
         #endregion
 
-        #region CommandTimer Tick tests
-
         [TestMethod]
-        public void GivenFlying_CommandTimerTick_SendFlightCommands()
+        public void SettingFixedRangePropertiesAreSet()
         {
-            // Arrange
-            InitializeFactoryAndWorkerMocksAndConnect();
-            _target.Flying = true;
-
-            // Act
-            _target.DoWork(null);
-
             // Assert
-            _mockCommandWorker.Verify(x => x.SendProgressiveCommand(_target));
-            _mockCommandWorker.Verify(x => x.Flush());
+            _target.MaxAltitudeInMetersMax.Should().Be(100);
+            _target.MaxAltitudeInMetersMin.Should().Be(1);
+            _target.RecordScreenshotDelayInSecondsMax.Should().Be(60);
+            _target.RecordScreenshotDelayInSecondsMin.Should().Be(1);
+            _target.MaxDeviceTiltInDegreesMin.Should().Be(5);
+            _target.MaxDeviceTiltInDegreesMax.Should().Be(50);
+            _target.MaxYawDegreesMax.Should().Be(350);
+            _target.MaxYawDegreesMin.Should().Be(40);
+            _target.MaxVeritcalCmPerSecondMax.Should().Be(200);
+            _target.MaxVeritcalCmPerSecondMin.Should().Be(20);
+            _target.MaxRollOrPitchDegreesMax.Should().Be(30);
+            _target.MaxRollOrPitchDegreesMin.Should().Be(1);
         }
 
         [TestMethod]
-        public void GivenCommWatchdogSet_CommandTimerTick_SendResetCommandInstead()
+        public void CanSetMaxAltitudeIsTheOppositeOfFlying()
         {
-            // Arrange
-            InitializeFactoryAndWorkerMocksAndConnect();
-            _target.Flying = true;
-            _target.CommWatchDog = true;
-
-            // Act
-            _target.DoWork(null);
-
-            // Assert
-            _mockCommandWorker.Verify(x => x.SendProgressiveCommand(_target), Times.Never());
-            _mockCommandWorker.Verify(x => x.SendResetWatchDogCommand());
-            _mockCommandWorker.Verify(x => x.Flush());
-        }
-
-        [TestMethod]
-        public void WhenNotFlyingAndNotCommWatchdogSet_CommandTimerTick_FlushCommandQueue()
-        {
-            // Arrange
-            InitializeFactoryAndWorkerMocksAndConnect();
             _target.Flying = false;
-            _target.CommWatchDog = false;
+            _target.CanSetMaxAltitude.Should().BeTrue();
 
-            // Act
-            _target.DoWork(null);
-
-            // Assert
-            _mockCommandWorker.Verify(x => x.Flush());
+            _target.Flying = true;
+            _target.CanSetMaxAltitude.Should().BeFalse();
         }
 
         [TestMethod]
-        public void WhenNotConnected_CommandTimerTick_NoCommandsSent()
+        public void CanSetCombineYawIsTheOppositeOfFlying()
         {
-            // Arrange
-            InitializeFactoryAndWorkerMocks();
+            _target.Flying = false;
+            _target.CanSetCombineYaw.Should().BeTrue();
 
-            // Act
-            _target.DoWork(null);
+            _target.Flying = true;
+            _target.CanSetCombineYaw.Should().BeFalse();
+        }
 
-            // Assert
-            _mockCommandWorker.Verify(x => x.Flush(), Times.Never);
+        [TestMethod]
+        public void CanSetMaxDeviceTiltIsTheOppositeOfFlying()
+        {
+            _target.Flying = false;
+            _target.CanSetMaxDeviceTiltInDegrees.Should().BeTrue();
+
+            _target.Flying = true;
+            _target.CanSetMaxDeviceTiltInDegrees.Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void CanSetOutdoorIsTheOppositeOfFlying()
+        {
+            _target.Flying = false;
+            _target.CanSetOutdoor.Should().BeTrue();
+
+            _target.Flying = true;
+            _target.CanSetOutdoor.Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void CanSetShellOnIsTheOppositeOfFlying()
+        {
+            _target.Flying = false;
+            _target.CanSetShellOn.Should().BeTrue();
+
+            _target.Flying = true;
+            _target.CanSetShellOn.Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void CanSetMaxIndoorYawDegreesIsTheOppositeOfFlying()
+        {
+            _target.Flying = false;
+            _target.CanSetMaxIndoorYawDegrees.Should().BeTrue();
+
+            _target.Flying = true;
+            _target.CanSetMaxIndoorYawDegrees.Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void CanSetMaxOutdoorYawDegreesIsTheOppositeOfFlying()
+        {
+            _target.Flying = false;
+            _target.CanSetMaxOutdoorYawDegrees.Should().BeTrue();
+
+            _target.Flying = true;
+            _target.CanSetMaxOutdoorYawDegrees.Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void CanSetMaxOutdoorRollOrPitchDegreesIsTheOppositeOfFlying()
+        {
+            _target.Flying = false;
+            _target.CanSetMaxOutdoorRollOrPitchDegrees.Should().BeTrue();
+
+            _target.Flying = true;
+            _target.CanSetMaxOutdoorRollOrPitchDegrees.Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void CanSetMaxIndoorRollOrPitchDegreesIsTheOppositeOfFlying()
+        {
+            _target.Flying = false;
+            _target.CanSetMaxIndoorRollOrPitchDegrees.Should().BeTrue();
+
+            _target.Flying = true;
+            _target.CanSetMaxIndoorRollOrPitchDegrees.Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void CanSetMaxIndoorVerticalCmPerSecondIsTheOppositeOfFlying()
+        {
+            _target.Flying = false;
+            _target.CanSetMaxIndoorVerticalCmPerSecond.Should().BeTrue();
+
+            _target.Flying = true;
+            _target.CanSetMaxIndoorVerticalCmPerSecond.Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void CanSetMaxOutdoorVerticalCmPerSecondIsTheOppositeOfFlying()
+        {
+            _target.Flying = false;
+            _target.CanSetMaxOutdoorVerticalCmPerSecond.Should().BeTrue();
+
+            _target.Flying = true;
+            _target.CanSetMaxOutdoorVerticalCmPerSecond.Should().BeFalse();
         }
 
         #endregion
+
+        private void VerifyTakeOffSendsOutdoorConfigCommand(bool outdoor, string expectedConfigValue)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.Outdoor = outdoor;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.OutdoorConfigKey, expectedConfigValue));
+        }
+
+        private void VerifyTakeOffSendsFlightWithoutShellConfigCommand(bool shell, string expectedConfigValue)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.ShellOn = shell;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.FlightWithoutShellConfigKey, expectedConfigValue));
+        }
+
+        private void VerifyTakeOffSendsAltitudeMaxConfigCommand(int altitudeInMetersTestValue, int altitudeInMillimeters)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.MaxAltitudeInMeters = altitudeInMetersTestValue;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.AltitudeMaxConfigKey, altitudeInMillimeters.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        private void VerifyTakeOffSendsMaxDeviceTiltConfigCommand(int maxDeviceTiltTestValue, double maxDeviceTiltInRadians)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.MaxDeviceTiltInDegrees = maxDeviceTiltTestValue;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.MaxDeviceTiltConfigKey, maxDeviceTiltInRadians.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        private void VerifyTakeOffSendsControlLevelConfigCommand(bool combineYaw, int expectedConfigValue)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.CombineYaw = combineYaw;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.ControlLevelConfigKey, expectedConfigValue.ToString(CultureInfo.InvariantCulture)));
+        }
 
         private void ArrangeRecordFlightDataTest()
         {
@@ -861,16 +1325,16 @@ namespace AR_Drone_Controller
             _mockCommandWorker.Verify(
                 x =>
                     x.SendConfigCommand(DroneController.UserboxConfigKey,
-                        ((int)DroneController.UserBoxCommands.Stop).ToString()), times);
+                        ((int)DroneController.UserBoxCommands.Stop).ToString(CultureInfo.InvariantCulture)), times);
         }
 
         private void VerifyUserBoxStartAndScreenShotCommandsSent(Func<Times> times)
         {
             const uint maxNumberOfScreenshots = 86400;
-            string userboxStartCommand = string.Format("{0},{1}", (int) DroneController.UserBoxCommands.Start,
+            string userboxStartCommand = string.Format("{0},{1}", (int)DroneController.UserBoxCommands.Start,
                 _recordScreenshotDateTimeTestValue.ToString(DroneController.UserBoxCommandDateFormat));
             string userboxScreenShotCommand = string.Format("{0},{1},{2},{3}",
-                (int) DroneController.UserBoxCommands.ScreenShot,
+                (int)DroneController.UserBoxCommands.ScreenShot,
                 RecordScreenshotDelayInSecondsTestValue, maxNumberOfScreenshots,
                 _recordScreenshotDateTimeTestValue.ToString(DroneController.UserBoxCommandDateFormat));
             _mockCommandWorker.Verify(x => x.SendConfigCommand(DroneController.UserboxConfigKey, userboxStartCommand),
@@ -943,8 +1407,7 @@ namespace AR_Drone_Controller
             _mockCommandWorker.Verify(
                 x => x.SendConfigCommand(DroneController.VideoVideoChannelConfigKey, "0"));
             VerifyNavDataRequestQueued(1);
-            _mockCommandWorker.Verify(
-                x => x.ExitBootStrapMode());
+            _mockCommandWorker.Verify(x => x.ExitBootStrapMode());
         }
 
         private void VerifyNavDataRequestQueued(int numberOfTimes)
@@ -955,7 +1418,7 @@ namespace AR_Drone_Controller
             _mockCommandWorker.Verify(
                 x =>
                     x.SendConfigCommand(DroneController.GeneralNavdataOptionsConfigKey,
-                        DroneController.NavDataOptions.ToString()), Times.Exactly(numberOfTimes));
+                        DroneController.NavDataOptions.ToString(CultureInfo.InvariantCulture)), Times.Exactly(numberOfTimes));
         }
 
         private void InitializeFactoryAndWorkerMocks()
@@ -995,7 +1458,6 @@ namespace AR_Drone_Controller
             _target.Phi = 13;
             _target.KilometersPerHour = 13;
             _target.Connected = true;
-            _target.CanSendFlatTrimCommand = true;
             _target.Flying = true;
             _target.CanRecord = true;
             _target.UsbKeyIsRecording = true;
@@ -1011,7 +1473,6 @@ namespace AR_Drone_Controller
             _target.Phi.Should().Be(0);
             _target.KilometersPerHour.Should().Be(0);
             _target.Connected.Should().BeFalse();
-            _target.CanSendFlatTrimCommand.Should().BeFalse();
             _target.Flying.Should().BeFalse();
             _target.CanRecord.Should().BeFalse();
             _target.UsbKeyIsRecording.Should().BeFalse();
@@ -1029,11 +1490,49 @@ namespace AR_Drone_Controller
         private void VerifyGpsConfigValuesSent(Func<Times> times)
         {
             _mockCommandWorker.Verify(
-                x => x.SendConfigCommand(DroneController.GpsLatitudeConfigKey, ConvertedTestLatitude.ToString()), times);
+                x => x.SendConfigCommand(DroneController.GpsLatitudeConfigKey, ConvertedTestLatitude.ToString(CultureInfo.InvariantCulture)), times);
             _mockCommandWorker.Verify(
-                x => x.SendConfigCommand(DroneController.GpsLongitudeConfigCommand, ConvertedTestLongitude.ToString()), times);
+                x => x.SendConfigCommand(DroneController.GpsLongitudeConfigCommand, ConvertedTestLongitude.ToString(CultureInfo.InvariantCulture)), times);
             _mockCommandWorker.Verify(
-                x => x.SendConfigCommand(DroneController.GpsAltitudeConfigCommand, ConvertedTestAltitude.ToString()), times);
+                x => x.SendConfigCommand(DroneController.GpsAltitudeConfigCommand, ConvertedTestAltitude.ToString(CultureInfo.InvariantCulture)), times);
+        }
+
+        private void VerifyAllSettingsAreDefault()
+        {
+            _target.CombineYaw.Should().BeFalse();
+            _target.AbsoluteControlMode.Should().BeFalse();
+            _target.CanSendLocationInformation.Should().BeFalse();
+            _target.RecordFlightData.Should().BeFalse();
+            _target.RecordScreenshotDelayInSeconds.Should().Be(1);
+            _target.MaxAltitudeInMeters.Should().Be(3);
+            _target.MaxDeviceTiltInDegrees.Should().Be(20);
+            _target.Outdoor.Should().BeFalse();
+            _target.ShellOn.Should().BeTrue();
+            _target.MaxIndoorYawDegrees.Should().Be(100);
+            _target.MaxOutdoorYawDegrees.Should().Be(200);
+            _target.MaxIndoorRollOrPitchDegrees.Should().Be(12);
+            _target.MaxOutdoorRollOrPitchDegrees.Should().Be(20);
+            _target.MaxIndoorVerticalCmPerSecond.Should().Be(70);
+            _target.MaxOutdoorVerticalCmPerSecond.Should().Be(100);
+        }
+
+        private void AssignNonDefaultsToAllSettings()
+        {
+            _target.CombineYaw = true;
+            _target.AbsoluteControlMode = true;
+            _target.CanSendLocationInformation = true;
+            _target.RecordFlightData = true;
+            _target.RecordScreenshotDelayInSeconds = 13;
+            _target.MaxAltitudeInMeters = 15;
+            _target.MaxDeviceTiltInDegrees = 17;
+            _target.Outdoor = true;
+            _target.ShellOn = false;
+            _target.MaxIndoorYawDegrees = 23;
+            _target.MaxOutdoorYawDegrees = 29;
+            _target.MaxIndoorRollOrPitchDegrees = 31;
+            _target.MaxOutdoorRollOrPitchDegrees = 37;
+            _target.MaxIndoorVerticalCmPerSecond = 41;
+            _target.MaxOutdoorVerticalCmPerSecond = 43;
         }
     }
 }

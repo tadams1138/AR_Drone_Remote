@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Windows.Devices.Geolocation;
 using Windows.Storage;
@@ -20,12 +21,7 @@ namespace AR_Drone_Remote_for_Windows_8
     /// </summary>
     public sealed partial class MainPage : INotifyPropertyChanged
     {
-        private const string RecordFlightDataPropertyName = "RecordFlightDataPropertyName";
-        private const string RecordScreenshotDelayInSecondsPropertyName = "RecordScreenshotDelayInSeconds"; 
         private const string ShowLeftJoyStickPropertyName = "ShowLeftJoyStick";
-        private const string UseAccelerometerPropertyName = "UseAccelerometer";
-        private const string AbsoluteControlPropertyName = "AbsoluteControl";
-        private const string UseLocationServicePropertyName = "UseLocationService";
         public static DroneController StaticDroneController;
         private static Compass _compass;
         private static Accelerometer _accelerometer;
@@ -102,8 +98,7 @@ namespace AR_Drone_Remote_for_Windows_8
 
             set
             {
-                ApplicationData.Current.LocalSettings.Values[UseAccelerometerPropertyName] = value;
-
+                SavePropertyValue(value);
                 if (_useAccelerometer != value && AccelerometerIsSupported)
                 {
                     _useAccelerometer = value;
@@ -127,8 +122,22 @@ namespace AR_Drone_Remote_for_Windows_8
 
             set
             {
+                SavePropertyValue(value);
                 DroneController.AbsoluteControlMode = value;
-                ApplicationData.Current.LocalSettings.Values[AbsoluteControlPropertyName] = value;
+            }
+        }
+
+        public bool CombineYaw
+        {
+            get
+            {
+                return DroneController.CombineYaw;
+            }
+
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.CombineYaw = value;
             }
         }
 
@@ -137,7 +146,7 @@ namespace AR_Drone_Remote_for_Windows_8
             get { return DroneController.CanSendLocationInformation; }
             set
             {
-                ApplicationData.Current.LocalSettings.Values[UseLocationServicePropertyName] = value;
+                SavePropertyValue(value); 
                 DroneController.CanSendLocationInformation = value;
             }
         }
@@ -147,7 +156,7 @@ namespace AR_Drone_Remote_for_Windows_8
             get { return DroneController.RecordFlightData; }
             set
             {
-                ApplicationData.Current.LocalSettings.Values[RecordFlightDataPropertyName] = value;
+                SavePropertyValue(value); 
                 DroneController.RecordFlightData = value;
             }
         }
@@ -157,8 +166,108 @@ namespace AR_Drone_Remote_for_Windows_8
             get { return DroneController.RecordScreenshotDelayInSeconds; }
             set
             {
-                ApplicationData.Current.LocalSettings.Values[RecordScreenshotDelayInSecondsPropertyName] = value;
+                SavePropertyValue(value); 
                 DroneController.RecordScreenshotDelayInSeconds = value;
+            }
+        }
+
+        public int MaxAltitudeInMeters
+        {
+            get { return DroneController.MaxAltitudeInMeters; }
+            set
+            {
+                SavePropertyValue(value); 
+                DroneController.MaxAltitudeInMeters = value;
+            }
+        }
+
+        public int MaxDeviceTiltInDegrees
+        {
+            get { return DroneController.MaxDeviceTiltInDegrees; }
+            set
+            {
+                SavePropertyValue(value); 
+                DroneController.MaxDeviceTiltInDegrees = value;
+            }
+        }
+
+        public bool Outdoor
+        {
+            get { return DroneController.Outdoor; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.Outdoor = value;
+            }
+        }
+
+        public bool ShellOn
+        {
+            get { return DroneController.ShellOn; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.ShellOn = value;
+            }
+        }
+
+        public int MaxIndoorYawDegrees
+        {
+            get { return DroneController.MaxIndoorYawDegrees; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxIndoorYawDegrees = value;
+            }
+        }
+
+        public int MaxOutdoorYawDegrees
+        {
+            get { return DroneController.MaxOutdoorYawDegrees; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxOutdoorYawDegrees = value;
+            }
+        }
+
+        public int MaxIndoorRollOrPitchDegrees
+        {
+            get { return DroneController.MaxIndoorRollOrPitchDegrees; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxIndoorRollOrPitchDegrees = value;
+            }
+        }
+
+        public int MaxOutdoorRollOrPitchDegrees
+        {
+            get { return DroneController.MaxOutdoorRollOrPitchDegrees; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxOutdoorRollOrPitchDegrees = value;
+            }
+        }
+
+        public int MaxIndoorVerticalCmPerSecond
+        {
+            get { return DroneController.MaxIndoorVerticalCmPerSecond; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxIndoorVerticalCmPerSecond = value;
+            }
+        }
+
+        public int MaxOutdoorVerticalCmPerSecond
+        {
+            get { return DroneController.MaxOutdoorVerticalCmPerSecond; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxOutdoorVerticalCmPerSecond = value;
             }
         }
 
@@ -202,61 +311,22 @@ namespace AR_Drone_Remote_for_Windows_8
 
         private void LoadSettings()
         {
-            SetUseAccelerometer();
-            SetAbsoluteControl();
-            SetUseLocationService();
-            SetRecordFlightData();
-            SetRecordScreenshotDelayInSeconds();
-        }
-
-        private void SetRecordFlightData()
-        {
-            var value = ApplicationData.Current.LocalSettings.Values[RecordFlightDataPropertyName];
-
-            if (value != null)
-            {
-                RecordFlightData = (bool)value;
-            }
-        }
-
-        private void SetRecordScreenshotDelayInSeconds()
-        {
-            var value = ApplicationData.Current.LocalSettings.Values[RecordScreenshotDelayInSecondsPropertyName];
-
-            if (value != null)
-            {
-                RecordScreenshotDelayInSeconds = (int)value;
-            }
-        }
-
-        private void SetUseLocationService()
-        {
-            var value = ApplicationData.Current.LocalSettings.Values[UseLocationServicePropertyName];
-
-            if (value != null)
-            {
-                UseLocationService = (bool)value;
-            }
-        }
-
-        private void SetAbsoluteControl()
-        {
-            var value = ApplicationData.Current.LocalSettings.Values[AbsoluteControlPropertyName];
-
-            if (value != null)
-            {
-                AbsoluteControl = (bool)value;
-            }
-        }
-
-        private void SetUseAccelerometer()
-        {
-            var value = ApplicationData.Current.LocalSettings.Values[UseAccelerometerPropertyName];
-
-            if (value != null)
-            {
-                UseAccelerometer = (bool)value;
-            }
+            LoadSettings("UseAccelerometer");
+            LoadSettings("AbsoluteControl");
+            LoadSettings("UseLocationService");
+            LoadSettings("RecordFlightData");
+            LoadSettings("RecordScreenshotDelayInSeconds");
+            LoadSettings("CombineYaw");
+            LoadSettings("MaxAltitudeInMeters");
+            LoadSettings("MaxDeviceTiltInDegrees");
+            LoadSettings("ShellOn");
+            LoadSettings("Outdoor");
+            LoadSettings("MaxIndoorYawDegrees");
+            LoadSettings("MaxOutdoorYawDegrees");
+            LoadSettings("MaxIndoorRollOrPitchDegrees");
+            LoadSettings("MaxOutdoorRollOrPitchDegrees");
+            LoadSettings("MaxIndoorVerticalCmPerSecond");
+            LoadSettings("MaxOutdoorVerticalCmPerSecond");
         }
 
         private void InitializeAccelerometer()
@@ -497,6 +567,25 @@ namespace AR_Drone_Remote_for_Windows_8
         {
             PropertyChangedEventHandler handler = PropertyChanged;
             if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void LoadSettings(string propertyName)
+        {
+            var value = ApplicationData.Current.LocalSettings.Values[propertyName];
+            if (value != null)
+            {
+                var type = GetType();
+                PropertyInfo property = type.GetRuntimeProperty(propertyName);
+                property.SetValue(this, value);
+            }
+        }
+
+        private void SavePropertyValue(object value, [CallerMemberName] string propertyName = null)
+        {
+            if (propertyName != null)
+            {
+                ApplicationData.Current.LocalSettings.Values[propertyName] = value;
+            }
         }
     }
 }

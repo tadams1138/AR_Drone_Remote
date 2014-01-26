@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Device.Location;
 using System.IO.IsolatedStorage;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace AR_Drone_Remote_for_Windows_Phone_7
@@ -17,12 +18,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
     public partial class MainPage : INotifyPropertyChanged
     {
-        private const string RecordFlightDataPropertyName = "RecordFlightDataPropertyName";
-        private const string RecordScreenshotDelayInSecondsPropertyName = "RecordScreenshotDelayInSeconds"; 
         private const string ShowLeftJoyStickPropertyName = "ShowLeftJoyStick";
-        private const string UseAccelerometerPropertyName = "UseAccelerometer";
-        private const string AbsoluteControlPropertyName = "AbsoluteControl";
-        private const string UseLocationServicePropertyName = "UseLocationService";
         private static DroneController _droneController;
         private static Compass _compass;
         private static Accelerometer _accelerometer;
@@ -111,6 +107,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         {
             get { return Accelerometer.IsSupported; }
         }
+
         public bool LocationServicesSupported
         {
             get
@@ -125,7 +122,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
             set
             {
-                IsolatedStorageSettings.ApplicationSettings[UseAccelerometerPropertyName] = value;
+                SavePropertyValue(value);
 
                 if (_useAccelerometer != value && Accelerometer.IsSupported)
                 {
@@ -155,8 +152,22 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
             set
             {
+                SavePropertyValue(value);
                 _droneController.AbsoluteControlMode = value;
-                IsolatedStorageSettings.ApplicationSettings[AbsoluteControlPropertyName] = value;
+            }
+        }
+
+        public bool CombineYaw
+        {
+            get
+            {
+                return DroneController.CombineYaw;
+            }
+
+            set
+            {
+                DroneController.CombineYaw = value;
+                SavePropertyValue(value);
             }
         }
 
@@ -165,7 +176,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             get { return _droneController.CanSendLocationInformation; }
             set
             {
-                IsolatedStorageSettings.ApplicationSettings[UseLocationServicePropertyName] = value;
+                SavePropertyValue(value);
 
                 if (_droneController.CanSendLocationInformation != value)
                 {
@@ -188,7 +199,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             get { return DroneController.RecordFlightData; }
             set
             {
-                IsolatedStorageSettings.ApplicationSettings[RecordFlightDataPropertyName] = value;
+                SavePropertyValue(value);
                 DroneController.RecordFlightData = value;
             }
         }
@@ -198,8 +209,108 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             get { return DroneController.RecordScreenshotDelayInSeconds; }
             set
             {
-                IsolatedStorageSettings.ApplicationSettings[RecordScreenshotDelayInSecondsPropertyName] = value;
+                SavePropertyValue(value);
                 DroneController.RecordScreenshotDelayInSeconds = value;
+            }
+        }
+
+        public int MaxAltitudeInMeters
+        {
+            get { return DroneController.MaxAltitudeInMeters; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxAltitudeInMeters = value;
+            }
+        }
+
+        public bool Outdoor
+        {
+            get { return DroneController.Outdoor; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.Outdoor = value;
+            }
+        }
+
+        public bool ShellOn
+        {
+            get { return DroneController.ShellOn; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.ShellOn = value;
+            }
+        }
+
+        public int MaxDeviceTiltInDegrees
+        {
+            get { return DroneController.MaxDeviceTiltInDegrees; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxDeviceTiltInDegrees = value;
+            }
+        }
+
+        public int MaxIndoorYawDegrees
+        {
+            get { return DroneController.MaxIndoorYawDegrees; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxIndoorYawDegrees = value;
+            }
+        }
+
+        public int MaxOutdoorYawDegrees
+        {
+            get { return DroneController.MaxOutdoorYawDegrees; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxOutdoorYawDegrees = value;
+            }
+        }
+
+        public int MaxIndoorRollOrPitchDegrees
+        {
+            get { return DroneController.MaxIndoorRollOrPitchDegrees; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxIndoorRollOrPitchDegrees = value;
+            }
+        }
+
+        public int MaxOutdoorRollOrPitchDegrees
+        {
+            get { return DroneController.MaxOutdoorRollOrPitchDegrees; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxOutdoorRollOrPitchDegrees = value;
+            }
+        }
+
+        public int MaxIndoorVerticalCmPerSecond
+        {
+            get { return DroneController.MaxIndoorVerticalCmPerSecond; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxIndoorVerticalCmPerSecond = value;
+            }
+        }
+
+        public int MaxOutdoorVerticalCmPerSecond
+        {
+            get { return DroneController.MaxOutdoorVerticalCmPerSecond; }
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.MaxOutdoorVerticalCmPerSecond = value;
             }
         }
 
@@ -232,6 +343,14 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        private void SavePropertyValue(object value, [CallerMemberName] string propertyName = null)
+        {
+            if (propertyName != null)
+            {
+                IsolatedStorageSettings.ApplicationSettings[propertyName] = value;
+            }
+        }
+
         private void InitializeAccelerometer()
         {
             if (AccelerometerIsSupported)
@@ -253,50 +372,31 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         private void LoadSettings()
         {
-            SetUseAccelerometer();
-            SetAbsoluteControl();
-            SetUseLocationService();
-            SetRecordFlightData();
-            SetRecordScreenshotDelayInSeconds();
+            LoadSettings("UseAccelerometer");
+            LoadSettings("AbsoluteControl");
+            LoadSettings("UseLocationService");
+            LoadSettings("RecordFlightData");
+            LoadSettings("RecordScreenshotDelayInSeconds");
+            LoadSettings("CombineYaw");
+            LoadSettings("MaxAltitudeInMeters");
+            LoadSettings("MaxDeviceTiltInDegrees");
+            LoadSettings("ShellOn");
+            LoadSettings("Outdoor");
+            LoadSettings("MaxIndoorYawDegrees");
+            LoadSettings("MaxOutdoorYawDegrees");
+            LoadSettings("MaxIndoorRollOrPitchDegrees");
+            LoadSettings("MaxOutdoorRollOrPitchDegrees");
+            LoadSettings("MaxIndoorVerticalCmPerSecond");
+            LoadSettings("MaxOutdoorVerticalCmPerSecond");
         }
 
-        private void SetRecordFlightData()
+        private void LoadSettings(string propertyName)
         {
-            if (IsolatedStorageSettings.ApplicationSettings.Contains(RecordFlightDataPropertyName))
+            if (IsolatedStorageSettings.ApplicationSettings.Contains(propertyName))
             {
-                RecordFlightData = (bool)IsolatedStorageSettings.ApplicationSettings[RecordFlightDataPropertyName];
-            }
-        }
-
-        private void SetRecordScreenshotDelayInSeconds()
-        {
-            if (IsolatedStorageSettings.ApplicationSettings.Contains(RecordScreenshotDelayInSecondsPropertyName))
-            {
-                RecordScreenshotDelayInSeconds = (int)IsolatedStorageSettings.ApplicationSettings[RecordScreenshotDelayInSecondsPropertyName];
-            }
-        }
-
-        private void SetUseLocationService()
-        {
-            if (IsolatedStorageSettings.ApplicationSettings.Contains(UseLocationServicePropertyName))
-            {
-                UseLocationService = (bool)IsolatedStorageSettings.ApplicationSettings[UseLocationServicePropertyName];
-            }
-        }
-
-        private void SetAbsoluteControl()
-        {
-            if (IsolatedStorageSettings.ApplicationSettings.Contains(AbsoluteControlPropertyName))
-            {
-                AbsoluteControl = (bool)IsolatedStorageSettings.ApplicationSettings[AbsoluteControlPropertyName];
-            }
-        }
-
-        private void SetUseAccelerometer()
-        {
-            if (IsolatedStorageSettings.ApplicationSettings.Contains(UseAccelerometerPropertyName))
-            {
-                UseAccelerometer = (bool)IsolatedStorageSettings.ApplicationSettings[UseAccelerometerPropertyName];
+                var type = GetType();
+                PropertyInfo property = type.GetProperty(propertyName);
+                property.SetValue(this, IsolatedStorageSettings.ApplicationSettings[propertyName]);
             }
         }
 

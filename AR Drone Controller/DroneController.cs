@@ -12,6 +12,17 @@ namespace AR_Drone_Controller
                                              (1 <<
                                               (ushort)NavData.NavData.NavDataTag.HdVideoStream);
 
+        internal const string OutdoorMaxVerticalSpeedConfigKey = "control:outdoor_control_vz_max";
+        internal const string IndoorMaxVerticalSpeedConfigKey = "control:indoor_control_vz_max";
+        internal const string IndoorEulerAngleMaxConfigKey = "control:indoor_euler_angle_max";
+        internal const string OutdoorEulerAngleMaxConfigKey = "control:outdoor_euler_angle_max";
+        internal const string OutdoorControlYawConfigKey = "control:outdoor_control_yaw";
+        internal const string IndoorControlYawConfigKey = "control:indoor_control_yaw";
+        internal const string FlightWithoutShellConfigKey = "control:ﬂight_without_shell";
+        internal const string OutdoorConfigKey = "control:outdoor";
+        internal const string MaxDeviceTiltConfigKey = "control:control_iphone_tilt";
+        internal const string AltitudeMaxConfigKey = "control:altitude_max";
+        internal const string ControlLevelConfigKey = "control:control_level";
         internal const string VideoOnUsbConfigKey = "video:video_on_usb";
         internal const string FalseConfigValue = "FALSE";
         internal const string TrueConfigValue = "TRUE";
@@ -27,6 +38,7 @@ namespace AR_Drone_Controller
         internal const int OptimalDelayBetweenCommandsInMilliseconds = 30;
         internal const string UserboxConfigKey = "userbox:userbox_cmd";
         internal const string UserBoxCommandDateFormat = "yyyyMMdd_HHmmss";
+        public const double DegreesToRadiansCoefficient = 0.0174532925;
         internal static readonly string H264_360P_CodecConfigValue = String.Format("{0}", 0x81);
         internal static readonly string Mp4_360p_H264_720p_CodecConfigValue = String.Format("{0}", 0x82);
 
@@ -54,7 +66,7 @@ namespace AR_Drone_Controller
         private long _convertedLongitude;
         private long _convertedAltitude;
         private bool _recordFlightData;
-
+        
         public DroneController()
         {
             DoubleToInt64Converter = new DoubleToInt64Converter();
@@ -66,7 +78,7 @@ namespace AR_Drone_Controller
                 Period = OptimalDelayBetweenCommandsInMilliseconds
             };
 
-            RecordScreenshotDelayInSeconds = 1;
+            ResetSettings();
         }
 
         public ISocketFactory SocketFactory
@@ -108,11 +120,62 @@ namespace AR_Drone_Controller
 
         public virtual float Gaz { get; set; }
 
-        public bool CombineYaw { get; set; }
-
         public float ControllerHeading { get; set; }
 
         public float ControllerHeadingAccuracy { get; set; }
+
+        #endregion
+
+        #region Feedback properties
+
+        public int Altitude { get; internal set; }
+
+        public uint BatteryPercentage { get; internal set; }
+
+        public float Theta { get; internal set; }
+
+        public float Phi { get; internal set; }
+
+        public float Psi { get; internal set; }
+
+        public float KilometersPerHour { get; internal set; }
+
+        public virtual bool Flying { get; internal set; }
+
+        public virtual bool Connected { get; internal set; }
+
+        public bool CanRecord { get; internal set; }
+
+        public bool UsbKeyIsRecording { get; internal set; }
+
+        public bool CanSendFlatTrimCommand { get { return Connected && !Flying; } }
+
+        internal bool CommWatchDog { get; set; }
+
+        #endregion
+
+        #region Settings
+
+        public void ResetSettings()
+        {
+            CombineYaw = false;
+            AbsoluteControlMode = false;
+            CanSendLocationInformation = false;
+            RecordFlightData = false;
+            RecordScreenshotDelayInSeconds = 1;
+            MaxAltitudeInMeters = 3;
+            MaxDeviceTiltInDegrees = 20;
+            Outdoor = false;
+            ShellOn = true;
+            MaxIndoorYawDegrees = 100;
+            MaxOutdoorYawDegrees = 200;
+            MaxIndoorRollOrPitchDegrees = 12;
+            MaxOutdoorRollOrPitchDegrees = 20;
+            MaxIndoorVerticalCmPerSecond = 70;
+            MaxOutdoorVerticalCmPerSecond = 100;
+        }
+
+        public bool CombineYaw { get; set; }
 
         public bool AbsoluteControlMode { get; set; }
 
@@ -158,33 +221,55 @@ namespace AR_Drone_Controller
 
         public int RecordScreenshotDelayInSeconds { get; set; }
 
-        #endregion
+        public int MaxAltitudeInMeters { get; set; }
 
-        #region Feedback properties
+        public int RecordScreenshotDelayInSecondsMax { get { return 60; } }
 
-        public int Altitude { get; internal set; }
+        public int RecordScreenshotDelayInSecondsMin { get { return 1; } }
 
-        public uint BatteryPercentage { get; internal set; }
+        public int MaxAltitudeInMetersMax { get { return 100; } }
 
-        public float Theta { get; internal set; }
+        public int MaxAltitudeInMetersMin { get { return 1; } }
 
-        public float Phi { get; internal set; }
+        public bool CanSetRecordScreenshotDelayInSeconds { get { return !RecordFlightData; } }
 
-        public float Psi { get; internal set; }
+        public bool CanSetMaxAltitude { get { return !Flying; } }
 
-        public float KilometersPerHour { get; internal set; }
+        public bool CanSetCombineYaw { get { return !Flying; } }
 
-        public virtual bool Flying { get; internal set; }
+        public int MaxDeviceTiltInDegreesMin { get { return 5; } }
 
-        public virtual bool Connected { get; internal set; }
+        public int MaxDeviceTiltInDegreesMax { get { return 50; } }
 
-        public bool CanRecord { get; internal set; }
+        public int MaxDeviceTiltInDegrees { get; set; }
 
-        public bool UsbKeyIsRecording { get; internal set; }
+        public bool CanSetMaxDeviceTiltInDegrees { get { return !Flying; } }
 
-        public bool CanSendFlatTrimCommand { get; internal set; }
+        public bool Outdoor { get; set; }
 
-        internal bool CommWatchDog { get; set; }
+        public bool ShellOn { get; set; }
+
+        public bool CanSetOutdoor { get { return !Flying; } }
+
+        public bool CanSetShellOn { get { return !Flying; } }
+        public int MaxYawDegreesMax { get { return 350; } }
+        public int MaxYawDegreesMin { get { return 40; } }
+        public int MaxVeritcalCmPerSecondMax { get { return 200; } }
+        public int MaxVeritcalCmPerSecondMin { get { return 20; } }
+        public int MaxRollOrPitchDegreesMax { get { return 30; } }
+        public int MaxRollOrPitchDegreesMin { get { return 1; } }
+        public int MaxIndoorYawDegrees { get; set; }
+        public int MaxOutdoorYawDegrees { get; set; }
+        public int MaxIndoorRollOrPitchDegrees { get; set; }
+        public int MaxOutdoorRollOrPitchDegrees { get; set; }
+        public int MaxIndoorVerticalCmPerSecond { get; set; }
+        public int MaxOutdoorVerticalCmPerSecond { get; set; }
+        public bool CanSetMaxIndoorYawDegrees { get { return !Flying; } }
+        public bool CanSetMaxOutdoorYawDegrees { get { return !Flying; } }
+        public bool CanSetMaxOutdoorRollOrPitchDegrees { get { return !Flying; } }
+        public bool CanSetMaxIndoorRollOrPitchDegrees { get { return !Flying; } }
+        public bool CanSetMaxIndoorVerticalCmPerSecond { get { return !Flying; } }
+        public bool CanSetMaxOutdoorVerticalCmPerSecond { get { return !Flying; } }
 
         #endregion
 
@@ -229,6 +314,7 @@ namespace AR_Drone_Controller
             CommandWorker.SendConfigCommand(VideoVideoChannelConfigKey, "0");
             RequestNavData();
             CommandWorker.ExitBootStrapMode();
+
             if (CanSendLocationInformation)
             {
                 SendLocationInformation();
@@ -272,6 +358,7 @@ namespace AR_Drone_Controller
 
         public virtual void TakeOff()
         {
+            SendPreFlightChecklist();
             CommandWorker.SendRefCommand(CommandWorker.RefCommands.TakeOff);
         }
 
@@ -339,7 +426,7 @@ namespace AR_Drone_Controller
                     {
                         CommandWorker.SendProgressiveCommand(this);
                     }
-                    
+
                     CommandWorker.Flush();
                 }
             }
@@ -358,7 +445,6 @@ namespace AR_Drone_Controller
 
         private void UpdateProperties(NavDataReceivedEventArgs e)
         {
-            CanSendFlatTrimCommand = !e.NavData.Flying;
             Flying = e.NavData.Flying;
             CommWatchDog = e.NavData.CommWatchDog;
 
@@ -452,7 +538,6 @@ namespace AR_Drone_Controller
             Phi = 0;
             KilometersPerHour = 0;
             Connected = false;
-            CanSendFlatTrimCommand = false;
             Flying = false;
             CanRecord = false;
             UsbKeyIsRecording = false;
@@ -497,7 +582,20 @@ namespace AR_Drone_Controller
             CommandWorker.SendConfigCommand(UserboxConfigKey, value);
         }
 
-
+        private void SendPreFlightChecklist()
+        {
+            CommandWorker.SendConfigCommand(ControlLevelConfigKey, CombineYaw ? "2" : "0");
+            CommandWorker.SendConfigCommand(AltitudeMaxConfigKey, (MaxAltitudeInMeters * 1000).ToString());
+            CommandWorker.SendConfigCommand(MaxDeviceTiltConfigKey, (MaxDeviceTiltInDegrees * DegreesToRadiansCoefficient).ToString());
+            CommandWorker.SendConfigCommand(IndoorControlYawConfigKey, (MaxIndoorYawDegrees * DegreesToRadiansCoefficient).ToString());
+            CommandWorker.SendConfigCommand(OutdoorControlYawConfigKey, (MaxOutdoorYawDegrees * DegreesToRadiansCoefficient).ToString());
+            CommandWorker.SendConfigCommand(OutdoorEulerAngleMaxConfigKey, (MaxOutdoorRollOrPitchDegrees * DegreesToRadiansCoefficient).ToString());
+            CommandWorker.SendConfigCommand(IndoorEulerAngleMaxConfigKey, (MaxIndoorRollOrPitchDegrees * DegreesToRadiansCoefficient).ToString());
+            CommandWorker.SendConfigCommand(IndoorMaxVerticalSpeedConfigKey, (MaxIndoorVerticalCmPerSecond * 10).ToString());
+            CommandWorker.SendConfigCommand(OutdoorMaxVerticalSpeedConfigKey, (MaxOutdoorVerticalCmPerSecond * 10).ToString());
+            CommandWorker.SendConfigCommand(OutdoorConfigKey, Outdoor ? TrueConfigValue : FalseConfigValue);
+            CommandWorker.SendConfigCommand(FlightWithoutShellConfigKey, ShellOn ? FalseConfigValue : TrueConfigValue);
+        }
 
         // Academy FTP "parrot01.nyx.emencia.net", port 21
         // URL to signup: http://ardrone2.parrot.com/ar-drone-academy/
