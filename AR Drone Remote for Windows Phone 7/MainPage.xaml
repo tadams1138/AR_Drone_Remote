@@ -338,7 +338,7 @@
                                     x:Name="SendLocationInformationToggleSwitch"
                                     Grid.Column="1"
                                     HorizontalAlignment="Center" 
-                                    IsEnabled="{Binding ElementName=This, Path=LocationServicesSupported, Converter={StaticResource BooleanToVisibility}}"
+                                    IsEnabled="{Binding ElementName=This, Path=LocationServicesSupported}"
                                     IsChecked="{Binding UseLocationService, Mode=TwoWay}"/>
                             </Grid>
                             <Grid>

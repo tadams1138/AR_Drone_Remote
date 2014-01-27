@@ -434,21 +434,28 @@ namespace AR_Drone_Controller
 
         internal void DoWork(object state)
         {
-            lock (_threadLock)
+            try
             {
-                if (Connected)
+                lock (_threadLock)
                 {
-                    if (CommWatchDog)
+                    if (Connected)
                     {
-                        CommandWorker.SendResetWatchDogCommand();
-                    }
-                    else if (Flying)
-                    {
-                        CommandWorker.SendProgressiveCommand(this);
-                    }
+                        if (CommWatchDog)
+                        {
+                            CommandWorker.SendResetWatchDogCommand();
+                        }
+                        else if (Flying)
+                        {
+                            CommandWorker.SendProgressiveCommand(this);
+                        }
 
-                    CommandWorker.Flush();
+                        CommandWorker.Flush();
+                    }
                 }
+            }
+            catch
+            {
+                Disconnect();
             }
         }
 
@@ -551,7 +558,7 @@ namespace AR_Drone_Controller
 
         private void ControlSocketOnDisconnected(object sender, EventArgs eventArgs)
         {
-            Disconnect();
+            Dispatcher.BeginInvoke(Disconnect);
         }
 
         private void ResetProperties()

@@ -8,7 +8,18 @@ namespace AR_Drone_Remote_for_Windows_8
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            return (bool)value ? Visibility.Collapsed : Visibility.Visible;
+            var b = ConvertObjectToBool(value);
+            return b ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private static bool ConvertObjectToBool(object value)
+        {
+            if (value is bool)
+            {
+                return (bool) value;
+            }
+            
+            return false;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

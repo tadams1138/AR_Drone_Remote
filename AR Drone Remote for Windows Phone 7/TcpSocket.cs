@@ -19,6 +19,7 @@
         private bool _connected;
         private readonly string _ipAddress;
         private readonly int _port;
+        private readonly object _synclock = new object();
 
         public TcpSocket(string ipAddress, int port)
         {
@@ -56,8 +57,15 @@
 
         public void Dispose()
         {
-            _connected = false;
-            _socket.Dispose();
+            lock (_synclock)
+            {
+                _connected = false;
+                if (_socket != null)
+                {
+                    _socket.Dispose();
+                    _socket = null;
+                }
+            }
         }
 
         public void Write(int s)
@@ -75,7 +83,14 @@
         private void ListenForIncomingData()
         {
             _responseListener.SetBuffer(_receiveBuffer, 0, _receiveBuffer.Length);
-            if (_connected && !_socket.ReceiveAsync(_responseListener))
+            bool shouldProcessSocketEvent;
+
+            lock (_synclock)
+            {
+                shouldProcessSocketEvent = _connected && !_socket.ReceiveAsync(_responseListener);
+            }
+
+            if (shouldProcessSocketEvent)
             {
                 ProcessSocketEvent(_responseListener);
             }
@@ -83,20 +98,24 @@
 
         private void ProcessSocketEvent(SocketAsyncEventArgs e)
         {
+            byte[] buffer = null;
+
             try
             {
-                if (!_connected)
+                lock (_synclock)
                 {
-                    return;
+                    if (e.BytesTransferred > 0)
+                    {
+                        buffer = new byte[e.BytesTransferred];
+                        Buffer.BlockCopy(e.Buffer, 0, buffer, 0, e.BytesTransferred);
+                    }
                 }
 
-                if (e.BytesTransferred > 0)
+                if (buffer != null)
                 {
-                    var buffer = new byte[e.BytesTransferred];
-                    Buffer.BlockCopy(e.Buffer, 0, buffer, 0, e.BytesTransferred);
                     DataReceived(this, new DataReceivedEventArgs(buffer));
                 }
-                
+
                 if (e.SocketError == SocketError.Success)
                 {
                     ListenForIncomingData();
@@ -114,10 +133,15 @@
                 }
 
                 Dispose();
-                if (Disconnected != null)
-                {
-                    Disconnected(this, null);
-                }
+                RaiseDisconnectedEvent();
+            }
+        }
+
+        private void RaiseDisconnectedEvent()
+        {
+            if (Disconnected != null)
+            {
+                Disconnected(this, null);
             }
         }
 

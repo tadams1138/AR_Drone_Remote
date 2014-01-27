@@ -147,12 +147,7 @@ namespace AR_Drone_Controller
             _target.Disconnect();
 
             // Assert
-            _mockControlWorker.Verify(x => x.Dispose());
-            _mockCommandWorker.Verify(x => x.Dispose());
-            _mockVideoWorker.Verify(x => x.Dispose());
-            _mockNavDataWorker.Verify(x => x.Dispose());
-            _mockCommandTimer.Verify(x => x.Dispose());
-            AssertPropertiesAreSetToDefaults();
+            VeryifyAllWorkersAndTmersDisposedAndPropertiesSetToDefaults();
         }
 
         #region Connect tests
@@ -219,8 +214,7 @@ namespace AR_Drone_Controller
             }
 
             // Assert
-            VerifyAllWorkersAndTimersDisposed();
-            AssertPropertiesAreSetToDefaults();
+            VeryifyAllWorkersAndTmersDisposedAndPropertiesSetToDefaults();
             expectedException.Should().NotBeNull();
         }
 
@@ -236,8 +230,8 @@ namespace AR_Drone_Controller
             _mockControlWorker.Raise(x => x.Disconnected += null, EventArgs.Empty);
 
             // Assert
-            VerifyAllWorkersAndTimersDisposed();
-            AssertPropertiesAreSetToDefaults();
+            _mockDispatcher.Verify(x => x.BeginInvoke(It.IsAny<Action>()));
+            VeryifyAllWorkersAndTmersDisposedAndPropertiesSetToDefaults();
         }
 
         #endregion
@@ -265,10 +259,10 @@ namespace AR_Drone_Controller
             _target.Connected = false;
 
             // Act
-            RaiseNavDataReceivedEvent();
+            RaiseNavDataReceivedEvent(null);
 
             // Assert
-            _mockDispatcher.Verify(x => x.BeginInvoke(It.IsAny<Action>()), Times.Never());
+            // no exception thrown when a null eventarg would have otherwise guaranteed an exception
         }
 
         [TestMethod]
@@ -891,6 +885,20 @@ namespace AR_Drone_Controller
             _mockCommandWorker.Verify(x => x.Flush(), Times.Never);
         }
 
+        [TestMethod]
+        public void IfExceptionFlushingCommandWorker_Disconnect()
+        {
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.VideoWorker = _mockVideoWorker.Object;
+            _mockCommandWorker.Setup(x => x.Flush()).Throws(new Exception("Test Exception"));
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            VeryifyAllWorkersAndTmersDisposedAndPropertiesSetToDefaults();
+        }
+
         #endregion
 
         #region Settings Tests
@@ -1106,8 +1114,8 @@ namespace AR_Drone_Controller
             _target.Connected = true;
             _target.CanSetRecordScreenshotDelayInSeconds.Should().BeFalse();
 
-            _target.RecordFlightData = false;
             _target.Connected = false;
+            _target.RecordFlightData = false;
             _target.CanSetRecordScreenshotDelayInSeconds.Should().BeTrue();
 
             _target.RecordFlightData = true;
@@ -1261,6 +1269,16 @@ namespace AR_Drone_Controller
 
         #endregion
 
+        private void VeryifyAllWorkersAndTmersDisposedAndPropertiesSetToDefaults()
+        {
+            _mockControlWorker.Verify(x => x.Dispose());
+            _mockCommandWorker.Verify(x => x.Dispose());
+            _mockVideoWorker.Verify(x => x.Dispose());
+            _mockNavDataWorker.Verify(x => x.Dispose());
+            _mockCommandTimer.Verify(x => x.Dispose());
+            AssertPropertiesAreSetToDefaults();
+        }
+
         private void VerifyTakeOffSendsOutdoorConfigCommand(bool outdoor, string expectedConfigValue)
         {
             // Arrange
@@ -1375,7 +1393,12 @@ namespace AR_Drone_Controller
 
         private void RaiseNavDataReceivedEvent()
         {
-            _mockNavDataWorker.Raise(x => x.NavDataReceived += null, new NavDataReceivedEventArgs(_navDataArgs.Object));
+            RaiseNavDataReceivedEvent(_navDataArgs.Object);
+        }
+
+        private void RaiseNavDataReceivedEvent(NavData.NavData navData)
+        {
+            _mockNavDataWorker.Raise(x => x.NavDataReceived += null, new NavDataReceivedEventArgs(navData));
         }
 
         private void InitializeWorkersAndNavDataEventArgsAndConnect()
@@ -1397,15 +1420,6 @@ namespace AR_Drone_Controller
         {
             InitializeFactoryAndWorkerMocks();
             _target.Connect();
-        }
-
-        private void VerifyAllWorkersAndTimersDisposed()
-        {
-            _mockControlWorker.Verify(x => x.Dispose());
-            _mockCommandWorker.Verify(x => x.Dispose());
-            _mockVideoWorker.Verify(x => x.Dispose());
-            _mockNavDataWorker.Verify(x => x.Dispose());
-            _mockCommandTimer.Verify(x => x.Dispose());
         }
 
         private void VerifyNewWorkersAndTimerRunAndConnectedSetToTrue()

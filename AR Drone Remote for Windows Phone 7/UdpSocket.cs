@@ -23,6 +23,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         private readonly int _localPort;
         private readonly string _remoteIp;
         private readonly int _remotePort;
+        private int _exceptionsSending;
 
         public UdpSocket(int localPort, string remoteIp, int remotePort)
         {
@@ -34,8 +35,8 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         public void Connect()
         {
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            _receiveSocketEventArg = CreateReceiveSocketEventArg(_localPort);
-            _sendSocketEventArg = CreateSendSocketAsyncEventArgs(_remoteIp, _remotePort);
+            CreateReceiveSocketEventArg();
+            CreateSendSocketAsyncEventArgs();
             InitializeSocket();
             ListenForIncomingData();
         }
@@ -48,20 +49,24 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             lock (_syncLock)
             {
                 _disposed = true;
-                _socket.Dispose();
+                if (_socket != null)
+                {
+                    _socket.Dispose();
+                    _socket = null;
+                }
             }
         }
 
         public void Write(string s)
         {
             byte[] payload = Encoding.UTF8.GetBytes(s);
-            Send(payload);
+            SafeSend(payload);
         }
 
         public void Write(int i)
         {
             byte[] payload = BitConverter.GetBytes(i);
-            Send(payload);
+            SafeSend(payload);
         }
 
         private void InitializeSocket()
@@ -69,43 +74,78 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             Write(1);
         }
 
-        private SocketAsyncEventArgs CreateSendSocketAsyncEventArgs(string remoteIp, int remotePort)
+        private void CreateSendSocketAsyncEventArgs()
         {
-            var sendSocketEventArg = new SocketAsyncEventArgs { RemoteEndPoint = new DnsEndPoint(remoteIp, remotePort) };
-            sendSocketEventArg.Completed += (s, e) => _clientDone.Set();
-            return sendSocketEventArg;
+            _sendSocketEventArg = new SocketAsyncEventArgs { RemoteEndPoint = new DnsEndPoint(_remoteIp, _remotePort) };
+            _sendSocketEventArg.Completed += (s, e) => _clientDone.Set();
         }
 
-        private SocketAsyncEventArgs CreateReceiveSocketEventArg(int localPort)
+        private void CreateReceiveSocketEventArg()
         {
-            var receiveSocketEventArg = new SocketAsyncEventArgs
+            _receiveSocketEventArg = new SocketAsyncEventArgs
             {
-                RemoteEndPoint = new IPEndPoint(IPAddress.Any, localPort)
+                RemoteEndPoint = new IPEndPoint(IPAddress.Any, _localPort)
             };
-            receiveSocketEventArg.SetBuffer(_buffer, 0, _buffer.Length);
-            receiveSocketEventArg.Completed += ReceiveSocketEventArgOnCompleted;
-            return receiveSocketEventArg;
+            _receiveSocketEventArg.SetBuffer(_buffer, 0, _buffer.Length);
+            _receiveSocketEventArg.Completed += ReceiveSocketEventArgOnCompleted;
+        }
+
+        private void SafeSend(byte[] payload)
+        {
+            lock (_syncLock)
+            {
+                if (!_disposed)
+                {
+                    try
+                    {
+                        Send(payload);
+                        _exceptionsSending = 0;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        if (_exceptionsSending > 2)
+                        {
+                            throw;
+                        }
+
+                        _exceptionsSending++;
+                        CreateNewSocketAsyncEventArgsAndResend(payload);
+                    }
+                }
+            }
+        }
+
+        private void CreateNewSocketAsyncEventArgsAndResend(byte[] payload)
+        {
+            DisposeSendSocketEventArg();
+            CreateSendSocketAsyncEventArgs();
+            Send(payload);
         }
 
         private void Send(byte[] payload)
         {
-            lock (_syncLock)
-            {
-                if (_disposed)
-                {
-                    return;
-                }
+            _sendSocketEventArg.SetBuffer(payload, 0, payload.Length);
+            _clientDone.Reset();
+            _socket.SendToAsync(_sendSocketEventArg);
+            _clientDone.WaitOne(TimeoutMilliseconds);
+        }
 
-                _sendSocketEventArg.SetBuffer(payload, 0, payload.Length);
-                _clientDone.Reset();
-                _socket.SendToAsync(_sendSocketEventArg);
-                _clientDone.WaitOne(TimeoutMilliseconds);
-            }
+        private void DisposeSendSocketEventArg()
+        {
+            _sendSocketEventArg.Dispose();
+            _sendSocketEventArg = null;
         }
 
         private void ListenForIncomingData()
         {
-            if (!_disposed && !_socket.ReceiveFromAsync(_receiveSocketEventArg))
+            bool shouldProcessSocketEvent;
+
+            lock (_syncLock)
+            {
+                shouldProcessSocketEvent = !_disposed && !_socket.ReceiveFromAsync(_receiveSocketEventArg);
+            }
+
+            if (shouldProcessSocketEvent)
             {
                 ProcessSocketEvent(_receiveSocketEventArg);
             }
@@ -115,10 +155,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         {
             try
             {
-                lock (_syncLock)
-                {
-                    ProcessSocketEvent(e);
-                }
+                ProcessSocketEvent(e);
             }
             catch (Exception ex)
             {
@@ -131,15 +168,24 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         private void ProcessSocketEvent(SocketAsyncEventArgs e)
         {
-            if (e.BytesTransferred > 0)
+            byte[] buffer = null;
+
+            lock (_syncLock)
             {
-                var buffer = new byte[e.BytesTransferred];
-                Buffer.BlockCopy(e.Buffer, 0, buffer, 0, e.BytesTransferred);
-                DataReceived(this, new DataReceivedEventArgs(buffer));
+                if (e.BytesTransferred > 0)
+                {
+                    buffer = new byte[e.BytesTransferred];
+                    Buffer.BlockCopy(e.Buffer, 0, buffer, 0, e.BytesTransferred);
+                }
+                else if (e.SocketError != SocketError.Success)
+                {
+                    throw new SocketException((int) e.SocketError);
+                }
             }
-            else if (e.SocketError != SocketError.Success)
+
+            if (buffer != null)
             {
-                throw new SocketException((int)e.SocketError);
+                DataReceived(this, new DataReceivedEventArgs(buffer));
             }
 
             ListenForIncomingData();
