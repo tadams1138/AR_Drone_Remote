@@ -1,13 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
-  <DefaultLanguage xmlns="" code="" />
-  <App xmlns="" ProductID="{6ef8a8e9-0b60-43d1-9aa9-3837cf8c4423}" Title="AR Drone Remote" RuntimeType="Silverlight" Version="1.0.1.0" Genre="apps.normal" Author="Thomas Adams" Description="Remote Control for Parrot Brand AR Drone 2.0" Publisher="Thomas Adams" BitsPerPixel="32" PublisherID="{f4bac5db-54ea-45e4-ba9f-ac79a5011e29}">
+  <DefaultLanguage xmlns="" code="en-US" />
+  <App xmlns="" ProductID="{6ef8a8e9-0b60-43d1-9aa9-3837cf8c4423}" Title="AR Drone Remote" RuntimeType="Silverlight" Version="1.0.2.0" Genre="apps.normal" Author="Thomas Adams" Description="Remote Control for Parrot Brand AR Drone 2.0" Publisher="Thomas Adams" BitsPerPixel="32" PublisherID="{f4bac5db-54ea-45e4-ba9f-ac79a5011e29}">
     <IconPath IsRelative="true" IsResource="false">Assets\AppIcon.png</IconPath>
     <Capabilities>
       <Capability Name="ID_CAP_NETWORKING" />
       <Capability Name="ID_CAP_SENSORS" />
       <Capability Name="ID_CAP_WEBBROWSERCOMPONENT" />
-      <Capability Name="ID_CAP_LOCATION" />
     </Capabilities>
     <Tasks>
       <DefaultTask Name="_default" NavigationPage="MainPage.xaml" />

@@ -50,6 +50,23 @@
                                 IsOn="{Binding AbsoluteControl, Mode=TwoWay}" 
                                 IsEnabled="{Binding CompassIsSupported}" />
         </Grid>
+        <!--<Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="Lock Drone heading to Device heading" TextWrapping="Wrap"/>
+                <TextBlock Text="Compass is not supported" 
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource WarningTextStyle}"
+                                               Visibility="{Binding CompassIsSupported, Converter={StaticResource InverseBooleanToVisibility}}"/>
+            </StackPanel>
+            <ToggleSwitch Grid.Column="1"
+                                HorizontalAlignment="Center" 
+                                IsOn="{Binding LockDroneHeadingToDeviceHeading, Mode=TwoWay}" 
+                                IsEnabled="{Binding CompassIsSupported}" />
+        </Grid>-->
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
@@ -61,7 +78,7 @@
                               IsOn="{Binding CombineYaw, Mode=TwoWay}"
                               IsEnabled="{Binding DroneController.CanSetCombineYaw}"/>
         </Grid>
-        <Grid>
+        <!--<Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
@@ -93,8 +110,8 @@
                     Grid.Column="1"
                     HorizontalAlignment="Center" 
                     IsOn="{Binding RecordFlightData, Mode=TwoWay}" />
-        </Grid>
-        <StackPanel Orientation="Horizontal">
+        </Grid>-->
+        <!--<StackPanel Orientation="Horizontal">
             <TextBlock>Record Screenshot Delay in Seconds:</TextBlock>
             <TextBlock Text="{Binding ElementName=RecordScreenshotDelayInSecondsSlider, Path=Value}"/>
         </StackPanel>
@@ -106,7 +123,7 @@
                     Width="300"
                     SnapsTo="StepValues"
                     StepFrequency="1"
-                    Value="{Binding RecordScreenshotDelayInSeconds, Mode=TwoWay}" />
+                    Value="{Binding RecordScreenshotDelayInSeconds, Mode=TwoWay}" />-->
         <StackPanel Orientation="Horizontal">
             <TextBlock Style="{StaticResource SubheaderTextStyle}">Max Altitude in Meters:</TextBlock>
             <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="{Binding ElementName=MaxAltitudeInMetersSlider, Path=Value}"/>

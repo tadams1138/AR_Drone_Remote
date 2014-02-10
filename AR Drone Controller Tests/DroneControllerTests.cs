@@ -534,20 +534,6 @@ namespace AR_Drone_Controller
             VerifyTakeOffSendsMaxIndoorYawDegreesConfigCommand(17, 17 * DroneController.DegreesToRadiansCoefficient);
         }
 
-        private void VerifyTakeOffSendsMaxIndoorYawDegreesConfigCommand(int maxIndoorYawDegrees, double maxIndoorYawRadians)
-        {
-            // Arrange
-            InitializeFactoryAndWorkerMocksAndConnect();
-            _target.MaxIndoorYawDegrees = maxIndoorYawDegrees;
-
-            // Act
-            _target.TakeOff();
-
-            // Assert
-            _mockCommandWorker.Verify(
-                x => x.SendConfigCommand(DroneController.IndoorControlYawConfigKey, maxIndoorYawRadians.ToString(CultureInfo.InvariantCulture)));
-        }
-
         [TestMethod]
         public void WhenMaxOutdoorYawDegrees30_TakeOff_SendsMaxOutdoorYawDegreesConfigCommand()
         {
@@ -612,20 +598,6 @@ namespace AR_Drone_Controller
             VerifyTakeOffSendsMaxIndoorRollOrPitchDegreesConfigCommand(17, 17 * DroneController.DegreesToRadiansCoefficient);
         }
 
-        private void VerifyTakeOffSendsMaxIndoorRollOrPitchDegreesConfigCommand(int maxIndoorRollOrPitchDegrees, double maxIndoorRollOrPitchRadians)
-        {
-            // Arrange
-            InitializeFactoryAndWorkerMocksAndConnect();
-            _target.MaxIndoorRollOrPitchDegrees = maxIndoorRollOrPitchDegrees;
-
-            // Act
-            _target.TakeOff();
-
-            // Assert
-            _mockCommandWorker.Verify(
-                x => x.SendConfigCommand(DroneController.IndoorEulerAngleMaxConfigKey, maxIndoorRollOrPitchRadians.ToString(CultureInfo.InvariantCulture)));
-        }
-
         [TestMethod]
         public void WhenMaxIndoorVerticalCmPerSecond30_TakeOff_SendsMaxIndoorVerticalCmPerSecondConfigCommand()
         {
@@ -664,22 +636,8 @@ namespace AR_Drone_Controller
             VerifyTakeOffSendsMaxOutdoorVerticalSpeedConfigCommand(17, 170);
         }
 
-        private void VerifyTakeOffSendsMaxOutdoorVerticalSpeedConfigCommand(int maxOutdoorCmPerSecond, double maxOutdoorMmPerSecond)
-        {
-            // Arrange
-            InitializeFactoryAndWorkerMocksAndConnect();
-            _target.MaxOutdoorVerticalCmPerSecond = maxOutdoorCmPerSecond;
-
-            // Act
-            _target.TakeOff();
-
-            // Assert
-            _mockCommandWorker.Verify(
-                x => x.SendConfigCommand(DroneController.OutdoorMaxVerticalSpeedConfigKey, maxOutdoorMmPerSecond.ToString(CultureInfo.InvariantCulture)));
-        }
-
         [TestMethod]
-        public void TakeOff_SendsTakeOffCommand()
+        public void TakeOff_SendsFlatTrimAndTakeOffCommand()
         {
             // Arrange
             InitializeFactoryAndWorkerMocksAndConnect();
@@ -688,6 +646,7 @@ namespace AR_Drone_Controller
             _target.TakeOff();
 
             // Assert
+            _mockCommandWorker.Verify(x => x.SendFlatTrimCommand());
             _mockCommandWorker.Verify(x => x.SendRefCommand(CommandWorker.RefCommands.TakeOff));
         }
 
@@ -826,44 +785,10 @@ namespace AR_Drone_Controller
         #region CommandTimer Tick tests
 
         [TestMethod]
-        public void GivenFlying_CommandTimerTick_SendFlightCommands()
+        public void WhenConnected_CommandTimerTick_FlushesCommandWorker()
         {
             // Arrange
             InitializeFactoryAndWorkerMocksAndConnect();
-            _target.Flying = true;
-
-            // Act
-            _target.DoWork(null);
-
-            // Assert
-            _mockCommandWorker.Verify(x => x.SendProgressiveCommand(_target));
-            _mockCommandWorker.Verify(x => x.Flush());
-        }
-
-        [TestMethod]
-        public void GivenCommWatchdogSet_CommandTimerTick_SendResetCommandInstead()
-        {
-            // Arrange
-            InitializeFactoryAndWorkerMocksAndConnect();
-            _target.Flying = true;
-            _target.CommWatchDog = true;
-
-            // Act
-            _target.DoWork(null);
-
-            // Assert
-            _mockCommandWorker.Verify(x => x.SendProgressiveCommand(_target), Times.Never());
-            _mockCommandWorker.Verify(x => x.SendResetWatchDogCommand());
-            _mockCommandWorker.Verify(x => x.Flush());
-        }
-
-        [TestMethod]
-        public void WhenNotFlyingAndNotCommWatchdogSet_CommandTimerTick_FlushCommandQueue()
-        {
-            // Arrange
-            InitializeFactoryAndWorkerMocksAndConnect();
-            _target.Flying = false;
-            _target.CommWatchDog = false;
 
             // Act
             _target.DoWork(null);
@@ -873,7 +798,7 @@ namespace AR_Drone_Controller
         }
 
         [TestMethod]
-        public void WhenNotConnected_CommandTimerTick_NoCommandsSent()
+        public void WhenNotConnected_CommandTimerTick_CommandWorkerIsNeverFlushed()
         {
             // Arrange
             InitializeFactoryAndWorkerMocks();
@@ -886,8 +811,9 @@ namespace AR_Drone_Controller
         }
 
         [TestMethod]
-        public void IfExceptionFlushingCommandWorker_Disconnect()
+        public void IfExceptionFlushingCommandWorker_CommandTimerTick_Disconnect()
         {
+            // Arrange
             InitializeFactoryAndWorkerMocksAndConnect();
             _target.VideoWorker = _mockVideoWorker.Object;
             _mockCommandWorker.Setup(x => x.Flush()).Throws(new Exception("Test Exception"));
@@ -897,6 +823,110 @@ namespace AR_Drone_Controller
 
             // Assert
             VeryifyAllWorkersAndTmersDisposedAndPropertiesSetToDefaults();
+        }
+
+        [TestMethod]
+        public void CommandTimerTick_SendsCalibrateCompassCommand5SecondsAfterTakeoff()
+        {
+            // Arrange
+            var startTime = DateTime.UtcNow;
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _mockDateTimeFactory.Setup(x => x.Now).Returns(startTime);
+            _target.TakeOff();
+
+            VerifyCommandTimerSendsCalibrateCompassCommand(startTime, 0, 0);
+            VerifyCommandTimerSendsCalibrateCompassCommand(startTime, 5, 0);
+            VerifyCommandTimerSendsCalibrateCompassCommand(startTime, 6, 1);
+            VerifyCommandTimerSendsCalibrateCompassCommand(startTime, 10, 1);
+        }
+
+        private const int ProgressiveCommandTimeDelayInSeconds = 10;
+
+        [TestMethod]
+        public void WhenFlyingNotCommWatchDog_CommandTimerTick_SendsProgressiveCommandsDealyedAfterTakeoff()
+        {
+            // Arrange
+            var startTime = DateTime.UtcNow;
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _mockDateTimeFactory.Setup(x => x.Now).Returns(startTime);
+            _target.TakeOff();
+            _target.Flying = true;
+            _target.CommWatchDog = false;
+
+            VerifyCommandTimerSendsProgressiveCommand(startTime, 0, 0);
+
+            VerifyCommandTimerSendsProgressiveCommand(startTime, ProgressiveCommandTimeDelayInSeconds, 0);
+            VerifyCommandTimerSendsProgressiveCommand(startTime, ProgressiveCommandTimeDelayInSeconds + 1, 1);
+            VerifyCommandTimerSendsProgressiveCommand(startTime, ProgressiveCommandTimeDelayInSeconds + 2, 2);
+            VerifyCommandTimerSendsProgressiveCommand(startTime, ProgressiveCommandTimeDelayInSeconds + 3, 3);
+            VerifyCommandTimerSendsProgressiveCommand(startTime, ProgressiveCommandTimeDelayInSeconds + 4, 4);
+            VerifyCommandTimerSendsProgressiveCommand(startTime, ProgressiveCommandTimeDelayInSeconds + 5, 5);
+        }
+
+        [TestMethod]
+        public void WhenAfterTakeoffDelayAndNoCommWatchdogAndNoFlying_CommandTimerTick_DoesNotSendProgressiveCommand()
+        {
+            // Arrange
+            var startTime = DateTime.UtcNow;
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _mockDateTimeFactory.Setup(x => x.Now).Returns(startTime);
+            _target.TakeOff();
+            _target.Flying = false;
+            _target.CommWatchDog = false;
+            _mockDateTimeFactory.Setup(x => x.Now).Returns(startTime.AddSeconds(ProgressiveCommandTimeDelayInSeconds + 1));
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.SendProgressiveCommand(_target), Times.Never);
+        }
+
+        [TestMethod]
+        public void WhenAfterTakeoffDelayCommWatchdogAndFlying_CommandTimerTick_DoesNotSendProgressiveCommand()
+        {
+            // Arrange
+            var startTime = DateTime.UtcNow;
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _mockDateTimeFactory.Setup(x => x.Now).Returns(startTime);
+            _target.TakeOff();
+            _target.Flying = true;
+            _target.CommWatchDog = true;
+            _mockDateTimeFactory.Setup(x => x.Now).Returns(startTime.AddSeconds(ProgressiveCommandTimeDelayInSeconds + 1));
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.SendProgressiveCommand(_target), Times.Never);
+        }
+
+        [TestMethod]
+        public void WhenNotCommWatchdog_CommandTimerTick_DoesNotSendResetWatchdogCommand()
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.CommWatchDog = false;
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.SendResetWatchDogCommand(), Times.Never);
+        }
+
+        [TestMethod]
+        public void WhenCommWatchdog_CommandTimerTick_SendsResetWatchdogCommand()
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.CommWatchDog = true;
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.SendResetWatchDogCommand());
         }
 
         #endregion
@@ -1267,7 +1297,127 @@ namespace AR_Drone_Controller
             _target.CanResetSettings.Should().BeFalse();
         }
 
+        [TestMethod]
+        public void WhenLockDroneDirectionToDeviceDirectionIsFalse_Yaw_IsWhateverItIsSetTo()
+        {
+            // Arrange
+            _target.LockDroneHeadingToDeviceHeading = false;
+            const float testYaw = 6543.171f;
+
+            // Act
+            _target.Yaw = testYaw;
+
+            // Assert
+            _target.Yaw.Should().Be(testYaw);
+        }
+
+        [TestMethod]
+        public void WhenDroneDirectionLockedToDeviceDirection_Yaw_IsTheResultofComparingDeviceHeadingToDroneHeading()
+        {
+            // Arrange
+            _target.LockDroneHeadingToDeviceHeading = true;
+            const float testYaw = 6543.171f;
+            _target.Yaw = testYaw;
+
+            // Act
+            VerifyYawFromHeadingAndPsi(0, 0, 0);
+            VerifyYawFromHeadingAndPsi(-4.9f, 0, 0f);
+            VerifyYawFromHeadingAndPsi(4.9f, 0, 0f);
+            VerifyYawFromHeadingAndPsi(-163f, 0f, .9f);
+            VerifyYawFromHeadingAndPsi(-90f, 0f, .5f);
+            VerifyYawFromHeadingAndPsi(163f, 0f, -.9f);
+            VerifyYawFromHeadingAndPsi(90f, 0f, -.5f);
+            VerifyYawFromHeadingAndPsi(0f, 163f, .9f);
+            VerifyYawFromHeadingAndPsi(0f, 90f, .5f);
+            VerifyYawFromHeadingAndPsi(0f, -90f, -.5f);
+            VerifyYawFromHeadingAndPsi(0f, -163f, -.9f);
+            VerifyYawFromHeadingAndPsi(135f, -135f, .5f);
+            VerifyYawFromHeadingAndPsi(-135f, 135f, -.5f);
+            VerifyYawFromHeadingAndPsi(-135f, 90f, -.75f);
+            VerifyYawFromHeadingAndPsi(135f, -90f, .75f);
+            VerifyYawFromHeadingAndPsi(180f, -90f, .5f);
+            VerifyYawFromHeadingAndPsi(-180f, 90f, -.5f);
+            VerifyYawFromHeadingAndPsi(90f, -180f, .5f);
+            VerifyYawFromHeadingAndPsi(-90f, 180f, -.5f);
+        }
+
+        private void VerifyYawFromHeadingAndPsi(float psi, float controllerHeading, float yaw)
+        {
+            _target.ControllerHeading = controllerHeading;
+            _target.Psi = psi;
+            _target.Yaw.Should().BeApproximately(yaw, 0.01f);
+        }
+
         #endregion
+
+        private void VerifyCommandTimerSendsProgressiveCommand(DateTime startTime, int secondsFromTakeoff,
+            int sendProgressiveCommandCallCount)
+        {
+            // Arrange
+            _mockDateTimeFactory.Setup(x => x.Now).Returns(startTime.AddSeconds(secondsFromTakeoff));
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.SendProgressiveCommand(_target),
+                Times.Exactly(sendProgressiveCommandCallCount));
+        }
+
+        private void VerifyCommandTimerSendsCalibrateCompassCommand(DateTime startTime, int secondsFromTakeOff,
+            int calibrateCompassCallCount)
+        {
+            // Arrange
+            _mockDateTimeFactory.Setup(x => x.Now).Returns(startTime.AddSeconds(secondsFromTakeOff));
+
+            // Act
+            _target.DoWork(null);
+
+            // Assert
+            _mockCommandWorker.Verify(x => x.SendCalibrateCompassCommand(), Times.Exactly(calibrateCompassCallCount));
+        }
+
+        private void VerifyTakeOffSendsMaxIndoorYawDegreesConfigCommand(int maxIndoorYawDegrees, double maxIndoorYawRadians)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.MaxIndoorYawDegrees = maxIndoorYawDegrees;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.IndoorControlYawConfigKey, maxIndoorYawRadians.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        private void VerifyTakeOffSendsMaxIndoorRollOrPitchDegreesConfigCommand(int maxIndoorRollOrPitchDegrees, double maxIndoorRollOrPitchRadians)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.MaxIndoorRollOrPitchDegrees = maxIndoorRollOrPitchDegrees;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.IndoorEulerAngleMaxConfigKey, maxIndoorRollOrPitchRadians.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        private void VerifyTakeOffSendsMaxOutdoorVerticalSpeedConfigCommand(int maxOutdoorCmPerSecond, double maxOutdoorMmPerSecond)
+        {
+            // Arrange
+            InitializeFactoryAndWorkerMocksAndConnect();
+            _target.MaxOutdoorVerticalCmPerSecond = maxOutdoorCmPerSecond;
+
+            // Act
+            _target.TakeOff();
+
+            // Assert
+            _mockCommandWorker.Verify(
+                x => x.SendConfigCommand(DroneController.OutdoorMaxVerticalSpeedConfigKey, maxOutdoorMmPerSecond.ToString(CultureInfo.InvariantCulture)));
+        }
 
         private void VeryifyAllWorkersAndTmersDisposedAndPropertiesSetToDefaults()
         {

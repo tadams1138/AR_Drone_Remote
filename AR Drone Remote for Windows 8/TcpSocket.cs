@@ -45,7 +45,7 @@
         public event EventHandler<DataReceivedEventArgs> DataReceived;
         public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
         public event EventHandler Disconnected;
-        
+
         public void Dispose()
         {
             _connected = false;
@@ -54,10 +54,10 @@
             _reader.Dispose();
         }
 
-        public void Write(int s)
+        public async void Write(int s)
         {
             _writer.WriteInt32(s);
-            _writer.FlushAsync();
+            await _writer.FlushAsync();
         }
 
         private static bool IsDisconnected(uint data)
@@ -103,7 +103,8 @@
 
         internal class UnexpectedDisconnectException : Exception
         {
-            public UnexpectedDisconnectException() : base("The socket closed unexpectedly.")
+            public UnexpectedDisconnectException()
+                : base("The socket closed unexpectedly.")
             {
             }
         }

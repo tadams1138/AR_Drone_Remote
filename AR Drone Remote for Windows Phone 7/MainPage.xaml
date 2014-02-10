@@ -312,13 +312,30 @@
                                     <ColumnDefinition Width="1*"/>
                                     <ColumnDefinition Width="1*"/>
                                 </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Lock Drone heading to Phone heading" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Compass is not supported" 
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource WarningTextStyle}"
+                                               Visibility="{Binding CompassIsSupported, Converter={StaticResource InverseBooleanToVisibility}}"/>
+                                </StackPanel>
+                                <telerik:RadToggleSwitch Grid.Column="1"
+                                                         HorizontalAlignment="Center" 
+                                                         IsChecked="{Binding LockDroneHeadingToDeviceHeading, Mode=TwoWay}" 
+                                                         IsEnabled="{Binding CompassIsSupported}" />
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
                                 <TextBlock TextWrapping="Wrap">Combine Yaw</TextBlock>
                                 <telerik:RadToggleSwitch Grid.Column="1"
                                                         HorizontalAlignment="Center" 
                                                         IsChecked="{Binding CombineYaw, Mode=TwoWay}"
                                                         IsEnabled="{Binding DroneController.CanSetCombineYaw}" />
                             </Grid>
-                            <Grid>
+                            <!--<Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1*"/>
                                     <ColumnDefinition Width="1*"/>
@@ -340,8 +357,8 @@
                                     HorizontalAlignment="Center" 
                                     IsEnabled="{Binding ElementName=This, Path=LocationServicesSupported}"
                                     IsChecked="{Binding UseLocationService, Mode=TwoWay}"/>
-                            </Grid>
-                            <Grid>
+                            </Grid>-->
+                            <!--<Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1*"/>
                                     <ColumnDefinition Width="1*"/>
@@ -354,8 +371,8 @@
                                     Grid.Column="1"
                                     HorizontalAlignment="Center" 
                                     IsChecked="{Binding RecordFlightData, Mode=TwoWay}"/>
-                            </Grid>
-                            <StackPanel Orientation="Horizontal">
+                            </Grid>-->
+                            <!--<StackPanel Orientation="Horizontal">
                                 <TextBlock>Record Screenshot Delay:</TextBlock>
                                 <TextBlock Text="{Binding ElementName=RecordScreenshotDelayInSecondsSlider, Path=Value, StringFormat='N0'}"/>
                                 <TextBlock>seconds</TextBlock>
@@ -367,7 +384,7 @@
                                 Maximum="{Binding DroneController.MaxAltitudeInMetersMax}" 
                                 Minimum="{Binding DroneController.MaxAltitudeInMetersMin}" 
                                 Width="300"
-                                Value="{Binding RecordScreenshotDelayInSeconds, Mode=TwoWay}" />
+                                Value="{Binding RecordScreenshotDelayInSeconds, Mode=TwoWay}" />-->
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock>Max Altitude:</TextBlock>
                                 <TextBlock Text="{Binding ElementName=MaxAltitudeInMetersSlider, Path=Value}"/>

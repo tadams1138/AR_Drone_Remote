@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest">
-  <Identity Name="9525TISoftware.ARDroneRemote" Publisher="CN=767287B8-2BBF-4473-8D71-AFFB0BF57F6E" Version="1.1.0.2" />
+  <Identity Name="9525TISoftware.ARDroneRemote" Publisher="CN=767287B8-2BBF-4473-8D71-AFFB0BF57F6E" Version="1.1.0.10" />
   <Properties>
     <DisplayName>AR Drone Remote</DisplayName>
     <PublisherDisplayName>T &amp; I Software</PublisherDisplayName>
@@ -30,6 +30,5 @@
   </Applications>
   <Capabilities>
     <Capability Name="internetClient" />
-    <DeviceCapability Name="location" />
   </Capabilities>
 </Package>

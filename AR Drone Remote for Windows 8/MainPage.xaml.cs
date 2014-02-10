@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Windows.Devices.Geolocation;
+//using Windows.Devices.Geolocation;
 using Windows.Storage;
 using Windows.UI.ApplicationSettings;
 using AR_Drone_Controller;
@@ -29,8 +29,8 @@ namespace AR_Drone_Remote_for_Windows_8
         private bool _useAccelerometer;
         private KeyboardInput _keyboardInput;
         private const float Gain = 1f;
-        private string _location;
-        private bool _locationServicesSupported;
+        //private string _location;
+        //private bool _locationServicesSupported;
         private bool _showControls = true;
 
         private readonly List<string> _settingsProperties = new List<string>
@@ -50,7 +50,8 @@ namespace AR_Drone_Remote_for_Windows_8
             "MaxIndoorRollOrPitchDegrees",
             "MaxOutdoorRollOrPitchDegrees",
             "MaxIndoorVerticalCmPerSecond",
-            "MaxOutdoorVerticalCmPerSecond"
+            "MaxOutdoorVerticalCmPerSecond",
+            "LockDroneHeadingToDeviceHeading"
         };
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -69,7 +70,7 @@ namespace AR_Drone_Remote_for_Windows_8
             InitializeKeyboardInput();
             InitializeCompass();
             InitializeAccelerometer();
-            InitializeGeolocator();
+            //InitializeGeolocator();
         }
 
         public DroneController DroneController
@@ -78,7 +79,7 @@ namespace AR_Drone_Remote_for_Windows_8
             set { StaticDroneController = value; }
         }
 
-        public Geolocator Geolocator { get; set; }
+        //public Geolocator Geolocator { get; set; }
 
         public bool CompassIsSupported
         {
@@ -93,25 +94,25 @@ namespace AR_Drone_Remote_for_Windows_8
             get { return _accelerometer != null; }
         }
 
-        public bool LocationServicesSupported
-        {
-            get { return _locationServicesSupported; }
-            private set
-            {
-                _locationServicesSupported = value;
-                OnPropertyChanged();
-            }
-        }
+        //public bool LocationServicesSupported
+        //{
+        //    get { return _locationServicesSupported; }
+        //    private set
+        //    {
+        //        _locationServicesSupported = value;
+        //        OnPropertyChanged();
+        //    }
+        //}
 
-        public string Location
-        {
-            get { return _location; }
-            private set
-            {
-                _location = value;
-                OnPropertyChanged();
-            }
-        }
+        //public string Location
+        //{
+        //    get { return _location; }
+        //    private set
+        //    {
+        //        _location = value;
+        //        OnPropertyChanged();
+        //    }
+        //}
 
         public bool UseAccelerometer
         {
@@ -145,6 +146,20 @@ namespace AR_Drone_Remote_for_Windows_8
             {
                 SavePropertyValue(value);
                 DroneController.AbsoluteControlMode = value;
+            }
+        }
+
+        public bool LockDroneHeadingToDeviceHeading
+        {
+            get
+            {
+                return DroneController.LockDroneHeadingToDeviceHeading;
+            }
+
+            set
+            {
+                SavePropertyValue(value);
+                DroneController.LockDroneHeadingToDeviceHeading = value;
             }
         }
 
@@ -318,7 +333,7 @@ namespace AR_Drone_Remote_for_Windows_8
         protected override void OnNavigatedTo(Windows.UI.Xaml.Navigation.NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            DisplayProperties.AutoRotationPreferences = DisplayOrientations.Landscape;
+            DisplayInformation.AutoRotationPreferences = DisplayOrientations.Landscape;
             SettingsPane.GetForCurrentView().CommandsRequested += OnCommandsRequested;
             LoadSettings();
         }
@@ -326,7 +341,7 @@ namespace AR_Drone_Remote_for_Windows_8
         protected override void OnNavigatedFrom(Windows.UI.Xaml.Navigation.NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
-
+            DroneController.Disconnect();
             SettingsPane.GetForCurrentView().CommandsRequested -= OnCommandsRequested;
         }
 
@@ -361,12 +376,12 @@ namespace AR_Drone_Remote_for_Windows_8
             Window.Current.CoreWindow.KeyUp += KeyboardStateChanged;
         }
 
-        private void InitializeGeolocator()
-        {
-            Geolocator = new Geolocator { MovementThreshold = 100 };
-            Geolocator.StatusChanged += Geolocator_StatusChanged;
-            Geolocator.PositionChanged += Geolocator_PositionChanged;
-        }
+        //private void InitializeGeolocator()
+        //{
+        //    Geolocator = new Geolocator { MovementThreshold = 100 };
+        //    Geolocator.StatusChanged += Geolocator_StatusChanged;
+        //    Geolocator.PositionChanged += Geolocator_PositionChanged;
+        //}
 
         private void OnCommandsRequested(SettingsPane settingsPane, SettingsPaneCommandsRequestedEventArgs e)
         {
@@ -379,11 +394,11 @@ namespace AR_Drone_Remote_for_Windows_8
             e.Request.ApplicationCommands.Add(defaultsCommand);
         }
 
-        private void AccelerometerOnCurrentValueChanged(Accelerometer accelerometer, AccelerometerReadingChangedEventArgs args)
+        private async void AccelerometerOnCurrentValueChanged(Accelerometer accelerometer, AccelerometerReadingChangedEventArgs args)
         {
             if (_useAccelerometer)
             {
-                Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate
                 {
                     if (SteerButton.IsPressed)
                     {
@@ -399,35 +414,35 @@ namespace AR_Drone_Remote_for_Windows_8
             }
         }
 
-        private void CompassOnCurrentValueChanged(Compass compass, CompassReadingChangedEventArgs args)
+        private async void CompassOnCurrentValueChanged(Compass compass, CompassReadingChangedEventArgs args)
         {
             var heading = (float)args.Reading.HeadingMagneticNorth;
-            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => CompassIndicator.ControllerHeading = heading);
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => CompassIndicator.ControllerHeading = heading);
             DroneController.ControllerHeading = heading;
         }
 
-        private void Geolocator_PositionChanged(Geolocator sender, PositionChangedEventArgs args)
-        {
-            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                var l = args.Position.Coordinate;
-                Location = string.Format("Lat: {0:0.0000}, Lon: {1:0.0000}, Alt: {2:0.0}", l.Latitude,
-                    l.Longitude, l.Altitude);
-                DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude ?? double.NaN);
-            });
-        }
+        //private void Geolocator_PositionChanged(Geolocator sender, PositionChangedEventArgs args)
+        //{
+        //    Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+        //    {
+        //        var l = args.Position.Coordinate;
+        //        Location = string.Format("Lat: {0:0.0000}, Lon: {1:0.0000}, Alt: {2:0.0}", l.Latitude,
+        //            l.Longitude, l.Altitude);
+        //        DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude ?? double.NaN);
+        //    });
+        //}
 
-        private void Geolocator_StatusChanged(Geolocator sender, StatusChangedEventArgs args)
-        {
-            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                LocationServicesSupported = args.Status != PositionStatus.Disabled && args.Status != PositionStatus.NotAvailable;
-                if (!LocationServicesSupported)
-                {
-                    UseLocationService = false;
-                }
-            });
-        }
+        //private void Geolocator_StatusChanged(Geolocator sender, StatusChangedEventArgs args)
+        //{
+        //    Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+        //    {
+        //        LocationServicesSupported = args.Status != PositionStatus.Disabled && args.Status != PositionStatus.NotAvailable;
+        //        if (!LocationServicesSupported)
+        //        {
+        //            UseLocationService = false;
+        //        }
+        //    });
+        //}
 
         private void KeyboardStateChanged(CoreWindow sender, KeyEventArgs args)
         {

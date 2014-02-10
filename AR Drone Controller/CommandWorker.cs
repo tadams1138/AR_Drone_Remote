@@ -178,11 +178,18 @@ namespace AR_Drone_Controller
 
         public virtual void Dispose()
         {
-            SendRemainingCommands();
-
-            if (MillisecondsSinceLastTransmition() < MinMillisecondsSinceLastTransmission)
+            try
             {
-                ThreadSleeper.Sleep(MinMillisecondsSinceLastTransmission);
+                SendRemainingCommands();
+
+                if (MillisecondsSinceLastTransmition() < MinMillisecondsSinceLastTransmission)
+                {
+                    ThreadSleeper.Sleep(MinMillisecondsSinceLastTransmission);
+                }
+            }
+            catch
+            {
+                // ignore
             }
 
             Socket.Dispose();

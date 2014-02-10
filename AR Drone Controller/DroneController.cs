@@ -66,6 +66,9 @@ namespace AR_Drone_Controller
         private long _convertedLongitude;
         private long _convertedAltitude;
         private bool _recordFlightData;
+        private DateTime _takeOffTime;
+        private bool _sendCompassCalibrationCommand;
+        private float _yaw;
 
         public DroneController()
         {
@@ -116,7 +119,35 @@ namespace AR_Drone_Controller
 
         public virtual float Roll { get; set; }
 
-        public virtual float Yaw { get; set; }
+        public virtual float Yaw
+        {
+            get
+            {
+                if (LockDroneHeadingToDeviceHeading)
+                {
+                    float difference = ControllerHeading - Psi;
+                    if (difference < -180)
+                    {
+                        difference += 360f;
+                    }
+                    else if (difference > 180)
+                    {
+                        difference -= 360f;
+                    }
+
+                    if (Math.Abs(difference) < 5f)
+                    {
+                        return 0;
+                    }
+
+                    return difference / (180f);
+                }
+
+                return _yaw;
+            }
+
+            set { _yaw = value; }
+        }
 
         public virtual float Gaz { get; set; }
 
@@ -291,6 +322,8 @@ namespace AR_Drone_Controller
 
         public bool CanResetSettings { get { return !Flying; } }
 
+        public bool LockDroneHeadingToDeviceHeading { get; set; }
+
         #endregion
 
         #region Commands
@@ -378,7 +411,10 @@ namespace AR_Drone_Controller
 
         public virtual void TakeOff()
         {
+            _takeOffTime = DateTimeFactory.Now;
+            _sendCompassCalibrationCommand = true;
             SendPreFlightChecklist();
+
             CommandWorker.SendRefCommand(CommandWorker.RefCommands.TakeOff);
         }
 
@@ -440,11 +476,17 @@ namespace AR_Drone_Controller
                 {
                     if (Connected)
                     {
+                        if (_sendCompassCalibrationCommand && DateTimeFactory.Now > _takeOffTime.AddSeconds(5))
+                        {
+                            _sendCompassCalibrationCommand = false;
+                            CommandWorker.SendCalibrateCompassCommand();
+                        }
+
                         if (CommWatchDog)
                         {
                             CommandWorker.SendResetWatchDogCommand();
                         }
-                        else if (Flying)
+                        else if (Flying && DateTimeFactory.Now > _takeOffTime.AddSeconds(10))
                         {
                             CommandWorker.SendProgressiveCommand(this);
                         }
@@ -627,6 +669,7 @@ namespace AR_Drone_Controller
             CommandWorker.SendConfigCommand(OutdoorMaxVerticalSpeedConfigKey, (MaxOutdoorVerticalCmPerSecond * 10).ToString());
             CommandWorker.SendConfigCommand(OutdoorConfigKey, Outdoor ? TrueConfigValue : FalseConfigValue);
             CommandWorker.SendConfigCommand(FlightWithoutShellConfigKey, ShellOn ? FalseConfigValue : TrueConfigValue);
+            CommandWorker.SendFlatTrimCommand();
         }
 
         // Academy FTP "parrot01.nyx.emencia.net", port 21

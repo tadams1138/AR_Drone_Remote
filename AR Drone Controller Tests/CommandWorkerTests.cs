@@ -92,13 +92,9 @@ namespace AR_Drone_Controller
         public void WhenCommandsOnQueue_Dispose_SendRemainderOfQueuePauseDisposesSocket()
         {
             // Arrange
-            var commands = new Queue<string>();
             const string testCommand1 = "testCommand1";
-            commands.Enqueue(testCommand1);
             const string testCommand2 = "testCommand2";
-            commands.Enqueue(testCommand2);
-            commands.Enqueue(null);
-            _mockCommandQueue.Setup(x => x.Flush()).Returns(commands.Dequeue);
+            CreateTestCommandQueue(testCommand1, testCommand2);
             
             // Act 
             _target.Dispose();
@@ -108,6 +104,22 @@ namespace AR_Drone_Controller
             _mockUdpSocket.Verify(x => x.Write(testCommand2));
             _mockThreadSleeper.Verify(x => x.Sleep(It.IsAny<int>()));
             _mockUdpSocket.Verify(x => x.Dispose());
+        }
+
+        [TestMethod]
+        public void WhenCommandsOnQueueAndSocketThrowsException_Dispose_IgnoresException()
+        {
+            // Arrange
+            const string testCommand1 = "testCommand1";
+            const string testCommand2 = "testCommand2";
+            CreateTestCommandQueue(testCommand1, testCommand2);
+            _mockUdpSocket.Setup(x => x.Write(It.IsAny<string>())).Throws(new Exception("Test Exception"));
+
+            // Act 
+            _target.Dispose();
+
+            // Assert
+            // should not have an exception
         }
 
         [TestMethod]
@@ -293,6 +305,15 @@ namespace AR_Drone_Controller
             _mockCommandQueue.Verify(x => x.Enqueue(testFormattedCommand));
         }
 
+        private void CreateTestCommandQueue(string testCommand1, string testCommand2)
+        {
+            var commands = new Queue<string>();
+            commands.Enqueue(testCommand1);
+            commands.Enqueue(testCommand2);
+            commands.Enqueue(null);
+            _mockCommandQueue.Setup(x => x.Flush()).Returns(commands.Dequeue);
+        }
+
         private static Mock<IFlightAnimation> CreateMockFlightAnimation(FlightAnimations animation, int timeout)
         {
             var mockFlightAnimation = new Mock<IFlightAnimation>();
@@ -409,6 +430,8 @@ namespace AR_Drone_Controller
             _mockProgressiveCommandFormatter.Verify(x => x.Load(mockProgressiveCommand.Object));
             _mockCommandQueue.Verify(x => x.Enqueue(testFormattedCommand));
         }
+
+
 
         private void SetupMagnetoPsiAndMagnetoPsiAccuracy(int magnetoPsi, int magnetoPsiAccuracy)
         {

@@ -7,7 +7,7 @@ using Windows.Storage.Streams;
 
 namespace AR_Drone_Remote_for_Windows_8
 {
-    internal class UdpSocket :  IUdpSocket
+    internal class UdpSocket : IUdpSocket
     {
         private DatagramSocket _socket;
         private DataWriter _writer;
@@ -63,10 +63,10 @@ namespace AR_Drone_Remote_for_Windows_8
             Write(payload);
         }
 
-        private void Write(byte[] b)
+        private async void Write(byte[] b)
         {
             _writer.WriteBytes(b);
-            _writer.StoreAsync();
+            await _writer.StoreAsync();
         }
 
         private void socket_MessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)

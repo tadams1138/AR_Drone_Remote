@@ -43,7 +43,8 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             "MaxIndoorRollOrPitchDegrees",
             "MaxOutdoorRollOrPitchDegrees",
             "MaxIndoorVerticalCmPerSecond",
-            "MaxOutdoorVerticalCmPerSecond"
+            "MaxOutdoorVerticalCmPerSecond",
+            "LockDroneHeadingToDeviceHeading"
         };
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -65,8 +66,8 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
 
         private void InitializeGeoCoordinateWatcher()
         {
-            GeoCoordinateWatcher = new GeoCoordinateWatcher { MovementThreshold = 100 };
-            GeoCoordinateWatcher.PositionChanged += LocationPositionChanged;
+            //GeoCoordinateWatcher = new GeoCoordinateWatcher { MovementThreshold = 100 };
+            //GeoCoordinateWatcher.PositionChanged += LocationPositionChanged;
         }
 
         protected override void OnNavigatedFrom(System.Windows.Navigation.NavigationEventArgs e)
@@ -85,10 +86,10 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
                 _accelerometer.Stop();
             }
 
-            if (UseLocationService)
-            {
-                GeoCoordinateWatcher.Stop();
-            }
+            //if (UseLocationService)
+            //{
+            //    GeoCoordinateWatcher.Stop();
+            //}
         }
 
         protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
@@ -109,15 +110,15 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
                 _accelerometer.Start();
             }
 
-            if (UseLocationService)
-            {
-                GeoCoordinateWatcher.Start();
-            }
+            //if (UseLocationService)
+            //{
+            //    GeoCoordinateWatcher.Start();
+            //}
         }
 
         public DroneController DroneController { get { return _droneController; } }
 
-        public GeoCoordinateWatcher GeoCoordinateWatcher { get; set; }
+        //public GeoCoordinateWatcher GeoCoordinateWatcher { get; set; }
 
         public bool CompassIsSupported
         {
@@ -129,13 +130,13 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             get { return Accelerometer.IsSupported; }
         }
 
-        public bool LocationServicesSupported
-        {
-            get
-            {
-                return GeoCoordinateWatcher.Permission == GeoPositionPermission.Granted;
-            }
-        }
+        //public bool LocationServicesSupported
+        //{
+        //    get
+        //    {
+        //        return GeoCoordinateWatcher.Permission == GeoPositionPermission.Granted;
+        //    }
+        //}
 
         public bool UseAccelerometer
         {
@@ -178,6 +179,20 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             }
         }
 
+        public bool LockDroneHeadingToDeviceHeading
+        {
+            get
+            {
+                return _droneController.LockDroneHeadingToDeviceHeading;
+            }
+
+            set
+            {
+                SavePropertyValue(value);
+                _droneController.LockDroneHeadingToDeviceHeading = value;
+            }
+        }
+
         public bool CombineYaw
         {
             get
@@ -192,28 +207,28 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             }
         }
 
-        public bool UseLocationService
-        {
-            get { return _droneController.CanSendLocationInformation; }
-            set
-            {
-                SavePropertyValue(value);
+        //public bool UseLocationService
+        //{
+        //    get { return _droneController.CanSendLocationInformation; }
+        //    set
+        //    {
+        //        SavePropertyValue(value);
 
-                if (_droneController.CanSendLocationInformation != value)
-                {
-                    _droneController.CanSendLocationInformation = value;
+        //        if (_droneController.CanSendLocationInformation != value)
+        //        {
+        //            _droneController.CanSendLocationInformation = value;
 
-                    if (value)
-                    {
-                        GeoCoordinateWatcher.Start();
-                    }
-                    else
-                    {
-                        GeoCoordinateWatcher.Stop();
-                    }
-                }
-            }
-        }
+        //            if (value)
+        //            {
+        //                GeoCoordinateWatcher.Start();
+        //            }
+        //            else
+        //            {
+        //                GeoCoordinateWatcher.Stop();
+        //            }
+        //        }
+        //    }
+        //}
 
         public bool RecordFlightData
         {
@@ -593,14 +608,14 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             }
         }
 
-        private void LocationPositionChanged(object sender, GeoPositionChangedEventArgs<GeoCoordinate> e)
-        {
-            Dispatcher.BeginInvoke(delegate
-            {
-                var l = e.Position.Location;
-                DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude);
-            });
-        }
+        //private void LocationPositionChanged(object sender, GeoPositionChangedEventArgs<GeoCoordinate> e)
+        //{
+        //    Dispatcher.BeginInvoke(delegate
+        //    {
+        //        var l = e.Position.Location;
+        //        DroneController.SetLocation(l.Latitude, l.Longitude, l.Altitude);
+        //    });
+        //}
 
         private void ResetSettingsButton_OnClick(object sender, RoutedEventArgs e)
         {

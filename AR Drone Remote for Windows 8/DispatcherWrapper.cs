@@ -13,9 +13,9 @@ namespace AR_Drone_Remote_for_Windows_8
 
         protected CoreDispatcher Dispatcher { get; private set; }
 
-        public void BeginInvoke(Action action)
+        public async void BeginInvoke(Action action)
         {
-            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, action.Invoke);
+           await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, action.Invoke);
         }
     }
 }

@@ -49,7 +49,6 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
                 // and consume battery power when the user is not using the phone.
                 PhoneApplicationService.Current.UserIdleDetectionMode = IdleDetectionMode.Disabled;
             }
-
         }
 
         // Code to execute when the application is launching (eg, from Start)
@@ -191,7 +190,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
                     Title = "O noz! Trial Expired :(",
                     Content = "The trial period has expired and our kids are getting hungry. To help support " +
                               "the hard work that went into making this app as well as the development of new " +
-                              "features, please consider buying this app. Press OK buy the app from the marketplace " +
+                              "features, please consider buying this app. Press OK to buy the app from the marketplace " +
                               "now."
                 };
         }

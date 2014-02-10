@@ -18,6 +18,7 @@
     <TargetPlatformVersion>8.1</TargetPlatformVersion>
     <MinimumVisualStudioVersion>12</MinimumVisualStudioVersion>
     <TargetFrameworkVersion />
+    <AppxBundlePlatforms>neutral</AppxBundlePlatforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -132,7 +133,6 @@
     <Compile Include="CompassControl.xaml.cs">
       <DependentUpon>CompassControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="DependencyObjectExtensions.cs" />
     <Compile Include="DispatcherWrapper.cs" />
     <Compile Include="Joystick.xaml.cs">
       <DependentUpon>Joystick.xaml</DependentUpon>
@@ -209,11 +209,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <SDKReference Include="RadControls for Windows 8, Version=2013.3.1105">
-      <Name>RadControls for Windows 8</Name>
-    </SDKReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>
