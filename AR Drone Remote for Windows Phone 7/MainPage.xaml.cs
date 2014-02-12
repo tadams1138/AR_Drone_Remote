@@ -30,7 +30,7 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         {
             "UseAccelerometer",
             "AbsoluteControl",
-            "UseLocationService",
+            //"UseLocationService",
             "RecordFlightData",
             "RecordScreenshotDelayInSeconds",
             "CombineYaw",
@@ -96,8 +96,6 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
         {
             base.OnNavigatedTo(e);
 
-            VerifyLicense();
-
             LoadSettings();
 
             if (_compass != null)
@@ -114,6 +112,8 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             //{
             //    GeoCoordinateWatcher.Start();
             //}
+
+            NotifyIfTrial();
         }
 
         public DroneController DroneController { get { return _droneController; } }
@@ -506,15 +506,44 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             }
             else
             {
-                try
-                {
-                    _droneController.Connect();
-                }
-                catch
-                {
-                    MessageBox.Show("Could not connect to AR Drone. Please verify you are connected to drone's WIFI and that you are the only device connected. Restart the Drone if necessary.",
-                                    "Unable to connect.", MessageBoxButton.OK);
-                }
+                Connect();
+            }
+        }
+
+        private static void Connect()
+        {
+            if (App.TrialReminder.IsTrialExpired)
+            {
+                NotifyIfTrial();
+            }
+            else
+            {
+                CallDroneControllConnect();
+            }
+        }
+
+        private static void CallDroneControllConnect()
+        {
+            try
+            {
+                _droneController.Connect();
+            }
+            catch
+            {
+                MessageBox.Show(
+                    "Could not connect to AR Drone. Please verify you are connected to drone's WIFI and that you are the only device connected. Restart the Drone if necessary.",
+                    "Unable to connect.", MessageBoxButton.OK);
+            }
+        }
+
+        private static void NotifyIfTrial()
+        {
+            try
+            {
+                App.TrialReminder.Notify();
+            }
+            catch
+            {
             }
         }
 
@@ -595,16 +624,6 @@ namespace AR_Drone_Remote_for_Windows_Phone_7
             else
             {
                 DroneController.StartRecording();
-            }
-        }
-
-        private void VerifyLicense()
-        {
-            App.TrialReminder.Notify();
-            if (ApplicationBar != null)
-            {
-                var connectButton = (ApplicationBarIconButton)ApplicationBar.Buttons[2];
-                connectButton.IsEnabled = !App.TrialReminder.IsTrialExpired;
             }
         }
 
